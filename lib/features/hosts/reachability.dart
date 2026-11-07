@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/icmp_ping.dart';
 import '../settings/app_settings.dart';
 import '../settings/settings_providers.dart';
 import 'host.dart';
@@ -28,6 +29,8 @@ abstract class ReachabilityChecker {
   Future<Duration?> check(Host host, ReachabilityMethod method);
 }
 
+/// Checks hosts with the app's own ICMP ping or a TCP connect; no
+/// external programs are run.
 class SystemReachabilityChecker implements ReachabilityChecker {
   static const timeout = Duration(seconds: 2);
 
@@ -38,40 +41,12 @@ class SystemReachabilityChecker implements ReachabilityChecker {
         ReachabilityMethod.sshPort => _tcp(host.address, host.port),
       };
 
-  static final _time = RegExp(
-    r'time[=<]\s*([\d.]+)\s*ms',
-    caseSensitive: false,
-  );
-
+  /// Built-in ICMP echo; the system `ping` command is never launched.
   Future<Duration?> _ping(String address) async {
-    final args = switch (defaultTargetPlatform) {
-      // -w: per-reply timeout in ms
-      TargetPlatform.windows => ['-n', '1', '-w', '${timeout.inMilliseconds}'],
-      // -t: overall timeout in seconds
-      TargetPlatform.macOS => ['-c', '1', '-t', '${timeout.inSeconds}'],
-      _ => ['-c', '1', '-W', '${timeout.inSeconds}'],
-    };
     try {
-      final watch = Stopwatch()..start();
-      final result = await Process.run('ping', [
-        ...args,
-        address,
-      ]).timeout(timeout + const Duration(seconds: 2));
-      watch.stop();
-      final out = '${result.stdout}';
-      // Windows can exit 0 for "Destination host unreachable", so also
-      // require an actual echo reply (it always carries a TTL).
-      if (result.exitCode != 0 || !out.toLowerCase().contains('ttl=')) {
-        return null;
-      }
-      final ms = double.tryParse(_time.firstMatch(out)?.group(1) ?? '');
-      return ms != null
-          ? Duration(microseconds: (ms * 1000).round())
-          : watch.elapsed;
-    } on TimeoutException {
-      return null;
+      return await icmpPing(address, timeout: timeout);
     } catch (e) {
-      debugPrint('ping $address failed to run: $e');
+      debugPrint('ping $address failed: $e');
       return null;
     }
   }
