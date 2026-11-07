@@ -11,30 +11,45 @@ import '../features/terminal/terminal_page.dart';
 import '../widgets/fade_through_stack.dart';
 import '../widgets/window_drag_area.dart';
 import 'navigation.dart';
+import '../l10n/l10n.dart';
 
 class _Destination {
   const _Destination(this.label, this.icon, this.selectedIcon);
-  final String label;
+
+  /// Looked up at build time so it follows the current language.
+  final String Function(AppLocalizations l) label;
   final IconData icon;
   final IconData selectedIcon;
 }
 
-const _destinations = {
-  AppDestination.hosts: _Destination('主机', Icons.dns_outlined, Icons.dns),
+final _destinations = {
+  AppDestination.hosts: _Destination(
+    (l) => l.navHosts,
+    Icons.dns_outlined,
+    Icons.dns,
+  ),
   AppDestination.terminal: _Destination(
-    '终端',
+    (l) => l.navTerminal,
     Icons.terminal_outlined,
     Icons.terminal,
   ),
-  AppDestination.keys: _Destination('密钥', Icons.key_outlined, Icons.key),
-  AppDestination.snippets: _Destination('片段', Icons.code_outlined, Icons.code),
+  AppDestination.keys: _Destination(
+    (l) => l.navKeys,
+    Icons.key_outlined,
+    Icons.key,
+  ),
+  AppDestination.snippets: _Destination(
+    (l) => l.navSnippets,
+    Icons.code_outlined,
+    Icons.code,
+  ),
   AppDestination.forwarding: _Destination(
-    '转发',
+    (l) => l.navForwarding,
     Icons.swap_horiz_outlined,
     Icons.swap_horiz,
   ),
   AppDestination.settings: _Destination(
-    '设置',
+    (l) => l.navSettings,
     Icons.settings_outlined,
     Icons.settings,
   ),
@@ -200,7 +215,7 @@ class _NavItem extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      destination.label,
+                      destination.label(context.l10n),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelLarge?.copyWith(

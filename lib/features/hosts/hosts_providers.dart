@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_providers.dart';
 import 'host.dart';
 import 'host_repository.dart';
+import '../../l10n/l10n.dart';
 
 final hostRepositoryProvider = Provider<HostRepository>(
   (ref) => HostRepository(
@@ -66,10 +67,10 @@ class HostsNotifier extends AsyncNotifier<HostsData> {
   /// Throws [ArgumentError] if another group already has [name].
   Future<void> renameGroup(String groupId, String name) async {
     final trimmed = name.trim();
-    if (trimmed.isEmpty) throw ArgumentError('分组名称不能为空');
+    if (trimmed.isEmpty) throw ArgumentError(currentL10n.groupNameEmptyError);
     final existing = _data.groupByName(trimmed);
     if (existing != null && existing.id != groupId) {
-      throw ArgumentError('已经有名为“$trimmed”的分组');
+      throw ArgumentError(currentL10n.groupNameExistsError(trimmed));
     }
     await _commit(
       _data.copyWith(
@@ -93,7 +94,7 @@ class HostsNotifier extends AsyncNotifier<HostsData> {
 
   static (HostsData, HostGroup) _withGroup(HostsData data, String name) {
     final trimmed = name.trim();
-    if (trimmed.isEmpty) throw ArgumentError('分组名称不能为空');
+    if (trimmed.isEmpty) throw ArgumentError(currentL10n.groupNameEmptyError);
     final existing = data.groupByName(trimmed);
     if (existing != null) return (data, existing);
     final group = HostGroup(id: generateId(), name: trimmed);

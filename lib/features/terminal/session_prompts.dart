@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import '../../theme/terminal_theme.dart';
 import 'known_hosts.dart';
 import 'terminal_session.dart';
+import '../../l10n/l10n.dart';
 
 /// Shows M3 dialogs on the root navigator.
 class DialogSessionPrompts implements SessionPrompts {
-  DialogSessionPrompts(this.navigatorKey);
+  const DialogSessionPrompts(this.navigatorKey);
 
   final GlobalKey<NavigatorState> navigatorKey;
 
@@ -70,7 +71,11 @@ class HostKeyDialog extends StatelessWidget {
         changed ? Icons.gpp_bad_outlined : Icons.fingerprint,
         color: changed ? theme.colorScheme.error : null,
       ),
-      title: Text(changed ? '主机密钥已变化' : '首次连接这台主机'),
+      title: Text(
+        changed
+            ? context.l10n.hostKeyChangedTitle
+            : context.l10n.hostKeyNewTitle,
+      ),
       content: SizedBox(
         width: 460,
         child: Column(
@@ -79,20 +84,22 @@ class HostKeyDialog extends StatelessWidget {
           children: [
             Text(
               changed
-                  ? '$hostPort 的主机密钥和上次不同。可能是服务器重装了系统，也可能有人在拦截连接。确认无误后再继续。'
-                  : '无法确认 $hostPort 的身份。请核对下面的指纹，确认是你的服务器后再继续。',
+                  ? context.l10n.hostKeyChangedBody(hostPort)
+                  : context.l10n.hostKeyNewBody(hostPort),
             ),
             const SizedBox(height: 16),
             if (changed) ...[
               Text(
-                '之前的指纹（${previous!.keyType}）',
+                context.l10n.previousFingerprint(previous!.keyType),
                 style: theme.textTheme.labelMedium,
               ),
               SelectableText(previous!.fingerprint, style: mono),
               const SizedBox(height: 12),
             ],
             Text(
-              changed ? '现在的指纹（${offered.keyType}）' : offered.keyType,
+              changed
+                  ? context.l10n.currentFingerprint(offered.keyType)
+                  : offered.keyType,
               style: theme.textTheme.labelMedium,
             ),
             SelectableText(offered.fingerprint, style: mono),
@@ -102,7 +109,7 @@ class HostKeyDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('取消'),
+          child: Text(context.l10n.cancel),
         ),
         changed
             ? FilledButton(
@@ -111,11 +118,11 @@ class HostKeyDialog extends StatelessWidget {
                   foregroundColor: theme.colorScheme.onError,
                 ),
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('仍然信任'),
+                child: Text(context.l10n.trustAnyway),
               )
             : FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('信任并连接'),
+                child: Text(context.l10n.trustAndConnect),
               ),
       ],
     );
@@ -164,7 +171,7 @@ class _SecretDialogState extends State<SecretDialog> {
               onSubmitted: (_) => _submit(),
               decoration: InputDecoration(
                 suffixIcon: IconButton(
-                  tooltip: _obscure ? '显示' : '隐藏',
+                  tooltip: _obscure ? context.l10n.show : context.l10n.hide,
                   icon: Icon(
                     _obscure ? Icons.visibility : Icons.visibility_off,
                   ),
@@ -178,9 +185,9 @@ class _SecretDialogState extends State<SecretDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(context.l10n.cancel),
         ),
-        FilledButton(onPressed: _submit, child: const Text('确定')),
+        FilledButton(onPressed: _submit, child: Text(context.l10n.ok)),
       ],
     );
   }

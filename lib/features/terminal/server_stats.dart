@@ -1,6 +1,8 @@
 /// System information read from a (mostly Linux) server over SSH.
 library;
 
+import '../../l10n/l10n.dart';
+
 /// One read-only POSIX sh script; each section is introduced by `@@name`.
 /// Wrapped in `sh -c` so it works whatever the user's login shell is.
 const serverStatsCommand =
@@ -115,7 +117,7 @@ class ServerStats {
     }
 
     int? memTotal, memAvailable;
-    for (final line in sections['mem'] ?? const <String>[]) {
+    for (final line in sections['mem'] ?? <String>[]) {
       final m = RegExp(r'^(\w+):\s+(\d+)\s*kB').firstMatch(line);
       if (m == null) continue;
       final bytes = int.parse(m.group(2)!) * 1024;
@@ -165,10 +167,15 @@ String formatBytes(int bytes) {
 /// "3 天 4 小时", "5 小时 12 分钟", "8 分钟", "不到 1 分钟".
 String formatDuration(Duration d) {
   final days = d.inDays, hours = d.inHours % 24, minutes = d.inMinutes % 60;
-  if (days > 0) return hours > 0 ? '$days 天 $hours 小时' : '$days 天';
-  if (d.inHours > 0) {
-    return minutes > 0 ? '${d.inHours} 小时 $minutes 分钟' : '${d.inHours} 小时';
+  final l = currentL10n;
+  if (days > 0) {
+    return hours > 0 ? l.durationDaysHours(days, hours) : l.durationDays(days);
   }
-  if (d.inMinutes > 0) return '${d.inMinutes} 分钟';
-  return '不到 1 分钟';
+  if (d.inHours > 0) {
+    return minutes > 0
+        ? l.durationHoursMinutes(d.inHours, minutes)
+        : l.durationHours(d.inHours);
+  }
+  if (d.inMinutes > 0) return l.durationMinutes(d.inMinutes);
+  return currentL10n.durationUnderMinute;
 }

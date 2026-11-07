@@ -19,6 +19,7 @@ class Host {
     required this.username,
     required this.authMethod,
     this.groupId,
+    this.keyId,
   });
 
   final String id;
@@ -30,6 +31,10 @@ class Host {
 
   /// The [HostGroup] this host belongs to; null means ungrouped.
   final String? groupId;
+
+  /// A saved key (Keys page) to log in with. Null with [AuthMethod.key]
+  /// means the host has its own pasted key.
+  final String? keyId;
 
   String get displayName => label.isNotEmpty ? label : address;
 
@@ -48,6 +53,7 @@ class Host {
     String? username,
     AuthMethod? authMethod,
     Object? groupId = _keep,
+    Object? keyId = _keep,
   }) => Host(
     id: id,
     label: label ?? this.label,
@@ -56,6 +62,7 @@ class Host {
     username: username ?? this.username,
     authMethod: authMethod ?? this.authMethod,
     groupId: identical(groupId, _keep) ? this.groupId : groupId as String?,
+    keyId: identical(keyId, _keep) ? this.keyId : keyId as String?,
   );
 
   Map<String, Object?> toJson() => {
@@ -66,6 +73,7 @@ class Host {
     'username': username,
     'authMethod': authMethod.name,
     if (groupId != null) 'groupId': groupId,
+    if (keyId != null) 'keyId': keyId,
   };
 
   factory Host.fromJson(Map<String, Object?> json) => Host(
@@ -78,6 +86,7 @@ class Host {
         AuthMethod.values.asNameMap()[json['authMethod']] ??
         AuthMethod.password,
     groupId: json['groupId'] as String?,
+    keyId: json['keyId'] as String?,
   );
 }
 

@@ -6,10 +6,15 @@ import '../security/master_password_dialog.dart';
 import '../security/vault_controller.dart';
 import '../../widgets/page_scaffold.dart';
 import 'app_settings.dart';
+import 'log_sheet.dart';
 import 'settings_providers.dart';
+import '../../l10n/l10n.dart';
 
-String formatInterval(int seconds) =>
-    seconds < 60 ? '$seconds 秒' : '${seconds ~/ 60} 分钟';
+String formatInterval(int seconds) => seconds == 0
+    ? currentL10n.checkOff
+    : (seconds < 60
+          ? currentL10n.seconds(seconds)
+          : currentL10n.minutes(seconds ~/ 60));
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -28,24 +33,30 @@ class SettingsPage extends ConsumerWidget {
     }.toList()..sort();
 
     return PageScaffold(
-      title: '设置',
+      title: context.l10n.navSettings,
       child: ListView(
         children: [
-          const _SectionTitle('外观'),
+          _SectionTitle(context.l10n.appearance),
           Card(
             child: Column(
               children: [
                 ListTile(
                   leading: const Icon(Icons.brightness_6_outlined),
-                  title: const Text('主题'),
+                  title: Text(context.l10n.theme),
                   trailing: SegmentedButton<ThemeMode>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: ThemeMode.system,
-                        label: Text('跟随系统'),
+                        label: Text(context.l10n.themeSystem),
                       ),
-                      ButtonSegment(value: ThemeMode.light, label: Text('浅色')),
-                      ButtonSegment(value: ThemeMode.dark, label: Text('深色')),
+                      ButtonSegment(
+                        value: ThemeMode.light,
+                        label: Text(context.l10n.themeLight),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        label: Text(context.l10n.themeDark),
+                      ),
                     ],
                     selected: {s.themeMode},
                     onSelectionChanged: (v) =>
@@ -54,24 +65,54 @@ class SettingsPage extends ConsumerWidget {
                 ),
                 SwitchListTile(
                   secondary: const Icon(Icons.palette_outlined),
-                  title: const Text('使用系统强调色'),
-                  subtitle: const Text('关闭后使用 uessh 默认配色'),
+                  title: Text(context.l10n.systemAccent),
+                  subtitle: Text(context.l10n.systemAccentSubtitle),
                   value: s.followSystemAccent,
                   onChanged: (v) =>
                       update((s) => s.copyWith(followSystemAccent: v)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.translate),
+                  title: Text(context.l10n.language),
+                  subtitle: Text(context.l10n.languageSubtitle),
+                  trailing: AppDropdown<AppLanguage>(
+                    key: const ValueKey('language'),
+                    width: 160,
+                    value: s.language,
+                    onChanged: (v) => update((s) => s.copyWith(language: v)),
+                    entries: [
+                      AppDropdownEntry(
+                        value: AppLanguage.system,
+                        label: context.l10n.themeSystem,
+                      ),
+                      // Language names stay in their own language.
+                      const AppDropdownEntry(
+                        value: AppLanguage.zh,
+                        label: '简体中文',
+                      ),
+                      const AppDropdownEntry(
+                        value: AppLanguage.en,
+                        label: 'English',
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          const _SectionTitle('主机连通检测'),
+          _SectionTitle(context.l10n.reachability),
           Card(
             child: Column(
               children: [
                 ListTile(
                   leading: const Icon(Icons.timer_outlined),
-                  title: const Text('检测间隔'),
-                  subtitle: const Text('打开软件时检测一次，之后按这个间隔重复检测'),
+                  title: Text(context.l10n.checkInterval),
+                  subtitle: Text(
+                    s.checksEnabled
+                        ? context.l10n.checkIntervalOn
+                        : context.l10n.checkIntervalOff,
+                  ),
                   trailing: AppDropdown<int>(
                     key: const ValueKey('check-interval'),
                     width: 140,
@@ -84,44 +125,67 @@ class SettingsPage extends ConsumerWidget {
                     ],
                   ),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.network_ping),
-                  title: const Text('检测方式'),
-                  subtitle: Text(
-                    s.checkMethod == ReachabilityMethod.ping
-                        ? '发送 ping。部分云服务器的安全组会屏蔽 ping，这时会显示为不通'
-                        : '尝试连接主机的 SSH 端口，能反映是否可以 SSH 登录',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  trailing: SegmentedButton<ReachabilityMethod>(
-                    segments: const [
-                      ButtonSegment(
-                        value: ReachabilityMethod.ping,
-                        label: Text('Ping'),
-                      ),
-                      ButtonSegment(
-                        value: ReachabilityMethod.sshPort,
-                        label: Text('SSH 端口'),
-                      ),
-                    ],
-                    selected: {s.checkMethod},
-                    onSelectionChanged: (v) =>
-                        update((s) => s.copyWith(checkMethod: v.first)),
-                  ),
+                // Method only matters while checking is on.
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: !s.checksEnabled
+                      ? const SizedBox(width: double.infinity)
+                      : ListTile(
+                          leading: const Icon(Icons.network_ping),
+                          title: Text(context.l10n.checkMethod),
+                          subtitle: Text(
+                            s.checkMethod == ReachabilityMethod.ping
+                                ? context.l10n.checkMethodPing
+                                : context.l10n.checkMethodSsh,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          trailing: SegmentedButton<ReachabilityMethod>(
+                            segments: [
+                              const ButtonSegment(
+                                value: ReachabilityMethod.ping,
+                                label: Text('Ping'),
+                              ),
+                              ButtonSegment(
+                                value: ReachabilityMethod.sshPort,
+                                label: Text(context.l10n.sshPort),
+                              ),
+                            ],
+                            selected: {s.checkMethod},
+                            onSelectionChanged: (v) =>
+                                update((s) => s.copyWith(checkMethod: v.first)),
+                          ),
+                        ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          const _SectionTitle('安全'),
+          _SectionTitle(context.l10n.security),
           _SecurityCard(autoLockMinutes: s.autoLockMinutes, update: update),
+          const SizedBox(height: 24),
+          _SectionTitle(context.l10n.diagnostics),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.receipt_long_outlined),
+              title: Text(context.l10n.log),
+              subtitle: Text(context.l10n.logSubtitle),
+              trailing: FilledButton.tonal(
+                key: const ValueKey('open-log'),
+                onPressed: () => showLogSheet(context),
+                child: Text(context.l10n.viewLog),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-String formatAutoLock(int minutes) => minutes == 0 ? '从不' : '$minutes 分钟';
+String formatAutoLock(int minutes) =>
+    minutes == 0 ? currentL10n.never : currentL10n.minutes(minutes);
 
 class _SecurityCard extends ConsumerWidget {
   const _SecurityCard({required this.autoLockMinutes, required this.update});
@@ -145,11 +209,11 @@ class _SecurityCard extends ConsumerWidget {
         children: [
           SwitchListTile(
             secondary: const Icon(Icons.lock_outline),
-            title: const Text('主密码'),
+            title: Text(context.l10n.masterPassword),
             subtitle: Text(
               vault.hasPassword
-                  ? '已开启：打开 uessh 时需要输入主密码'
-                  : '未开启：凭据用本机密钥加密保存，使用时无需输入密码',
+                  ? context.l10n.masterPasswordOn
+                  : context.l10n.masterPasswordOff,
               style: theme.textTheme.bodySmall,
             ),
             value: vault.hasPassword,
@@ -161,14 +225,14 @@ class _SecurityCard extends ConsumerWidget {
           if (vault.hasPassword) ...[
             ListTile(
               leading: const Icon(Icons.password),
-              title: const Text('修改主密码'),
+              title: Text(context.l10n.changeMasterPassword),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _open(context, MasterPasswordAction.change),
             ),
             ListTile(
               leading: const Icon(Icons.timer_off_outlined),
-              title: const Text('自动锁定'),
-              subtitle: const Text('一段时间没有操作后自动锁定'),
+              title: Text(context.l10n.autoLock),
+              subtitle: Text(context.l10n.autoLockSubtitle),
               trailing: AppDropdown<int>(
                 key: const ValueKey('auto-lock'),
                 width: 140,
@@ -185,7 +249,7 @@ class _SecurityCard extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.lock_clock_outlined),
-              title: const Text('立即锁定'),
+              title: Text(context.l10n.lockNow),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => ref.read(vaultControllerProvider.notifier).lock(),
             ),

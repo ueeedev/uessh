@@ -6,9 +6,13 @@ import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
 import 'package:xterm/xterm.dart';
 
+import '../../core/app_log.dart';
+
 import '../hosts/host.dart';
 import '../hosts/host_repository.dart';
+import '../keys/ssh_key.dart';
 import 'known_hosts.dart';
+import '../../l10n/l10n.dart';
 
 enum SessionStatus { connecting, connected, failed, closed }
 
@@ -31,6 +35,7 @@ class TerminalSession extends ChangeNotifier {
     required this.repository,
     required this.knownHosts,
     required this.prompts,
+    this.keys,
   }) : terminal = Terminal(maxLines: 10000, platform: _terminalPlatform()) {
     terminal.onTitleChange = (t) {
       title = t;
@@ -43,6 +48,9 @@ class TerminalSession extends ChangeNotifier {
   final HostRepository repository;
   final KnownHostsStore knownHosts;
   final SessionPrompts prompts;
+
+  /// Saved keys (Keys page), for hosts that use one.
+  final KeyRepository? keys;
 
   final Terminal terminal;
   final TerminalController controller = TerminalController();
@@ -69,7 +77,10 @@ class TerminalSession extends ChangeNotifier {
     _teardown();
     final gen = ++_generation;
     _setStatus(SessionStatus.connecting);
-    terminal.write('\x1b[2m正在连接 ${host.target} …\x1b[0m\r\n');
+    log.info('ssh', 'Connecting to ${host.target}');
+    terminal.write(
+      '\x1b[2m${currentL10n.connectingTo(host.target)}\x1b[0m\r\n',
+    );
 
     try {
       final secrets = await repository.readSecrets(host.id);
@@ -146,6 +157,7 @@ class TerminalSession extends ChangeNotifier {
       terminal.onResize = (w, h, pw, ph) => shell.resizeTerminal(w, h, pw, ph);
 
       connectedAt = DateTime.now();
+      log.info('ssh', 'Connected to ${host.target}');
       _setStatus(SessionStatus.connected);
 
       unawaited(
@@ -158,6 +170,7 @@ class TerminalSession extends ChangeNotifier {
       if (gen != _generation) return;
       _teardown();
       error = describeConnectError(e, host);
+      log.warn('ssh', 'Connection to ${host.target} failed: $e');
       terminal.write('\r\n\x1b[31m$error\x1b[0m\r\n');
       _setStatus(SessionStatus.failed);
     }
@@ -195,17 +208,26 @@ class TerminalSession extends ChangeNotifier {
   }
 
   Future<List<SSHKeyPair>> _loadKeyPairs(HostSecrets secrets) async {
-    final pem = secrets.privateKey;
-    if (pem == null || pem.trim().isEmpty) {
-      throw const _ConnectError('这台主机没有保存私钥，请先编辑主机并导入私钥');
+    String? pem = secrets.privateKey;
+    String? passphrase = secrets.passphrase;
+    final keyId = host.keyId;
+    if (keyId != null) {
+      final saved = await keys?.readSecrets(keyId);
+      pem = saved?.privateKey;
+      passphrase = saved?.passphrase;
+      if (pem == null || pem.trim().isEmpty) {
+        throw _ConnectError(currentL10n.keyDeletedError);
+      }
     }
-    var passphrase = secrets.passphrase;
+    if (pem == null || pem.trim().isEmpty) {
+      throw _ConnectError(currentL10n.noKeyError);
+    }
     if (SSHKeyPair.isEncryptedPem(pem) && (passphrase ?? '').isEmpty) {
       passphrase = await prompts.askSecret(
-        title: '输入私钥口令',
-        message: '${host.displayName} 的私钥已加密',
+        title: currentL10n.enterKeyPassphrase,
+        message: currentL10n.keyIsEncrypted(host.displayName),
       );
-      if (passphrase == null) throw const _ConnectError('已取消登录');
+      if (passphrase == null) throw _ConnectError(currentL10n.loginCancelled);
     }
     return SSHKeyPair.fromPem(pem, passphrase);
   }
@@ -213,7 +235,10 @@ class TerminalSession extends ChangeNotifier {
   Future<String?> _resolvePassword(HostSecrets secrets) async {
     final saved = secrets.password;
     if (saved != null && saved.isNotEmpty) return saved;
-    return prompts.askSecret(title: '输入密码', message: '登录 ${host.target}');
+    return prompts.askSecret(
+      title: currentL10n.enterPassword,
+      message: currentL10n.loginTo(host.target),
+    );
   }
 
   Future<List<String>?> _answerKeyboardInteractive(
@@ -230,7 +255,9 @@ class TerminalSession extends ChangeNotifier {
         answer = await getPassword();
       } else {
         answer = await prompts.askSecret(
-          title: request.name.isNotEmpty ? request.name : '服务器验证',
+          title: request.name.isNotEmpty
+              ? request.name
+              : currentL10n.serverVerification,
           message: p.promptText.trim(),
         );
       }
@@ -242,8 +269,11 @@ class TerminalSession extends ChangeNotifier {
 
   void _onRemoteClosed(int gen) {
     if (gen != _generation || _disposed) return;
+    log.info('ssh', 'Connection to ${host.target} closed');
     _teardown();
-    terminal.write('\r\n\x1b[2m[连接已关闭]\x1b[0m\r\n');
+    terminal.write(
+      '\r\n\x1b[2m${currentL10n.connectionClosedMarker}\x1b[0m\r\n',
+    );
     _setStatus(SessionStatus.closed);
   }
 
@@ -292,14 +322,16 @@ String describeConnectError(Object e, Host host) {
   if (e is _ConnectError) return e.message;
   if (e is SocketException) {
     final reason = e.osError?.message ?? e.message;
-    return '无法连接到 ${host.address}:${host.port}（$reason）';
+    return currentL10n.cannotConnect('${host.address}:${host.port}', reason);
   }
-  if (e is TimeoutException) return '连接 ${host.address}:${host.port} 超时';
-  if (e is SSHAuthAbortError) return '已取消登录';
-  if (e is SSHAuthFailError) return '认证失败：用户名、密码或密钥不正确';
-  if (e is SSHHostkeyError) return '主机密钥未被信任，已断开连接';
-  if (e is SSHKeyDecryptError) return '私钥口令不正确';
-  if (e is SSHKeyDecodeError) return '无法识别私钥格式';
-  if (e is SSHError) return 'SSH 错误：$e';
-  return '连接失败：$e';
+  if (e is TimeoutException) {
+    return currentL10n.connectTimeout('${host.address}:${host.port}');
+  }
+  if (e is SSHAuthAbortError) return currentL10n.loginCancelled;
+  if (e is SSHAuthFailError) return currentL10n.authFailed;
+  if (e is SSHHostkeyError) return currentL10n.hostKeyRejected;
+  if (e is SSHKeyDecryptError) return currentL10n.keyWrongPassphrase;
+  if (e is SSHKeyDecodeError) return currentL10n.keyFormatShort;
+  if (e is SSHError) return currentL10n.sshError('$e');
+  return currentL10n.connectFailed('$e');
 }

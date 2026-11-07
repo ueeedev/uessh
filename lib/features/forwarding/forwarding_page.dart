@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../widgets/page_scaffold.dart';
+import '../../l10n/l10n.dart';
 
 class ForwardingPage extends StatelessWidget {
   const ForwardingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const PageScaffold(
-      title: '端口转发',
+    return PageScaffold(
+      title: context.l10n.forwardingTitle,
       child: EmptyState(
         icon: Icons.swap_horiz,
-        title: '还没有转发规则',
-        message: '支持本地、远程和动态（SOCKS）转发',
+        title: context.l10n.noForwardsTitle,
+        message: context.l10n.noForwardsMessage,
       ),
     );
   }

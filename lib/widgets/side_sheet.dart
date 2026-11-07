@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
+
 /// Opens a Material 3 modal side sheet that slides in from the right.
 Future<T?> showSideSheet<T>(
   BuildContext context, {
@@ -12,7 +14,7 @@ Future<T?> showSideSheet<T>(
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: '关闭',
+    barrierLabel: context.l10n.close,
     barrierColor: scheme.scrim.withValues(alpha: 0.32),
     transitionDuration: const Duration(milliseconds: 320),
     pageBuilder: (context, _, _) {
@@ -51,12 +53,18 @@ class SideSheet extends StatelessWidget {
     required this.title,
     required this.body,
     this.actions = const [],
+    this.leadingActions = const [],
     this.hasUnsavedChanges = false,
   });
 
   final String title;
   final Widget body;
+
+  /// Right-aligned buttons (cancel / save).
   final List<Widget> actions;
+
+  /// Left-aligned buttons, e.g. delete.
+  final List<Widget> leadingActions;
   final bool hasUnsavedChanges;
 
   Future<void> _confirmDiscard(BuildContext context) async {
@@ -64,16 +72,16 @@ class SideSheet extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         icon: const Icon(Icons.edit_off_outlined),
-        title: const Text('放弃未保存的修改？'),
-        content: const Text('关闭后，刚才填写的内容不会保存。'),
+        title: Text(context.l10n.discardChangesTitle),
+        content: Text(context.l10n.discardChangesBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('继续编辑'),
+            child: Text(context.l10n.keepEditing),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('放弃修改'),
+            child: Text(context.l10n.discardChanges),
           ),
         ],
       ),
@@ -111,7 +119,7 @@ class SideSheet extends StatelessWidget {
               children: [
                 Expanded(child: Text(title, style: theme.textTheme.titleLarge)),
                 IconButton(
-                  tooltip: '关闭',
+                  tooltip: context.l10n.close,
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.maybePop(context),
                 ),
@@ -119,13 +127,14 @@ class SideSheet extends StatelessWidget {
             ),
           ),
           Expanded(child: body),
-          if (actions.isNotEmpty) ...[
+          if (actions.isNotEmpty || leadingActions.isNotEmpty) ...[
             Divider(height: 1, color: scheme.outlineVariant),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  ...leadingActions,
+                  const Spacer(),
                   for (var i = 0; i < actions.length; i++) ...[
                     if (i > 0) const SizedBox(width: 8),
                     actions[i],

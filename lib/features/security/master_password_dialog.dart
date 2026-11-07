@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/vault.dart';
 import 'vault_controller.dart';
+import '../../l10n/l10n.dart';
 
 enum MasterPasswordAction { set, change, remove }
 
@@ -58,14 +59,14 @@ class _MasterPasswordDialogState extends ConsumerState<MasterPasswordDialog> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _currentError = '主密码不正确';
+        _currentError = context.l10n.wrongMasterPassword;
       });
     }
   }
 
   String? _validateNew(String? v) {
     if ((v ?? '').length < minMasterPasswordLength) {
-      return '至少 $minMasterPasswordLength 个字符';
+      return context.l10n.minChars(minMasterPasswordLength);
     }
     return null;
   }
@@ -75,16 +76,19 @@ class _MasterPasswordDialogState extends ConsumerState<MasterPasswordDialog> {
     final theme = Theme.of(context);
     final (title, intro, button) = switch (widget.action) {
       MasterPasswordAction.set => (
-        '设置主密码',
-        '开启后，每次打开 uessh 需要输入一次主密码，才能使用已保存的密码和私钥。'
-            '主密码无法找回，请务必记住。',
-        '开启',
+        context.l10n.setMasterPassword,
+        context.l10n.setMasterPasswordIntro,
+        context.l10n.turnOn,
       ),
-      MasterPasswordAction.change => ('修改主密码', null, '修改'),
+      MasterPasswordAction.change => (
+        context.l10n.changeMasterPassword,
+        null,
+        context.l10n.change,
+      ),
       MasterPasswordAction.remove => (
-        '关闭主密码',
-        '关闭后，打开 uessh 不再需要输入主密码，凭据改用本机密钥加密保存。',
-        '关闭主密码',
+        context.l10n.turnOffMasterPassword,
+        context.l10n.turnOffIntro,
+        context.l10n.turnOffMasterPassword,
       ),
     };
 
@@ -110,10 +114,12 @@ class _MasterPasswordDialogState extends ConsumerState<MasterPasswordDialog> {
                   obscureText: true,
                   enabled: !_busy,
                   decoration: InputDecoration(
-                    labelText: '当前主密码',
+                    labelText: context.l10n.currentMasterPassword,
                     errorText: _currentError,
                   ),
-                  validator: (v) => (v ?? '').isEmpty ? '请输入当前主密码' : null,
+                  validator: (v) => (v ?? '').isEmpty
+                      ? context.l10n.enterCurrentMasterPassword
+                      : null,
                   onFieldSubmitted: (_) => _needsNew ? null : _submit(),
                 ),
                 const SizedBox(height: 16),
@@ -125,8 +131,10 @@ class _MasterPasswordDialogState extends ConsumerState<MasterPasswordDialog> {
                   obscureText: true,
                   enabled: !_busy,
                   decoration: InputDecoration(
-                    labelText: _needsCurrent ? '新主密码' : '主密码',
-                    helperText: '至少 $minMasterPasswordLength 个字符',
+                    labelText: _needsCurrent
+                        ? context.l10n.newMasterPassword
+                        : context.l10n.masterPassword,
+                    helperText: context.l10n.minChars(minMasterPasswordLength),
                   ),
                   validator: _validateNew,
                 ),
@@ -135,8 +143,11 @@ class _MasterPasswordDialogState extends ConsumerState<MasterPasswordDialog> {
                   controller: _confirm,
                   obscureText: true,
                   enabled: !_busy,
-                  decoration: const InputDecoration(labelText: '再输入一次'),
-                  validator: (v) => v != _next.text ? '两次输入不一致' : null,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.confirmPassword,
+                  ),
+                  validator: (v) =>
+                      v != _next.text ? context.l10n.passwordsDontMatch : null,
                   onFieldSubmitted: (_) => _submit(),
                 ),
               ],
@@ -147,7 +158,7 @@ class _MasterPasswordDialogState extends ConsumerState<MasterPasswordDialog> {
       actions: [
         TextButton(
           onPressed: _busy ? null : () => Navigator.pop(context, false),
-          child: const Text('取消'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: _busy ? null : _submit,

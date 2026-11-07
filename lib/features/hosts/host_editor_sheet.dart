@@ -8,7 +8,9 @@ import '../../theme/terminal_theme.dart';
 import '../../widgets/app_dropdown.dart';
 import '../../widgets/side_sheet.dart';
 import 'host.dart';
+import '../keys/keys_providers.dart';
 import 'hosts_providers.dart';
+import '../../l10n/l10n.dart';
 
 /// Opens the editor as a side sheet from the right. Pass [host] to edit,
 /// or null to create.
@@ -45,6 +47,9 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
 
   /// A group typed in this sheet; created only when the host is saved.
   String? _newGroupName;
+
+  /// Saved key to log in with ('' = use the key pasted below).
+  late String _keyId = widget.host?.keyId ?? '';
   bool _obscurePassword = true;
   bool _saving = false;
   bool _loadingSecrets = false;
@@ -72,6 +77,7 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
     _authMethod,
     _groupId,
     _newGroupName,
+    _keyId,
   ];
 
   void _updateDirty() {
@@ -120,7 +126,7 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
   }
 
   Future<void> _importKeyFile() async {
-    final file = await openFile(confirmButtonText: '导入');
+    final file = await openFile(confirmButtonText: context.l10n.importAction);
     if (file == null) return;
     final text = await file.readAsString();
     setState(() {
@@ -130,9 +136,22 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
   }
 
   /// Checks the key parses; returns an error message or null.
+  /// Like [_usesSavedKey] but rebuilds when the key list changes.
+  bool _usesSavedKeyWatched(WidgetRef ref) {
+    final keys = ref.watch(keysProvider).value ?? [];
+    return _keyId.isNotEmpty && keys.any((k) => k.id == _keyId);
+  }
+
+  /// True when a saved key (that still exists) is selected.
+  bool get _usesSavedKey {
+    if (_keyId.isEmpty) return false;
+    final keys = ref.read(keysProvider).value ?? [];
+    return keys.any((k) => k.id == _keyId);
+  }
+
   String? _validateKey() {
     final pem = _privateKey.text.trim();
-    if (pem.isEmpty) return '请粘贴或导入私钥';
+    if (pem.isEmpty) return context.l10n.keyRequired;
     try {
       final encrypted = SSHKeyPair.isEncryptedPem(pem);
       // An encrypted key without a saved passphrase is fine: we ask on connect.
@@ -140,15 +159,15 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
       SSHKeyPair.fromPem(pem, encrypted ? _passphrase.text : null);
       return null;
     } on SSHKeyDecryptError {
-      return '私钥口令不正确';
+      return context.l10n.keyWrongPassphrase;
     } catch (_) {
-      return '无法识别私钥格式（支持 OpenSSH、PEM 格式的 RSA / ECDSA / Ed25519）';
+      return context.l10n.keyUnrecognized;
     }
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_authMethod == AuthMethod.key) {
+    if (_authMethod == AuthMethod.key && !_usesSavedKey) {
       final error = _validateKey();
       setState(() => _keyError = error);
       if (error != null) return;
@@ -163,13 +182,16 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
       username: _username.text.trim(),
       authMethod: _authMethod,
       groupId: _newGroupName == null ? _groupId : null,
+      keyId: _authMethod == AuthMethod.key && _usesSavedKey ? _keyId : null,
     );
     final secrets = _authMethod == AuthMethod.password
         ? HostSecrets(password: _password.text)
-        : HostSecrets(
-            privateKey: _privateKey.text.trim(),
-            passphrase: _passphrase.text,
-          );
+        : (_usesSavedKey
+              ? const HostSecrets() // the saved key holds the secrets
+              : HostSecrets(
+                  privateKey: _privateKey.text.trim(),
+                  passphrase: _passphrase.text,
+                ));
 
     try {
       await ref
@@ -180,15 +202,46 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
       if (!mounted) return;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('保存失败：$e')));
+          .showSnackBar(SnackBar(content: Text(context.l10n.saveFailed('$e'))));
     }
+  }
+
+  Future<void> _delete() async {
+    final host = widget.host!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.delete_outline),
+        title: Text(context.l10n.deleteHostTitle(host.displayName)),
+        content: Text(context.l10n.deleteHostBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _saving = true);
+    await ref.read(hostsProvider.notifier).remove(host.id);
+    // pop, not maybePop: deleting needs no "discard changes?" question.
+    if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SideSheet(
-      title: _isEdit ? '编辑主机' : '新建主机',
+      title: _isEdit ? context.l10n.editHost : context.l10n.newHost,
       hasUnsavedChanges: _dirty && !_saving,
       body: _loadingSecrets
           ? const Center(child: CircularProgressIndicator())
@@ -202,15 +255,14 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
                   children: [
                     TextFormField(
                       controller: _label,
-                      decoration: const InputDecoration(
-                        labelText: '名称',
-                        hintText: '例如：生产服务器（可选）',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.fieldName,
+                        hintText: context.l10n.hostNameHint,
                       ),
                     ),
                     const SizedBox(height: 16),
                     GroupPicker(
-                      groups:
-                          ref.watch(hostsProvider).value?.groups ?? const [],
+                      groups: ref.watch(hostsProvider).value?.groups ?? [],
                       groupId: _groupId,
                       newGroupName: _newGroupName,
                       onChanged: (groupId, newName) {
@@ -229,12 +281,12 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
                           child: TextFormField(
                             controller: _address,
                             autofocus: !_isEdit,
-                            decoration: const InputDecoration(
-                              labelText: '地址',
-                              hintText: 'IP 或域名',
+                            decoration: InputDecoration(
+                              labelText: context.l10n.fieldAddress,
+                              hintText: context.l10n.addressHint,
                             ),
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? '请输入地址'
+                                ? context.l10n.addressRequired
                                 : null,
                           ),
                         ),
@@ -243,7 +295,9 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
                           width: 100,
                           child: TextFormField(
                             controller: _port,
-                            decoration: const InputDecoration(labelText: '端口'),
+                            decoration: InputDecoration(
+                              labelText: context.l10n.fieldPort,
+                            ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
@@ -261,24 +315,30 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _username,
-                      decoration: const InputDecoration(labelText: '用户名'),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? '请输入用户名' : null,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.fieldUsername,
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? context.l10n.usernameRequired
+                          : null,
                     ),
                     const SizedBox(height: 20),
-                    Text('认证方式', style: theme.textTheme.labelLarge),
+                    Text(
+                      context.l10n.authMethod,
+                      style: theme.textTheme.labelLarge,
+                    ),
                     const SizedBox(height: 8),
                     SegmentedButton<AuthMethod>(
-                      segments: const [
+                      segments: [
                         ButtonSegment(
                           value: AuthMethod.password,
-                          icon: Icon(Icons.password),
-                          label: Text('密码'),
+                          icon: const Icon(Icons.password),
+                          label: Text(context.l10n.authPassword),
                         ),
                         ButtonSegment(
                           value: AuthMethod.key,
-                          icon: Icon(Icons.key),
-                          label: Text('私钥'),
+                          icon: const Icon(Icons.key),
+                          label: Text(context.l10n.authKey),
                         ),
                       ],
                       selected: {_authMethod},
@@ -293,10 +353,13 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
                         controller: _password,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: '密码',
-                          helperText: '保存在系统钥匙串中；留空则每次连接时询问',
+                          labelText: context.l10n.authPassword,
+                          helperText: context.l10n.passwordHelper,
+                          helperMaxLines: 2,
                           suffixIcon: IconButton(
-                            tooltip: _obscurePassword ? '显示' : '隐藏',
+                            tooltip: _obscurePassword
+                                ? context.l10n.show
+                                : context.l10n.hide,
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility
@@ -309,58 +372,83 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
                         ),
                       )
                     else ...[
-                      TextField(
-                        controller: _privateKey,
-                        minLines: 4,
-                        maxLines: 8,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontFamily: monoFontFamily,
-                          fontFamilyFallback: monoFontFallback,
-                        ),
-                        onChanged: (_) {
-                          if (_keyError != null) {
-                            setState(() => _keyError = null);
-                          }
+                      _KeySource(
+                        keyId: _keyId,
+                        onChanged: (v) {
+                          setState(() {
+                            _keyId = v;
+                            _keyError = null;
+                          });
+                          _updateDirty();
                         },
-                        decoration: InputDecoration(
-                          labelText: '私钥',
-                          hintText: '-----BEGIN OPENSSH PRIVATE KEY-----',
-                          alignLabelWithHint: true,
-                          errorText: _keyError,
-                          errorMaxLines: 2,
-                        ),
                       ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          onPressed: _importKeyFile,
-                          icon: const Icon(Icons.file_open_outlined),
-                          label: const Text('从文件导入'),
+                      if (!_usesSavedKeyWatched(ref)) ...[
+                        TextField(
+                          controller: _privateKey,
+                          minLines: 4,
+                          maxLines: 8,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontFamily: monoFontFamily,
+                            fontFamilyFallback: monoFontFallback,
+                          ),
+                          onChanged: (_) {
+                            if (_keyError != null) {
+                              setState(() => _keyError = null);
+                            }
+                          },
+                          decoration: InputDecoration(
+                            labelText: context.l10n.authKey,
+                            hintText: '-----BEGIN OPENSSH PRIVATE KEY-----',
+                            alignLabelWithHint: true,
+                            errorText: _keyError,
+                            errorMaxLines: 2,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _passphrase,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: '私钥口令',
-                          helperText: '私钥没有加密就留空；加密了但留空则每次连接时询问',
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: _importKeyFile,
+                            icon: const Icon(Icons.file_open_outlined),
+                            label: Text(context.l10n.importFromFile),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _passphrase,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: context.l10n.fieldPassphrase,
+                            helperText: context.l10n.passphraseHelper,
+                            helperMaxLines: 2,
+                          ),
+                        ),
+                      ],
                     ],
                   ],
                 ),
               ),
             ),
+      leadingActions: [
+        if (_isEdit)
+          TextButton.icon(
+            key: const ValueKey('delete-host'),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: _saving ? null : _delete,
+            icon: const Icon(Icons.delete_outline),
+            label: Text(context.l10n.delete),
+          ),
+      ],
       actions: [
         TextButton(
           // maybePop, so unsaved changes ask for confirmation first.
           onPressed: _saving ? null : () => Navigator.maybePop(context),
-          child: const Text('取消'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: _saving || _loadingSecrets ? null : _save,
-          child: const Text('保存'),
+          child: Text(context.l10n.save),
         ),
       ],
     );
@@ -404,7 +492,7 @@ class _GroupPickerState extends State<GroupPicker> {
   void _confirmNew() {
     final name = _name.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = '请输入分组名称');
+      setState(() => _error = context.l10n.groupNameRequired);
       return;
     }
     final key = name.toLowerCase();
@@ -421,64 +509,59 @@ class _GroupPickerState extends State<GroupPicker> {
     });
   }
 
+  /// Same width in both modes, so the field on the left never changes
+  /// size when the buttons swap.
+  static const _actionsWidth = 132.0;
+
+  static Widget _swap(Widget child, Animation<double> animation) =>
+      FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0, 0.15),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      );
+
+  static Widget _topStack(Widget? current, List<Widget> previous) =>
+      Stack(alignment: Alignment.topLeft, children: [...previous, ?current]);
+
+  void _cancelNew() => setState(() {
+    _adding = false;
+    _error = null;
+    _name.clear();
+  });
+
   @override
   Widget build(BuildContext context) {
-    if (_adding) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _name,
-              autofocus: true,
-              maxLength: 40,
-              onChanged: (_) {
-                if (_error != null) setState(() => _error = null);
-              },
-              onSubmitted: (_) => _confirmNew(),
-              decoration: InputDecoration(
-                labelText: '新分组名称',
-                hintText: '例如：生产环境',
-                errorText: _error,
-                counterText: '',
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: IconButton.filledTonal(
-              tooltip: '添加分组',
-              icon: const Icon(Icons.check),
-              onPressed: _confirmNew,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: IconButton(
-              tooltip: '取消新建',
-              icon: const Icon(Icons.close),
-              onPressed: () => setState(() {
-                _adding = false;
-                _error = null;
-                _name.clear();
-              }),
-            ),
-          ),
-        ],
-      );
-    }
-
     final selected = widget.newGroupName != null
         ? _pending
         : (widget.groups.any((g) => g.id == widget.groupId)
               ? widget.groupId!
               : _none);
-    return Row(
-      children: [
-        Expanded(
-          child: AppDropdown<String>(
-            label: '分组',
+
+    final field = _adding
+        ? TextField(
+            key: const ValueKey('new-group-field'),
+            controller: _name,
+            autofocus: true,
+            maxLength: 40,
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+            onSubmitted: (_) => _confirmNew(),
+            decoration: InputDecoration(
+              labelText: context.l10n.newGroupName,
+              hintText: context.l10n.newGroupHint,
+              errorText: _error,
+              counterText: '',
+            ),
+          )
+        : AppDropdown<String>(
+            key: const ValueKey('group-dropdown'),
+            label: context.l10n.group,
             leadingIcon: Icons.folder_outlined,
             value: selected,
             onChanged: (v) {
@@ -486,9 +569,9 @@ class _GroupPickerState extends State<GroupPicker> {
               widget.onChanged(v == _none ? null : v, null);
             },
             entries: [
-              const AppDropdownEntry(
+              AppDropdownEntry(
                 value: _none,
-                label: '未分组',
+                label: context.l10n.ungrouped,
                 icon: Icons.folder_off_outlined,
               ),
               for (final g in widget.groups)
@@ -500,19 +583,113 @@ class _GroupPickerState extends State<GroupPicker> {
               if (widget.newGroupName != null)
                 AppDropdownEntry(
                   value: _pending,
-                  label: '${widget.newGroupName}（新）',
+                  label: context.l10n.newGroupPending(widget.newGroupName!),
                   icon: Icons.create_new_folder_outlined,
                 ),
             ],
+          );
+
+    final buttons = _adding
+        ? Row(
+            key: const ValueKey('confirm-cancel'),
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton.filledTonal(
+                tooltip: context.l10n.addGroup,
+                icon: const Icon(Icons.check),
+                onPressed: _confirmNew,
+              ),
+              IconButton(
+                tooltip: context.l10n.cancelNewGroup,
+                icon: const Icon(Icons.close),
+                onPressed: _cancelNew,
+              ),
+            ],
+          )
+        : Align(
+            key: const ValueKey('new-group-button'),
+            alignment: Alignment.centerRight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _adding = true),
+                icon: const Icon(Icons.create_new_folder_outlined),
+                label: Text(context.l10n.newGroup),
+              ),
+            ),
+          );
+
+    const duration = Duration(milliseconds: 220);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: duration,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: _swap,
+            layoutBuilder: _topStack,
+            child: field,
           ),
         ),
         const SizedBox(width: 8),
-        TextButton.icon(
-          onPressed: () => setState(() => _adding = true),
-          icon: const Icon(Icons.create_new_folder_outlined),
-          label: const Text('新建分组'),
+        SizedBox(
+          key: const ValueKey('group-actions'),
+          width: _actionsWidth,
+          height: 48,
+          child: AnimatedSwitcher(
+            duration: duration,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: _swap,
+            child: buttons,
+          ),
         ),
       ],
+    );
+  }
+}
+
+/// Pick a saved key (Keys page) or paste one for this host only.
+class _KeySource extends ConsumerWidget {
+  const _KeySource({required this.keyId, required this.onChanged});
+
+  final String keyId;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final keys = ref.watch(keysProvider).value ?? [];
+    if (keys.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Text(
+          context.l10n.savedKeysHint,
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
+      );
+    }
+    final value = keys.any((k) => k.id == keyId) ? keyId : '';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AppDropdown<String>(
+        key: const ValueKey('key-source'),
+        label: context.l10n.keyToUse,
+        leadingIcon: Icons.key,
+        value: value,
+        onChanged: onChanged,
+        entries: [
+          for (final k in keys)
+            AppDropdownEntry(value: k.id, label: k.name, icon: Icons.key),
+          AppDropdownEntry(
+            value: '',
+            label: context.l10n.pasteKeyOption,
+            icon: Icons.content_paste,
+          ),
+        ],
+      ),
     );
   }
 }

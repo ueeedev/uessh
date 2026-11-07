@@ -11,6 +11,7 @@ const monoFontFallback = [
   'Consolas',
   'SF Mono',
   'Cascadia Mono',
+  'MiSans', // bundled: Chinese in the terminal matches the UI
   'PingFang SC',
   'Microsoft YaHei',
   'Noto Sans Mono CJK SC',

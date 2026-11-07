@@ -7,6 +7,7 @@ import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
 import 'core/app_providers.dart';
+import 'core/app_log.dart';
 import 'core/secret_store.dart';
 import 'core/vault.dart';
 import 'features/hosts/host_repository.dart';
@@ -15,12 +16,13 @@ import 'features/settings/settings_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  log.captureErrors();
   await windowManager.ensureInitialized();
 
   final options = WindowOptions(
     title: 'uessh',
-    size: Size(1200, 760),
-    minimumSize: Size(800, 520),
+    size: const Size(1200, 760),
+    minimumSize: const Size(800, 520),
     center: true,
     // macOS: no title bar; content goes to the top edge and the traffic
     // lights float over the sidebar. Windows keeps its system title bar.
@@ -33,6 +35,11 @@ Future<void> main() async {
   });
 
   final dataDir = await getApplicationSupportDirectory();
+  await log.attachFile(dataDir);
+  log.info(
+    'app',
+    'uessh started on ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+  );
   final settings = await SettingsStore(dataDir: dataDir).load();
   final vault = await _openVault(dataDir);
 
@@ -58,11 +65,13 @@ Future<Vault> _openVault(Directory dataDir) async {
       dataDir: dataDir,
       secrets: MemorySecretStore(),
     ).load();
-    await migrateKeychainSecrets(
+    final moved = await migrateKeychainSecrets(
       keychain: KeychainSecretStore(),
       vault: opened.vault,
       keys: [for (final h in hosts.hosts) ...HostRepository.secretKeys(h.id)],
     );
+    log.info('vault', 'Created vault; moved $moved secret(s) from keychain');
   }
+  log.info('vault', 'Vault opened (${opened.vault.mode.name} mode)');
   return opened.vault;
 }

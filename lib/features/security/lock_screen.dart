@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/vault.dart';
 import '../settings/settings_providers.dart';
 import 'vault_controller.dart';
+import '../../l10n/l10n.dart';
 
 /// Sits above the whole app (MaterialApp.builder). While the vault is
 /// locked it covers everything, dialogs included, with the lock screen;
@@ -109,7 +110,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   Future<void> _unlock() async {
     if (_busy) return;
     if (_password.text.isEmpty) {
-      setState(() => _error = '请输入主密码');
+      setState(() => _error = context.l10n.enterMasterPassword);
       return;
     }
     setState(() {
@@ -122,7 +123,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       if (!mounted) return;
       setState(() {
         _busy = false;
-        _error = '主密码不正确';
+        _error = context.l10n.wrongMasterPassword;
       });
       _password.selection = TextSelection(
         baseOffset: 0,
@@ -163,10 +164,10 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       children: [
         Image.asset('assets/branding/logo.png', width: 88, height: 88),
         const SizedBox(height: 20),
-        Text('uessh 已锁定', style: theme.textTheme.headlineSmall),
+        Text(context.l10n.lockedTitle, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 6),
         Text(
-          '输入主密码解锁已保存的密码和私钥',
+          context.l10n.lockedSubtitle,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
@@ -183,11 +184,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             if (_error != null) setState(() => _error = null);
           },
           decoration: InputDecoration(
-            labelText: '主密码',
+            labelText: context.l10n.masterPassword,
             prefixIcon: const Icon(Icons.lock_outline),
             errorText: _error,
             suffixIcon: IconButton(
-              tooltip: _obscure ? '显示' : '隐藏',
+              tooltip: _obscure ? context.l10n.show : context.l10n.hide,
               icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
               onPressed: () => setState(() => _obscure = !_obscure),
             ),
@@ -204,13 +205,13 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                     dimension: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('解锁'),
+                : Text(context.l10n.unlock),
           ),
         ),
         const SizedBox(height: 8),
         TextButton(
           onPressed: _busy ? null : () => setState(() => _confirmReset = true),
-          child: const Text('忘记主密码？'),
+          child: Text(context.l10n.forgotMasterPassword),
         ),
       ],
     );
@@ -226,16 +227,12 @@ class _LockScreenState extends ConsumerState<LockScreen> {
         Icon(Icons.warning_amber_rounded, size: 48, color: scheme.error),
         const SizedBox(height: 16),
         Text(
-          '重置保险库？',
+          context.l10n.resetVaultTitle,
           textAlign: TextAlign.center,
           style: theme.textTheme.headlineSmall,
         ),
         const SizedBox(height: 12),
-        Text(
-          '主密码无法找回。重置会删除所有已保存的密码、私钥和口令，'
-          '主机列表和分组会保留，之后需要重新填写登录信息。',
-          style: theme.textTheme.bodyMedium,
-        ),
+        Text(context.l10n.resetVaultBody, style: theme.textTheme.bodyMedium),
         const SizedBox(height: 24),
         FilledButton(
           style: FilledButton.styleFrom(
@@ -244,12 +241,12 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             minimumSize: const Size.fromHeight(44),
           ),
           onPressed: _busy ? null : _reset,
-          child: const Text('删除已保存的凭据并重置'),
+          child: Text(context.l10n.resetVaultConfirm),
         ),
         const SizedBox(height: 8),
         TextButton(
           onPressed: _busy ? null : () => setState(() => _confirmReset = false),
-          child: const Text('返回'),
+          child: Text(context.l10n.back),
         ),
       ],
     );

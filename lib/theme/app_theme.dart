@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// Bundled UI font (see pubspec.yaml).
+const appFontFamily = 'MiSans';
+
 class AppTheme {
   /// Used when the system accent color is unavailable or turned off.
   static const seed = Color(0xFF3F6FD8);
@@ -12,6 +15,7 @@ class AppTheme {
 
     return ThemeData(
       colorScheme: scheme,
+      fontFamily: appFontFamily,
       visualDensity: VisualDensity.compact, // desktop pointer density
       cardTheme: CardThemeData(
         elevation: 0,

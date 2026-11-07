@@ -8,6 +8,7 @@ import 'package:uessh/core/vault.dart';
 import 'package:uessh/features/hosts/host.dart';
 import 'package:uessh/features/hosts/reachability.dart';
 import 'package:uessh/features/settings/app_settings.dart';
+import 'package:uessh/features/settings/settings_providers.dart';
 import 'package:uessh/features/terminal/known_hosts.dart';
 import 'package:uessh/features/terminal/terminal_session.dart';
 
@@ -26,10 +27,15 @@ class TestEnv {
   /// it with a real vault (see vault_ui_test.dart).
   Vault vault = Vault.unlockedInMemory();
 
+  AppSettings settings = const AppSettings(language: AppLanguage.zh);
+
   List<Override> get overrides => [
     dataDirProvider.overrideWithValue(dataDir),
     secretStoreProvider.overrideWithValue(secrets),
     vaultProvider.overrideWithValue(vault),
+    // Tests are written against the Chinese UI; the test machine's locale
+    // is English, so pin the language.
+    initialSettingsProvider.overrideWithValue(settings),
     reachabilityCheckerProvider.overrideWithValue(reachability),
   ];
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'morph_shapes.dart';
+import '../l10n/l10n.dart';
 
 /// Loading indicator: a vector shape that keeps rotating and seamlessly
 /// morphs into a randomly chosen next shape (star, triangle, circle,
@@ -100,7 +101,7 @@ class _ShapeMorphIndicatorState extends State<ShapeMorphIndicator>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Semantics(
-      label: '加载中',
+      label: currentL10n.loading,
       child: SizedBox.square(
         dimension: widget.size,
         child: CustomPaint(
@@ -125,8 +126,11 @@ class _Frame {
 }
 
 class _MorphPainter extends CustomPainter {
-  _MorphPainter({required this.frame, required this.color, this.containerColor})
-    : super(repaint: frame);
+  const _MorphPainter({
+    required this.frame,
+    required this.color,
+    this.containerColor,
+  }) : super(repaint: frame);
 
   final ValueNotifier<_Frame> frame;
   final Color color;

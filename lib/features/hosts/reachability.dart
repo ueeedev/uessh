@@ -90,15 +90,21 @@ class ReachabilityNotifier extends Notifier<Map<String, Reachability>> {
       settingsProvider.select((s) => (s.checkIntervalSeconds, s.checkMethod)),
       (prev, next) {
         _restartTimer(Duration(seconds: next.$1));
-        if (prev != null && prev.$2 != next.$2) _checkAll(); // method changed
+        final turnedOn = prev != null && prev.$1 == 0 && next.$1 > 0;
+        final methodChanged = prev != null && prev.$2 != next.$2;
+        if (turnedOn || methodChanged) _checkAll();
       },
       fireImmediately: true,
     );
     return const {};
   }
 
+  bool get _enabled => ref.read(settingsProvider).checksEnabled;
+
   void _restartTimer(Duration interval) {
     _timer?.cancel();
+    _timer = null;
+    if (interval == Duration.zero) return; // checking turned off
     _timer = Timer.periodic(interval, (_) => _checkAll());
   }
 
@@ -141,6 +147,7 @@ class ReachabilityNotifier extends Notifier<Map<String, Reachability>> {
   void refresh() => _checkAll();
 
   Future<void> _check(Host host) async {
+    if (!_enabled) return;
     if (!_inFlight.add(host.id)) return; // already being checked
     final target = '${host.address}:${host.port}';
     try {

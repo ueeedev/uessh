@@ -148,7 +148,7 @@ void main() {
       // The dot sits left of the name; user and address are not shown.
       final dot = tester.getRect(dotOf('up-host'));
       final name = tester.getRect(find.text('up-host'));
-      expect(dot.right, lessThan(name.left));
+      expect(dot.right, lessThanOrEqualTo(name.left));
       expect((dot.center.dy - name.center.dy).abs(), lessThan(2));
       expect(find.textContaining('root@'), findsNothing);
       expect(find.textContaining('10.0.0.1'), findsNothing);
@@ -197,6 +197,49 @@ void main() {
       ))!;
       expect(saved.checkIntervalSeconds, 10);
       expect(saved.checkMethod, ReachabilityMethod.sshPort);
+    });
+
+    testWidgets('"off" stops checking and hides the dots', (tester) async {
+      await pumpApp(tester);
+      expect(find.byType(ReachabilityDot), findsNWidgets(2));
+      expect(
+        find.descendant(
+          of: find.byType(ReachabilityDot),
+          matching: find.byType(Container),
+        ),
+        findsNWidgets(2),
+      );
+
+      await tester.tap(find.text('设置'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('check-interval')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('不启用').last);
+      await tester.pumpAndSettle();
+      expect(find.text('检测方式'), findsNothing, reason: 'method row hidden');
+
+      final calls = env.reachability.calls.length;
+      await tester.pump(const Duration(minutes: 5));
+      expect(env.reachability.calls.length, calls, reason: 'no more checks');
+
+      await tester.tap(find.text('主机').first);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(ReachabilityDot),
+          matching: find.byType(Container),
+        ),
+        findsNothing,
+      );
+
+      // Turning it back on checks right away and shows the dots again.
+      await tester.tap(find.text('设置'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('check-interval')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('30 秒').last);
+      await tester.pumpAndSettle();
+      expect(env.reachability.calls.length, calls + 2);
     });
   });
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import '../../core/json_file.dart';
+import '../../core/app_log.dart';
 
 /// OpenSSH-style fingerprint text: `SHA256:<base64 without padding>`.
 String formatFingerprint(Uint8List sha256) =>
@@ -73,6 +74,12 @@ class KnownHostsStore {
       hostPort: key,
       offered: offered,
       previous: known,
+    );
+    log.info(
+      'hostkey',
+      '${known == null ? 'New' : 'CHANGED'} key for $key '
+          '(${offered.keyType} ${offered.fingerprint}): '
+          '${trusted ? 'trusted' : 'rejected'}',
     );
     if (trusted) {
       entries[key] = offered;

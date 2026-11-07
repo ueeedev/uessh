@@ -13,6 +13,7 @@ import '../settings/settings_providers.dart';
 import 'info_panel.dart';
 import 'sessions_providers.dart';
 import 'terminal_session.dart';
+import '../../l10n/l10n.dart';
 
 class TerminalPage extends ConsumerWidget {
   const TerminalPage({super.key, required this.isVisible});
@@ -25,12 +26,12 @@ class TerminalPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(sessionsProvider);
     if (state.sessions.isEmpty) {
-      return const PageScaffold(
-        title: '终端',
+      return PageScaffold(
+        title: context.l10n.navTerminal,
         child: EmptyState(
           icon: Icons.terminal,
-          title: '没有打开的会话',
-          message: '在“主机”里点一台服务器即可连接',
+          title: context.l10n.noSessionsTitle,
+          message: context.l10n.noSessionsMessage,
         ),
       );
     }
@@ -200,7 +201,9 @@ class _TabStrip extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: IconButton(
-                tooltip: infoOpen ? '隐藏信息栏' : '显示信息栏',
+                tooltip: infoOpen
+                    ? context.l10n.hideInfoPanel
+                    : context.l10n.showInfoPanel,
                 isSelected: infoOpen,
                 icon: const Icon(Icons.view_sidebar_outlined),
                 selectedIcon: const Icon(Icons.view_sidebar),
@@ -279,7 +282,7 @@ class _SessionTab extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: '关闭',
+                    tooltip: context.l10n.close,
                     iconSize: 16,
                     visualDensity: VisualDensity.compact,
                     color: fg,
@@ -305,16 +308,22 @@ class _StatusDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (status == SessionStatus.connecting) {
-      return const Tooltip(
-        message: '正在连接',
-        child: ShapeMorphIndicator(size: 14),
+      return Tooltip(
+        message: context.l10n.statusConnecting,
+        child: const ShapeMorphIndicator(size: 14),
       );
     }
     final (color, label) = switch (status) {
-      SessionStatus.connecting => (scheme.tertiary, '正在连接'),
-      SessionStatus.connected => (Colors.green.shade500, '已连接'),
-      SessionStatus.failed => (scheme.error, '连接失败'),
-      SessionStatus.closed => (scheme.outline, '已断开'),
+      SessionStatus.connecting => (
+        scheme.tertiary,
+        context.l10n.statusConnecting,
+      ),
+      SessionStatus.connected => (
+        Colors.green.shade500,
+        context.l10n.statusConnected,
+      ),
+      SessionStatus.failed => (scheme.error, context.l10n.statusFailed),
+      SessionStatus.closed => (scheme.outline, context.l10n.statusClosed),
     };
     return Tooltip(
       message: label,
@@ -358,17 +367,17 @@ Future<void> requestCloseSession(
       context: context,
       builder: (context) => AlertDialog(
         icon: const Icon(Icons.tab_unselected),
-        title: const Text('关闭标签页？'),
-        content: Text('与 ${session.host.displayName} 的 SSH 连接会断开，终端里的内容不会保留。'),
+        title: Text(context.l10n.closeTabTitle),
+        content: Text(context.l10n.closeTabBody(session.host.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             autofocus: true, // Enter confirms, Esc cancels
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('关闭'),
+            child: Text(context.l10n.close),
           ),
         ],
       ),
@@ -458,9 +467,9 @@ class _TerminalPaneState extends State<TerminalPane> {
         PopupMenuItem(
           value: 'copy',
           enabled: selection != null,
-          child: const Text('复制'),
+          child: Text(context.l10n.copy),
         ),
-        const PopupMenuItem(value: 'paste', child: Text('粘贴')),
+        PopupMenuItem(value: 'paste', child: Text(context.l10n.paste)),
       ],
     );
     if (!mounted) return;
@@ -523,9 +532,12 @@ class _TerminalPaneState extends State<TerminalPane> {
                   ? Icons.error_outline
                   : Icons.link_off,
             ),
-            content: Text(session.error ?? '连接已关闭'),
+            content: Text(session.error ?? context.l10n.connectionClosed),
             actions: [
-              TextButton(onPressed: session.connect, child: const Text('重新连接')),
+              TextButton(
+                onPressed: session.connect,
+                child: Text(context.l10n.reconnect),
+              ),
             ],
           ),
         Expanded(
@@ -578,7 +590,10 @@ class _ConnectingOverlay extends StatelessWidget {
           children: [
             const ShapeMorphIndicator(size: 64),
             const SizedBox(height: 20),
-            Text('正在连接', style: theme.textTheme.titleMedium),
+            Text(
+              context.l10n.statusConnecting,
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 4),
             Text(
               target,

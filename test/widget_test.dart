@@ -80,10 +80,10 @@ void main() {
     expect(json, isNot(contains('hunter2')));
     expect(env.secrets.values.values, contains('hunter2'));
 
-    // Edit: the saved password is pre-filled
-    await tester.tap(find.byTooltip('更多'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('编辑'));
+    // Edit (the card's edit button opens the editor directly): the saved
+    // password is pre-filled.
+    expect(find.byTooltip('更多'), findsNothing, reason: 'no menu any more');
+    await tester.tap(find.byTooltip('编辑'));
     await settleIo(tester);
     expect(find.text('编辑主机'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, 'hunter2'), findsOneWidget);
@@ -95,13 +95,24 @@ void main() {
       contains('"port": 2200'),
     );
 
-    // Delete
-    await tester.tap(find.byTooltip('更多'));
+    // Delete from the bottom of the editor; asks first.
+    await tester.tap(find.byTooltip('编辑'));
+    await settleIo(tester);
+    await tester.tap(find.byKey(const ValueKey('delete-host')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('删除'));
+    expect(find.text('删除 测试机？'), findsOneWidget);
+    await tester.tap(
+      find.descendant(of: find.byType(AlertDialog), matching: find.text('取消')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('编辑主机'), findsOneWidget, reason: 'cancel keeps it');
+
+    await tester.tap(find.byKey(const ValueKey('delete-host')));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, '删除'));
     await settleIo(tester);
+    expect(find.text('编辑主机'), findsNothing, reason: 'sheet closed');
+    expect(find.text('放弃未保存的修改？'), findsNothing);
     expect(find.text('还没有主机'), findsOneWidget);
     expect(env.secrets.values, isEmpty);
   });
@@ -287,9 +298,7 @@ void main() {
       await pumpApp(tester);
 
       Future<void> openEdit() async {
-        await tester.tap(find.byTooltip('更多'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('编辑'));
+        await tester.tap(find.byTooltip('编辑'));
         await settleIo(tester);
       }
 
@@ -447,6 +456,46 @@ void main() {
       expect(json, contains('数据库'));
     });
 
+    testWidgets('new group: buttons swap with animation, field width fixed', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await tester.tap(find.text('新建主机'));
+      await tester.pumpAndSettle();
+      final before = tester.getRect(
+        find.byKey(const ValueKey('group-dropdown')),
+      );
+      final actions = tester.getRect(
+        find.byKey(const ValueKey('group-actions')),
+      );
+
+      await tester.tap(find.text('新建分组'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      // Mid-animation: both the old and the new controls are on screen.
+      expect(find.byKey(const ValueKey('group-dropdown')), findsOneWidget);
+      expect(find.byKey(const ValueKey('new-group-field')), findsOneWidget);
+      await tester.pumpAndSettle();
+
+      final field = tester.getRect(
+        find.byKey(const ValueKey('new-group-field')),
+      );
+      expect(field.left, before.left);
+      expect(field.width, before.width, reason: 'left field keeps its size');
+      expect(
+        tester.getRect(find.byKey(const ValueKey('group-actions'))),
+        actions,
+      );
+      expect(find.byTooltip('添加分组'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('取消新建'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getRect(find.byKey(const ValueKey('group-dropdown'))).width,
+        before.width,
+      );
+    });
+
     testWidgets('pick an existing group; cancelling a new one keeps nothing', (
       tester,
     ) async {
@@ -454,9 +503,7 @@ void main() {
       await pumpApp(tester);
 
       // Edit "loose" (ungrouped) and move it to 测试.
-      await tester.tap(find.byTooltip('更多').last);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('编辑'));
+      await tester.tap(find.byTooltip('编辑').last);
       await settleIo(tester);
       await tester.tap(find.byType(AppDropdown<String>));
       await tester.pumpAndSettle();
@@ -532,6 +579,10 @@ void main() {
   });
 
   testWidgets('dropdown menus open with an animation', (tester) async {
+    final intervalArrow = find.descendant(
+      of: find.byKey(const ValueKey('check-interval')),
+      matching: find.byType(AnimatedRotation),
+    );
     await pumpApp(tester);
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
@@ -546,7 +597,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('check-interval')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 40));
-    final rot = tester.widget<AnimatedRotation>(find.byType(AnimatedRotation));
+    final rot = tester.widget<AnimatedRotation>(intervalArrow);
     expect(rot.turns, 0.5, reason: 'arrow turns while open');
     await tester.pumpAndSettle();
     expect(find.text('5 分钟'), findsOneWidget);
@@ -554,10 +605,7 @@ void main() {
     await tester.tap(find.text('5 分钟'));
     await tester.pumpAndSettle();
     expect(find.text('5 分钟'), findsOneWidget, reason: 'now the value');
-    expect(
-      tester.widget<AnimatedRotation>(find.byType(AnimatedRotation)).turns,
-      0,
-    );
+    expect(tester.widget<AnimatedRotation>(intervalArrow).turns, 0);
   });
 
   testWidgets('search filters the host list', (tester) async {

@@ -13,6 +13,10 @@ enum ReachabilityMethod {
   sshPort,
 }
 
+/// UI language; [system] follows the OS (Chinese if it's Chinese,
+/// English otherwise).
+enum AppLanguage { system, zh, en }
+
 class AppSettings {
   const AppSettings({
     this.themeMode = ThemeMode.system,
@@ -21,6 +25,7 @@ class AppSettings {
     this.checkMethod = ReachabilityMethod.ping,
     this.autoLockMinutes = defaultAutoLock,
     this.showTerminalInfo = false,
+    this.language = AppLanguage.system,
   });
 
   /// Lock after this many idle minutes (master password only); 0 = never.
@@ -30,7 +35,8 @@ class AppSettings {
   static const defaultCheckInterval = 30;
 
   /// Choices offered in settings, in seconds.
-  static const checkIntervalChoices = [10, 15, 30, 60, 120, 300];
+  /// Choices offered in settings, in seconds; 0 turns checking off.
+  static const checkIntervalChoices = [0, 10, 15, 30, 60, 120, 300];
 
   final ThemeMode themeMode;
   final bool followSystemAccent;
@@ -41,7 +47,12 @@ class AppSettings {
   /// Whether the info panel beside the terminal is open.
   final bool showTerminalInfo;
 
+  final AppLanguage language;
+
   Duration get checkInterval => Duration(seconds: checkIntervalSeconds);
+
+  /// False when the user picked "off": no checks, no status dots.
+  bool get checksEnabled => checkIntervalSeconds > 0;
 
   AppSettings copyWith({
     ThemeMode? themeMode,
@@ -50,6 +61,7 @@ class AppSettings {
     ReachabilityMethod? checkMethod,
     int? autoLockMinutes,
     bool? showTerminalInfo,
+    AppLanguage? language,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     followSystemAccent: followSystemAccent ?? this.followSystemAccent,
@@ -57,6 +69,7 @@ class AppSettings {
     checkMethod: checkMethod ?? this.checkMethod,
     autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
     showTerminalInfo: showTerminalInfo ?? this.showTerminalInfo,
+    language: language ?? this.language,
   );
 
   Map<String, Object?> toJson() => {
@@ -66,6 +79,7 @@ class AppSettings {
     'checkMethod': checkMethod.name,
     'autoLockMinutes': autoLockMinutes,
     'showTerminalInfo': showTerminalInfo,
+    'language': language.name,
   };
 
   /// Unknown or invalid values fall back to defaults.
@@ -77,7 +91,8 @@ class AppSettings {
       themeMode: ThemeMode.values.asNameMap()[json['themeMode']] ?? d.themeMode,
       followSystemAccent:
           json['followSystemAccent'] as bool? ?? d.followSystemAccent,
-      checkIntervalSeconds: (interval != null && interval >= 5)
+      checkIntervalSeconds:
+          (interval != null && (interval == 0 || interval >= 5))
           ? interval
           : d.checkIntervalSeconds,
       checkMethod:
@@ -87,6 +102,7 @@ class AppSettings {
           ? autoLock
           : d.autoLockMinutes,
       showTerminalInfo: json['showTerminalInfo'] as bool? ?? d.showTerminalInfo,
+      language: AppLanguage.values.asNameMap()[json['language']] ?? d.language,
     );
   }
 }

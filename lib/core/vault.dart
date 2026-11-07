@@ -8,6 +8,7 @@ import 'package:cryptography/cryptography.dart';
 
 import 'json_file.dart';
 import 'secret_store.dart';
+import '../l10n/l10n.dart';
 
 /// How the vault's data key is protected.
 enum VaultMode {
@@ -20,12 +21,12 @@ enum VaultMode {
 
 class VaultLockedException implements Exception {
   @override
-  String toString() => '保险库已锁定';
+  String toString() => currentL10n.vaultLocked;
 }
 
 class WrongPasswordException implements Exception {
   @override
-  String toString() => '主密码不正确';
+  String toString() => currentL10n.wrongMasterPassword;
 }
 
 /// The app's own encrypted store for passwords, private keys and
@@ -93,7 +94,7 @@ class Vault {
     }
     final json = (data as Map).cast<String, Object?>();
     if (json['version'] != _version) {
-      throw FormatException('未知的保险库版本：${json['version']}');
+      throw FormatException('Unknown vault version: ${json['version']}');
     }
     final mode = VaultMode.values.byName(json['mode'] as String);
     final vault = Vault._(
@@ -273,7 +274,7 @@ class Vault {
 
 /// AES-GCM output, base64 in JSON.
 class _Box {
-  _Box(this.nonce, this.cipherText, this.mac);
+  const _Box(this.nonce, this.cipherText, this.mac);
 
   final List<int> nonce;
   final List<int> cipherText;
@@ -294,7 +295,7 @@ class _Box {
 
 /// Argon2id settings, stored with the vault so they can be raised later.
 class _KdfParams {
-  _KdfParams(this.salt, {this.memoryKiB = 65536, this.iterations = 3});
+  const _KdfParams(this.salt, {this.memoryKiB = 65536, this.iterations = 3});
 
   final List<int> salt;
   final int memoryKiB;
@@ -323,7 +324,7 @@ class _KdfParams {
 
   factory _KdfParams.fromJson(Map json) {
     if (json['name'] != 'argon2id') {
-      throw FormatException('不支持的密钥派生算法：${json['name']}');
+      throw FormatException('Unsupported key derivation: ${json['name']}');
     }
     return _KdfParams(
       base64.decode(json['salt'] as String),
@@ -335,7 +336,7 @@ class _KdfParams {
 
 /// [SecretStore] backed by the vault.
 class VaultSecretStore implements SecretStore {
-  VaultSecretStore(this.vault);
+  const VaultSecretStore(this.vault);
 
   final Vault vault;
 

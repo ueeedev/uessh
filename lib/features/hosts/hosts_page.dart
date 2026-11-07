@@ -8,6 +8,8 @@ import 'host.dart';
 import 'host_editor_sheet.dart';
 import 'hosts_providers.dart';
 import 'reachability.dart';
+import '../settings/settings_providers.dart';
+import '../../l10n/l10n.dart';
 
 /// Search bar and "new host" button share this height.
 const _actionHeight = 44.0;
@@ -27,42 +29,18 @@ class _HostsPageState extends ConsumerState<HostsPage> {
     ref.read(navigationProvider.notifier).go(AppDestination.terminal);
   }
 
-  Future<void> _delete(Host host) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        icon: const Icon(Icons.delete_outline),
-        title: Text('删除 ${host.displayName}？'),
-        content: const Text('主机信息和保存的密码、私钥会一起删除，无法恢复。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      await ref.read(hostsProvider.notifier).remove(host.id);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final hosts = ref.watch(hostsProvider);
 
     return PageScaffold(
-      title: '主机',
+      title: context.l10n.navHosts,
       actions: [
         SizedBox(
           width: 280,
           height: _actionHeight,
           child: SearchBar(
-            hintText: '搜索主机',
+            hintText: context.l10n.searchHosts,
             leading: const Icon(Icons.search),
             elevation: const WidgetStatePropertyAll(0),
             constraints: const BoxConstraints.tightFor(height: _actionHeight),
@@ -78,7 +56,7 @@ class _HostsPageState extends ConsumerState<HostsPage> {
             ),
             onPressed: () => showHostEditor(context),
             icon: const Icon(Icons.add),
-            label: const Text('新建主机'),
+            label: Text(context.l10n.newHost),
           ),
         ),
       ],
@@ -86,23 +64,23 @@ class _HostsPageState extends ConsumerState<HostsPage> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(
           icon: Icons.error_outline,
-          title: '读取主机列表失败',
+          title: context.l10n.loadHostsFailed,
           message: '$e',
         ),
         data: (data) {
           if (data.hosts.isEmpty && data.groups.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.dns_outlined,
-              title: '还没有主机',
-              message: '添加一台服务器后，就可以从这里一键连接',
+              title: context.l10n.noHostsTitle,
+              message: context.l10n.noHostsMessage,
             );
           }
           final sections = buildHostSections(data, _query);
           if (sections.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.search_off,
-              title: '没有匹配的主机',
-              message: '换个关键词试试',
+              title: context.l10n.noMatchesTitle,
+              message: context.l10n.noMatchesMessage,
             );
           }
           // Headers only make sense once there is at least one group.
@@ -141,7 +119,6 @@ class _HostsPageState extends ConsumerState<HostsPage> {
                         host: host,
                         onConnect: () => _connect(host),
                         onEdit: () => showHostEditor(context, host: host),
-                        onDelete: () => _delete(host),
                       );
                     },
                   ),
@@ -158,7 +135,7 @@ class _HostsPageState extends ConsumerState<HostsPage> {
     final name = await showDialog<String>(
       context: context,
       builder: (_) => GroupNameDialog(
-        title: '重命名分组',
+        title: context.l10n.renameGroup,
         initialName: group.name,
         takenNames: {
           for (final g in data.groups)
@@ -176,18 +153,20 @@ class _HostsPageState extends ConsumerState<HostsPage> {
       context: context,
       builder: (context) => AlertDialog(
         icon: const Icon(Icons.folder_delete_outlined),
-        title: Text('删除分组“${group.name}”？'),
+        title: Text(context.l10n.deleteGroupTitle(group.name)),
         content: Text(
-          count == 0 ? '这个分组里没有主机。' : '组内 $count 台主机会移到“未分组”，主机本身不会被删除。',
+          count == 0
+              ? context.l10n.deleteGroupEmpty
+              : context.l10n.deleteGroupBody(count),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('删除分组'),
+            child: Text(context.l10n.deleteGroup),
           ),
         ],
       ),
@@ -281,10 +260,10 @@ class GroupHeader extends StatelessWidget {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Tooltip(
-                      message: group?.name ?? '未分组',
+                      message: group?.name ?? context.l10n.ungrouped,
                       waitDuration: const Duration(milliseconds: 600),
                       child: Text(
-                        group?.name ?? '未分组',
+                        group?.name ?? context.l10n.ungrouped,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
@@ -314,7 +293,7 @@ class GroupHeader extends StatelessWidget {
               child: group == null
                   ? null
                   : PopupMenuButton<String>(
-                      tooltip: '分组操作',
+                      tooltip: context.l10n.groupActions,
                       padding: EdgeInsets.zero,
                       icon: const Icon(Icons.more_horiz, size: 20),
                       onSelected: (v) => switch (v) {
@@ -322,19 +301,21 @@ class GroupHeader extends StatelessWidget {
                         'delete' => onDelete?.call(),
                         _ => null,
                       },
-                      itemBuilder: (_) => const [
+                      itemBuilder: (_) => [
                         PopupMenuItem(
                           value: 'rename',
                           child: ListTile(
-                            leading: Icon(Icons.drive_file_rename_outline),
-                            title: Text('重命名分组'),
+                            leading: const Icon(
+                              Icons.drive_file_rename_outline,
+                            ),
+                            title: Text(context.l10n.renameGroup),
                           ),
                         ),
                         PopupMenuItem(
                           value: 'delete',
                           child: ListTile(
-                            leading: Icon(Icons.folder_delete_outlined),
-                            title: Text('删除分组'),
+                            leading: const Icon(Icons.folder_delete_outlined),
+                            title: Text(context.l10n.deleteGroup),
                           ),
                         ),
                       ],
@@ -356,7 +337,7 @@ class _EmptyGroupHint extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 26, bottom: 4),
       child: Text(
-        '这个分组还没有主机，编辑主机时可以把它放进来',
+        context.l10n.emptyGroupHint,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.outline,
         ),
@@ -396,9 +377,9 @@ class _GroupNameDialogState extends State<GroupNameDialog> {
   void _submit() {
     final name = _controller.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = '请输入分组名称');
+      setState(() => _error = context.l10n.groupNameRequired);
     } else if (widget.takenNames.contains(name.toLowerCase())) {
-      setState(() => _error = '已经有同名的分组');
+      setState(() => _error = context.l10n.groupNameTaken);
     } else {
       Navigator.pop(context, name);
     }
@@ -418,15 +399,18 @@ class _GroupNameDialogState extends State<GroupNameDialog> {
             if (_error != null) setState(() => _error = null);
           },
           onSubmitted: (_) => _submit(),
-          decoration: InputDecoration(labelText: '分组名称', errorText: _error),
+          decoration: InputDecoration(
+            labelText: context.l10n.groupName,
+            errorText: _error,
+          ),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(context.l10n.cancel),
         ),
-        FilledButton(onPressed: _submit, child: const Text('确定')),
+        FilledButton(onPressed: _submit, child: Text(context.l10n.ok)),
       ],
     );
   }
@@ -438,13 +422,11 @@ class HostCard extends StatelessWidget {
     required this.host,
     required this.onConnect,
     required this.onEdit,
-    required this.onDelete,
   });
 
   final Host host;
   final VoidCallback onConnect;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -469,7 +451,6 @@ class HostCard extends StatelessWidget {
                 child: Row(
                   children: [
                     ReachabilityDot(hostId: host.id),
-                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         host.displayName,
@@ -481,37 +462,10 @@ class HostCard extends StatelessWidget {
                   ],
                 ),
               ),
-              PopupMenuButton<String>(
-                tooltip: '更多',
-                onSelected: (v) => switch (v) {
-                  'connect' => onConnect(),
-                  'edit' => onEdit(),
-                  'delete' => onDelete(),
-                  _ => null,
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                    value: 'connect',
-                    child: ListTile(
-                      leading: Icon(Icons.terminal),
-                      title: Text('连接'),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: ListTile(
-                      leading: Icon(Icons.edit_outlined),
-                      title: Text('编辑'),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: ListTile(
-                      leading: Icon(Icons.delete_outline),
-                      title: Text('删除'),
-                    ),
-                  ),
-                ],
+              IconButton(
+                tooltip: context.l10n.edit,
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: onEdit,
               ),
             ],
           ),
@@ -529,6 +483,10 @@ class ReachabilityDot extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Checking turned off in settings: no dot at all.
+    if (!ref.watch(settingsProvider.select((s) => s.checksEnabled))) {
+      return const SizedBox.shrink();
+    }
     final r =
         ref.watch(reachabilityProvider.select((m) => m[hostId])) ??
         Reachability.unknown;
@@ -537,21 +495,26 @@ class ReachabilityDot extends ConsumerWidget {
       ReachState.up => (
         const Color(0xFF34C759),
         r.latency == null
-            ? '连通'
-            : '连通 · ${(r.latency!.inMicroseconds / 1000).toStringAsFixed(0)} ms',
+            ? context.l10n.reachUp
+            : context.l10n.reachUpLatency(
+                (r.latency!.inMicroseconds / 1000).round(),
+              ),
       ),
-      ReachState.down => (const Color(0xFFFF3B30), '不通'),
-      ReachState.unknown => (scheme.outline, '正在检测…'),
+      ReachState.down => (const Color(0xFFFF3B30), context.l10n.reachDown),
+      ReachState.unknown => (scheme.outline, context.l10n.reachChecking),
     };
-    return Tooltip(
-      message: label,
-      child: Semantics(
-        label: label,
-        child: Container(
-          key: ValueKey('reach-${r.state.name}'),
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Tooltip(
+        message: label,
+        child: Semantics(
+          label: label,
+          child: Container(
+            key: ValueKey('reach-${r.state.name}'),
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
         ),
       ),
     );

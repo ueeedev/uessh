@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_providers.dart';
 import '../hosts/host.dart';
 import '../hosts/hosts_providers.dart';
+import '../keys/keys_providers.dart';
 import 'known_hosts.dart';
 import 'session_prompts.dart';
 import 'terminal_session.dart';
@@ -50,6 +51,7 @@ class SessionsNotifier extends Notifier<SessionsState> {
       repository: ref.read(hostRepositoryProvider),
       knownHosts: ref.read(knownHostsProvider),
       prompts: ref.read(sessionPromptsProvider),
+      keys: ref.read(keyRepositoryProvider),
     );
     _open.add(session);
     state = SessionsState(

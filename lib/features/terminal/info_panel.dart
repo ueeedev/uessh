@@ -6,8 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../widgets/shape_morph_indicator.dart';
 import '../hosts/host.dart';
 import '../hosts/reachability.dart';
+import '../settings/settings_providers.dart';
 import 'server_stats.dart';
 import 'terminal_session.dart';
+import '../../l10n/l10n.dart';
 
 const infoPanelWidth = 300.0;
 
@@ -120,9 +122,14 @@ class _TerminalInfoPanelState extends State<TerminalInfoPanel> {
             padding: const EdgeInsets.fromLTRB(20, 12, 8, 4),
             child: Row(
               children: [
-                Expanded(child: Text('信息', style: theme.textTheme.titleMedium)),
+                Expanded(
+                  child: Text(
+                    context.l10n.info,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
                 IconButton(
-                  tooltip: '关闭信息栏',
+                  tooltip: context.l10n.closeInfoPanel,
                   icon: const Icon(Icons.close),
                   onPressed: widget.onClose,
                 ),
@@ -136,25 +143,28 @@ class _TerminalInfoPanelState extends State<TerminalInfoPanel> {
                 _ConnectionSection(session: _session),
                 const SizedBox(height: 20),
                 if (!connected)
-                  _Hint('连接后显示服务器的系统信息')
+                  _Hint(context.l10n.infoAfterConnect)
                 else if (stats == null && _failed)
-                  _Hint('无法获取系统信息')
+                  _Hint(context.l10n.infoUnavailable)
                 else if (stats == null)
                   const _Loading()
                 else ...[
                   _Section(
-                    title: '系统',
+                    title: context.l10n.sectionSystem,
                     rows: [
-                      if (stats.hostname != null) ('主机名', stats.hostname!),
-                      if (stats.os != null) ('系统', stats.os!),
-                      if (stats.kernel != null) ('内核', stats.kernel!),
+                      if (stats.hostname != null)
+                        (context.l10n.hostname, stats.hostname!),
+                      if (stats.os != null)
+                        (context.l10n.sectionSystem, stats.os!),
+                      if (stats.kernel != null)
+                        (context.l10n.kernel, stats.kernel!),
                       if (stats.uptime != null)
-                        ('运行时间', formatDuration(stats.uptime!)),
+                        (context.l10n.uptime, formatDuration(stats.uptime!)),
                       if (stats.cpuCount != null)
-                        ('CPU', '${stats.cpuCount} 核'),
+                        ('CPU', context.l10n.cpuCores(stats.cpuCount!)),
                       if (stats.load != null)
                         (
-                          '负载',
+                          context.l10n.load,
                           stats.load!
                               .map((v) => v.toStringAsFixed(2))
                               .join('  '),
@@ -163,25 +173,25 @@ class _TerminalInfoPanelState extends State<TerminalInfoPanel> {
                   ),
                   if (stats.hasResources) ...[
                     const SizedBox(height: 20),
-                    _SectionTitle('资源'),
+                    _SectionTitle(context.l10n.resources),
                     if (stats.cpuTimes != null)
                       _UsageBar(
                         label: 'CPU',
                         fraction: _cpuUsage,
                         detail: _cpuUsage == null
-                            ? '计算中…'
+                            ? context.l10n.calculating
                             : '${(_cpuUsage! * 100).toStringAsFixed(0)}%',
                       ),
                     if (stats.memTotal != null && stats.memUsed != null)
                       _UsageBar(
-                        label: '内存',
+                        label: context.l10n.memory,
                         fraction: stats.memUsed! / stats.memTotal!,
                         detail:
                             '${formatBytes(stats.memUsed!)} / ${formatBytes(stats.memTotal!)}',
                       ),
                     if (stats.diskTotal != null && stats.diskUsed != null)
                       _UsageBar(
-                        label: '磁盘 /',
+                        label: context.l10n.diskRoot,
                         fraction: stats.diskUsed! / stats.diskTotal!,
                         detail:
                             '${formatBytes(stats.diskUsed!)} / ${formatBytes(stats.diskTotal!)}',
@@ -205,25 +215,38 @@ class _ConnectionSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final host = session.host;
-    final reach = ref.watch(reachabilityProvider.select((m) => m[host.id]));
+    final reach = ref.watch(settingsProvider.select((s) => s.checksEnabled))
+        ? ref.watch(reachabilityProvider.select((m) => m[host.id]))
+        : null;
     final connectedAt = session.connectedAt;
     final status = switch (session.status) {
-      SessionStatus.connecting => '正在连接',
-      SessionStatus.connected => '已连接',
-      SessionStatus.failed => '连接失败',
-      SessionStatus.closed => '已断开',
+      SessionStatus.connecting => context.l10n.statusConnecting,
+      SessionStatus.connected => context.l10n.statusConnected,
+      SessionStatus.failed => context.l10n.statusFailed,
+      SessionStatus.closed => context.l10n.statusClosed,
     };
     return _Section(
-      title: '连接',
+      title: context.l10n.sectionConnection,
       rows: [
-        ('名称', host.displayName),
-        ('地址', host.target),
-        ('认证', host.authMethod == AuthMethod.key ? '私钥' : '密码'),
-        ('状态', status),
+        (context.l10n.fieldName, host.displayName),
+        (context.l10n.fieldAddress, host.target),
+        (
+          context.l10n.auth,
+          host.authMethod == AuthMethod.key
+              ? context.l10n.authKey
+              : context.l10n.authPassword,
+        ),
+        (context.l10n.status, status),
         if (connectedAt != null)
-          ('已连接', formatDuration(DateTime.now().difference(connectedAt))),
+          (
+            context.l10n.statusConnected,
+            formatDuration(DateTime.now().difference(connectedAt)),
+          ),
         if (reach?.latency != null)
-          ('延迟', '${(reach!.latency!.inMicroseconds / 1000).round()} ms'),
+          (
+            context.l10n.latency,
+            '${(reach!.latency!.inMicroseconds / 1000).round()} ms',
+          ),
       ],
     );
   }
@@ -368,11 +391,11 @@ class _Loading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        ShapeMorphIndicator(size: 20),
-        SizedBox(width: 10),
-        _Hint('正在获取系统信息…'),
+        const ShapeMorphIndicator(size: 20),
+        const SizedBox(width: 10),
+        _Hint(context.l10n.fetchingInfo),
       ],
     );
   }
