@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uessh/core/app_providers.dart';
 import 'package:uessh/core/secret_store.dart';
+import 'package:uessh/core/vault.dart';
 import 'package:uessh/features/hosts/host.dart';
 import 'package:uessh/features/hosts/reachability.dart';
 import 'package:uessh/features/settings/app_settings.dart';
@@ -21,9 +22,14 @@ class TestEnv {
   final MemorySecretStore secrets;
   final FakeReachabilityChecker reachability;
 
+  /// Unlocked, local mode, memory only. Tests of the lock screen replace
+  /// it with a real vault (see vault_ui_test.dart).
+  Vault vault = Vault.unlockedInMemory();
+
   List<Override> get overrides => [
     dataDirProvider.overrideWithValue(dataDir),
     secretStoreProvider.overrideWithValue(secrets),
+    vaultProvider.overrideWithValue(vault),
     reachabilityCheckerProvider.overrideWithValue(reachability),
   ];
 
@@ -85,6 +91,25 @@ Future<void> settleIo(WidgetTester tester) async {
       () => Future<void>.delayed(const Duration(milliseconds: 5)),
     );
     await tester.pump();
+  }
+  await tester.pumpAndSettle();
+}
+
+/// Pumps until [done] is true, letting real async work (file I/O,
+/// isolates) progress between frames. Fails after [timeout].
+Future<void> pumpUntil(
+  WidgetTester tester,
+  bool Function() done, {
+  Duration timeout = const Duration(seconds: 15),
+}) async {
+  final end = DateTime.now().add(timeout);
+  while (!done()) {
+    if (DateTime.now().isAfter(end)) fail('pumpUntil timed out');
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 20)),
+    );
+    // Advance the fake clock too, so route transitions can finish.
+    await tester.pump(const Duration(milliseconds: 20));
   }
   await tester.pumpAndSettle();
 }

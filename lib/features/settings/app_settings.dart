@@ -19,7 +19,12 @@ class AppSettings {
     this.followSystemAccent = true,
     this.checkIntervalSeconds = defaultCheckInterval,
     this.checkMethod = ReachabilityMethod.ping,
+    this.autoLockMinutes = defaultAutoLock,
   });
+
+  /// Lock after this many idle minutes (master password only); 0 = never.
+  static const defaultAutoLock = 15;
+  static const autoLockChoices = [0, 5, 15, 30, 60];
 
   static const defaultCheckInterval = 30;
 
@@ -30,6 +35,7 @@ class AppSettings {
   final bool followSystemAccent;
   final int checkIntervalSeconds;
   final ReachabilityMethod checkMethod;
+  final int autoLockMinutes;
 
   Duration get checkInterval => Duration(seconds: checkIntervalSeconds);
 
@@ -38,11 +44,13 @@ class AppSettings {
     bool? followSystemAccent,
     int? checkIntervalSeconds,
     ReachabilityMethod? checkMethod,
+    int? autoLockMinutes,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     followSystemAccent: followSystemAccent ?? this.followSystemAccent,
     checkIntervalSeconds: checkIntervalSeconds ?? this.checkIntervalSeconds,
     checkMethod: checkMethod ?? this.checkMethod,
+    autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
   );
 
   Map<String, Object?> toJson() => {
@@ -50,12 +58,14 @@ class AppSettings {
     'followSystemAccent': followSystemAccent,
     'checkIntervalSeconds': checkIntervalSeconds,
     'checkMethod': checkMethod.name,
+    'autoLockMinutes': autoLockMinutes,
   };
 
   /// Unknown or invalid values fall back to defaults.
   factory AppSettings.fromJson(Map<String, Object?> json) {
     const d = AppSettings();
     final interval = (json['checkIntervalSeconds'] as num?)?.toInt();
+    final autoLock = (json['autoLockMinutes'] as num?)?.toInt();
     return AppSettings(
       themeMode: ThemeMode.values.asNameMap()[json['themeMode']] ?? d.themeMode,
       followSystemAccent:
@@ -66,6 +76,9 @@ class AppSettings {
       checkMethod:
           ReachabilityMethod.values.asNameMap()[json['checkMethod']] ??
           d.checkMethod,
+      autoLockMinutes: (autoLock != null && autoLock >= 0)
+          ? autoLock
+          : d.autoLockMinutes,
     );
   }
 }

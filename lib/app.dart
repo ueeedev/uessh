@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/app_providers.dart';
+import 'features/security/lock_screen.dart';
 import 'features/settings/settings_providers.dart';
 import 'shell/home_shell.dart';
 import 'theme/app_theme.dart';
@@ -29,6 +30,7 @@ class UesshApp extends ConsumerWidget {
           theme: AppTheme.build(Brightness.light, accent),
           darkTheme: AppTheme.build(Brightness.dark, accent),
           home: const HomeShell(),
+          builder: (context, child) => VaultGate(child: child!),
         );
       },
     );

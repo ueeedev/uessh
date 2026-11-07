@@ -61,6 +61,12 @@ class HostRepository {
   Future<void> deleteSecrets(String hostId) =>
       writeSecrets(hostId, const HostSecrets());
 
+  /// Every secret key a host can have (used to migrate old keychain data).
+  static List<String> secretKeys(String hostId) => [
+    for (final f in const ['password', 'privateKey', 'passphrase'])
+      _key(hostId, f),
+  ];
+
   static String _key(String hostId, String field) =>
       'uessh.host.$hostId.$field';
 }
