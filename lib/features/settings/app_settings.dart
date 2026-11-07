@@ -20,6 +20,7 @@ class AppSettings {
     this.checkIntervalSeconds = defaultCheckInterval,
     this.checkMethod = ReachabilityMethod.ping,
     this.autoLockMinutes = defaultAutoLock,
+    this.showTerminalInfo = false,
   });
 
   /// Lock after this many idle minutes (master password only); 0 = never.
@@ -37,6 +38,9 @@ class AppSettings {
   final ReachabilityMethod checkMethod;
   final int autoLockMinutes;
 
+  /// Whether the info panel beside the terminal is open.
+  final bool showTerminalInfo;
+
   Duration get checkInterval => Duration(seconds: checkIntervalSeconds);
 
   AppSettings copyWith({
@@ -45,12 +49,14 @@ class AppSettings {
     int? checkIntervalSeconds,
     ReachabilityMethod? checkMethod,
     int? autoLockMinutes,
+    bool? showTerminalInfo,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     followSystemAccent: followSystemAccent ?? this.followSystemAccent,
     checkIntervalSeconds: checkIntervalSeconds ?? this.checkIntervalSeconds,
     checkMethod: checkMethod ?? this.checkMethod,
     autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
+    showTerminalInfo: showTerminalInfo ?? this.showTerminalInfo,
   );
 
   Map<String, Object?> toJson() => {
@@ -59,6 +65,7 @@ class AppSettings {
     'checkIntervalSeconds': checkIntervalSeconds,
     'checkMethod': checkMethod.name,
     'autoLockMinutes': autoLockMinutes,
+    'showTerminalInfo': showTerminalInfo,
   };
 
   /// Unknown or invalid values fall back to defaults.
@@ -79,6 +86,7 @@ class AppSettings {
       autoLockMinutes: (autoLock != null && autoLock >= 0)
           ? autoLock
           : d.autoLockMinutes,
+      showTerminalInfo: json['showTerminalInfo'] as bool? ?? d.showTerminalInfo,
     );
   }
 }

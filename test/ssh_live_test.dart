@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uessh/features/hosts/host.dart';
 import 'package:uessh/features/hosts/host_repository.dart';
 import 'package:uessh/features/terminal/known_hosts.dart';
+import 'package:uessh/features/terminal/server_stats.dart';
 import 'package:uessh/features/terminal/terminal_session.dart';
 
 import 'test_helpers.dart';
@@ -99,6 +100,48 @@ void main() {
         '\r',
       );
       await waitForText(s, 'cols-132');
+      s.dispose();
+    },
+    skip: skipPassword,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
+
+  test(
+    'server stats come back over a side channel',
+    () async {
+      final host = hostWith(AuthMethod.password);
+      await repo.writeSecrets(host.id, HostSecrets(password: _password));
+      final s = sessionFor(host, FakePrompts());
+      await s.connect();
+      expect(s.connectedAt, isNotNull);
+
+      final out = await s.runCommand(serverStatsCommand);
+      expect(out, isNotNull);
+      final stats = ServerStats.parse(out!);
+      // ignore: avoid_print
+      print(
+        'hostname=${stats.hostname} os=${stats.os} kernel=${stats.kernel} '
+        'uptime=${stats.uptime} load=${stats.load} cpus=${stats.cpuCount} '
+        'mem=${stats.memUsed}/${stats.memTotal} disk=${stats.diskUsed}/${stats.diskTotal}',
+      );
+      expect(stats.hostname, isNotEmpty);
+      expect(stats.os, isNotEmpty);
+      expect(stats.memTotal, greaterThan(0));
+      expect(stats.diskTotal, greaterThan(0));
+      expect(stats.cpuCount, greaterThan(0));
+
+      // Two samples give a CPU usage figure.
+      await Future<void>.delayed(const Duration(seconds: 1));
+      final again = ServerStats.parse(
+        (await s.runCommand(serverStatsCommand))!,
+      );
+      expect(
+        again.cpuTimes!.usageSince(stats.cpuTimes!),
+        inInclusiveRange(0, 1),
+      );
+
+      // Nothing leaked into the interactive terminal.
+      expect(s.terminal.buffer.getText(), isNot(contains('@@hostname')));
       s.dispose();
     },
     skip: skipPassword,

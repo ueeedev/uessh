@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'window_drag_area.dart';
+
 /// Common page frame: title row with optional actions, then content.
 class PageScaffold extends StatelessWidget {
   const PageScaffold({
@@ -15,26 +17,33 @@ class PageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.headlineSmall,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // The header row doubles as the title bar on macOS.
+        WindowDragArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
                 ),
-              ),
-              ...actions,
-            ],
+                ...actions,
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
-          Expanded(child: child),
-        ],
-      ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(32, 0, 32, 24),
+            child: child,
+          ),
+        ),
+      ],
     );
   }
 }

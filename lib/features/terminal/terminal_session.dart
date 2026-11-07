@@ -53,6 +53,9 @@ class TerminalSession extends ChangeNotifier {
   /// Window title set by the remote shell (e.g. `user@server: ~`).
   String? title;
 
+  /// When the current connection's shell opened.
+  DateTime? connectedAt;
+
   SSHClient? _client;
   SSHSession? _shell;
   final _subs = <StreamSubscription<String>>[];
@@ -142,6 +145,7 @@ class TerminalSession extends ChangeNotifier {
       terminal.onOutput = (data) => shell.write(utf8.encode(data));
       terminal.onResize = (w, h, pw, ph) => shell.resizeTerminal(w, h, pw, ph);
 
+      connectedAt = DateTime.now();
       _setStatus(SessionStatus.connected);
 
       unawaited(
@@ -156,6 +160,23 @@ class TerminalSession extends ChangeNotifier {
       error = describeConnectError(e, host);
       terminal.write('\r\n\x1b[31m$error\x1b[0m\r\n');
       _setStatus(SessionStatus.failed);
+    }
+  }
+
+  /// Runs [command] on a separate channel of this connection (nothing
+  /// shows in the terminal) and returns its stdout, or null if not
+  /// connected, it fails, or it takes longer than [timeout].
+  Future<String?> runCommand(
+    String command, {
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
+    final client = _client;
+    if (client == null || status != SessionStatus.connected) return null;
+    try {
+      final out = await client.run(command, stderr: false).timeout(timeout);
+      return utf8.decode(out, allowMalformed: true);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -227,6 +248,7 @@ class TerminalSession extends ChangeNotifier {
   }
 
   void _teardown() {
+    connectedAt = null;
     for (final s in _subs) {
       s.cancel();
     }

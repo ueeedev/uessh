@@ -7,7 +7,10 @@ import 'package:xterm/xterm.dart';
 import '../../theme/terminal_theme.dart';
 import '../../widgets/fade_through_stack.dart';
 import '../../widgets/page_scaffold.dart';
+import '../../widgets/window_drag_area.dart';
 import '../../widgets/shape_morph_indicator.dart';
+import '../settings/settings_providers.dart';
+import 'info_panel.dart';
 import 'sessions_providers.dart';
 import 'terminal_session.dart';
 
@@ -35,41 +38,183 @@ class TerminalPage extends ConsumerWidget {
     final activeIndex = state.sessions.indexWhere(
       (s) => s.id == state.activeId,
     );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _TabStrip(state: state),
-        Expanded(
-          // Quicker than page switches: tabs are switched often.
-          child: FadeThroughIndexedStack(
-            duration: const Duration(milliseconds: 200),
-            index: activeIndex < 0 ? 0 : activeIndex,
-            children: [
-              for (final s in state.sessions)
-                TerminalPane(
-                  key: ValueKey(s.id),
-                  session: s,
-                  isActive: isVisible && s.id == state.activeId,
-                ),
-            ],
+    final active = state.active ?? state.sessions.first;
+    final showInfo = ref.watch(
+      settingsProvider.select((s) => s.showTerminalInfo),
+    );
+    void setInfo(bool v) => ref
+        .read(settingsProvider.notifier)
+        .update((s) => s.copyWith(showTerminalInfo: v));
+
+    void closeActive() {
+      final current = ref.read(sessionsProvider).active;
+      if (isVisible && current != null) {
+        requestCloseSession(context, ref, current);
+      }
+    }
+
+    // The terminal maps ⌘W/Ctrl+W to CloseTabIntent itself (so the shell
+    // doesn't get it); Shortcuts here cover focus elsewhere on the page.
+    return Shortcuts(
+      shortcuts: {closeTabActivator: const CloseTabIntent()},
+      child: Actions(
+        actions: {
+          CloseTabIntent: CallbackAction<CloseTabIntent>(
+            onInvoke: (_) {
+              closeActive();
+              return null;
+            },
           ),
+        },
+        child: _buildBody(
+          context,
+          ref,
+          state,
+          activeIndex,
+          active,
+          showInfo,
+          setInfo,
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    WidgetRef ref,
+    SessionsState state,
+    int activeIndex,
+    TerminalSession active,
+    bool showInfo,
+    void Function(bool) setInfo,
+  ) {
+    // Same colour as the tab strip, so the rounded terminal card and the
+    // info panel stand out from it in both light and dark themes.
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.surfaceContainer,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _TabStrip(
+            state: state,
+            infoOpen: showInfo,
+            onToggleInfo: () => setInfo(!showInfo),
+          ),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  // Quicker than page switches: tabs are switched often.
+                  child: FadeThroughIndexedStack(
+                    duration: const Duration(milliseconds: 200),
+                    index: activeIndex < 0 ? 0 : activeIndex,
+                    children: [
+                      for (final s in state.sessions)
+                        TerminalPane(
+                          key: ValueKey(s.id),
+                          session: s,
+                          isActive: isVisible && s.id == state.activeId,
+                        ),
+                    ],
+                  ),
+                ),
+                _SlidingPanel(
+                  open: showInfo,
+                  child: TerminalInfoPanel(
+                    key: ValueKey('info-${active.id}'),
+                    session: active,
+                    onClose: () => setInfo(false),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Slides its child in from the right edge; the terminal beside it
+/// shrinks to make room rather than being covered.
+class _SlidingPanel extends StatelessWidget {
+  const _SlidingPanel({required this.open, required this.child});
+
+  final bool open;
+  final Widget child;
+
+  static const _gap = 12.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: open ? 1 : 0),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) {
+        if (t == 0) return const SizedBox.shrink();
+        return SizedBox(
+          width: (infoPanelWidth + _gap) * t,
+          child: ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.centerLeft,
+              minWidth: infoPanelWidth + _gap,
+              maxWidth: infoPanelWidth + _gap,
+              child: Opacity(opacity: t, child: child),
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 0, _gap, _gap),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(terminalCardRadius),
+          child: child,
+        ),
+      ),
     );
   }
 }
 
 class _TabStrip extends ConsumerWidget {
-  const _TabStrip({required this.state});
+  const _TabStrip({
+    required this.state,
+    required this.infoOpen,
+    required this.onToggleInfo,
+  });
 
   final SessionsState state;
+  final bool infoOpen;
+  final VoidCallback onToggleInfo;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      height: 48,
-      color: scheme.surfaceContainer,
+    // Empty space in the tab strip doubles as the title bar on macOS.
+    return WindowDragArea(
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          children: [
+            Expanded(child: _tabs(ref)),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                tooltip: infoOpen ? '隐藏信息栏' : '显示信息栏',
+                isSelected: infoOpen,
+                icon: const Icon(Icons.view_sidebar_outlined),
+                selectedIcon: const Icon(Icons.view_sidebar),
+                onPressed: onToggleInfo,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tabs(WidgetRef ref) {
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
@@ -81,7 +226,7 @@ class _TabStrip extends ConsumerWidget {
             session: s,
             selected: s.id == state.activeId,
             onTap: () => ref.read(sessionsProvider.notifier).activate(s.id),
-            onClose: () => ref.read(sessionsProvider.notifier).close(s.id),
+            onClose: () => requestCloseSession(context, ref, s),
           );
         },
       ),
@@ -184,9 +329,59 @@ class _StatusDot extends StatelessWidget {
 
 /// Copy / paste shortcuts. Windows uses Ctrl+Shift so plain Ctrl+C, Ctrl+V
 /// and Ctrl+A still reach the shell.
+/// Close the current terminal tab: ⌘W on macOS, Ctrl+W elsewhere.
+class CloseTabIntent extends Intent {
+  const CloseTabIntent();
+}
+
+SingleActivator get closeTabActivator =>
+    defaultTargetPlatform == TargetPlatform.macOS
+    ? const SingleActivator(LogicalKeyboardKey.keyW, meta: true)
+    : const SingleActivator(LogicalKeyboardKey.keyW, control: true);
+
+/// Closes [session]'s tab, asking first while it is connected or
+/// connecting. Tabs whose connection already failed or ended close
+/// straight away: there is nothing left to lose.
+Future<void> requestCloseSession(
+  BuildContext context,
+  WidgetRef ref,
+  TerminalSession session,
+) async {
+  // A dialog (e.g. this confirmation, after a second ⌘W) is already on
+  // top of the page: don't stack another one.
+  if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
+  final live =
+      session.status == SessionStatus.connected ||
+      session.status == SessionStatus.connecting;
+  if (live) {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.tab_unselected),
+        title: const Text('关闭标签页？'),
+        content: Text('与 ${session.host.displayName} 的 SSH 连接会断开，终端里的内容不会保留。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            autofocus: true, // Enter confirms, Esc cancels
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+  }
+  ref.read(sessionsProvider.notifier).close(session.id);
+}
+
 Map<ShortcutActivator, Intent> get _terminalShortcuts {
   if (defaultTargetPlatform == TargetPlatform.macOS) {
     return {
+      closeTabActivator: const CloseTabIntent(),
       const SingleActivator(LogicalKeyboardKey.keyC, meta: true):
           CopySelectionTextIntent.copy,
       const SingleActivator(LogicalKeyboardKey.keyV, meta: true):
@@ -196,12 +391,17 @@ Map<ShortcutActivator, Intent> get _terminalShortcuts {
     };
   }
   return {
+    // Takes Ctrl+W from the shell (where it deletes a word), as asked.
+    closeTabActivator: const CloseTabIntent(),
     const SingleActivator(LogicalKeyboardKey.keyC, control: true, shift: true):
         CopySelectionTextIntent.copy,
     const SingleActivator(LogicalKeyboardKey.keyV, control: true, shift: true):
         const PasteTextIntent(SelectionChangedCause.keyboard),
   };
 }
+
+/// Corner radius of the terminal card and the info panel.
+const terminalCardRadius = 16.0;
 
 class TerminalPane extends StatefulWidget {
   const TerminalPane({
@@ -288,57 +488,74 @@ class _TerminalPaneState extends State<TerminalPane> {
     final session = widget.session;
     return ListenableBuilder(
       listenable: session,
-      builder: (context, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (session.status == SessionStatus.failed ||
-              session.status == SessionStatus.closed)
-            MaterialBanner(
-              backgroundColor: session.status == SessionStatus.failed
-                  ? scheme.errorContainer
-                  : scheme.surfaceContainerHigh,
-              leading: Icon(
-                session.status == SessionStatus.failed
-                    ? Icons.error_outline
-                    : Icons.link_off,
-              ),
-              content: Text(session.error ?? '连接已关闭'),
-              actions: [
-                TextButton(
-                  onPressed: session.connect,
-                  child: const Text('重新连接'),
-                ),
-              ],
-            ),
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                TerminalView(
-                  session.terminal,
-                  controller: session.controller,
-                  focusNode: _focusNode,
-                  theme: terminalTheme,
-                  textStyle: terminalTextStyle(),
-                  padding: const EdgeInsets.all(8),
-                  shortcuts: _terminalShortcuts,
-                  keyboardAppearance: scheme.brightness,
-                  onSecondaryTapDown: (details, _) => _showContextMenu(details),
-                ),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  child: session.status == SessionStatus.connecting
-                      ? _ConnectingOverlay(
-                          target: session.host.target,
-                          background: terminalTheme.background,
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ],
-            ),
+      builder: (context, _) => Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        // Terminal window as a rounded card.
+        child: ClipRRect(
+          key: const ValueKey('terminal-card'),
+          borderRadius: BorderRadius.circular(terminalCardRadius),
+          child: ColoredBox(
+            color: terminalTheme.background,
+            child: _buildCard(context, session, terminalTheme),
           ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildCard(
+    BuildContext context,
+    TerminalSession session,
+    TerminalTheme terminalTheme,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (session.status == SessionStatus.failed ||
+            session.status == SessionStatus.closed)
+          MaterialBanner(
+            backgroundColor: session.status == SessionStatus.failed
+                ? scheme.errorContainer
+                : scheme.surfaceContainerHigh,
+            leading: Icon(
+              session.status == SessionStatus.failed
+                  ? Icons.error_outline
+                  : Icons.link_off,
+            ),
+            content: Text(session.error ?? '连接已关闭'),
+            actions: [
+              TextButton(onPressed: session.connect, child: const Text('重新连接')),
+            ],
+          ),
+        Expanded(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              TerminalView(
+                session.terminal,
+                controller: session.controller,
+                focusNode: _focusNode,
+                theme: terminalTheme,
+                textStyle: terminalTextStyle(),
+                padding: const EdgeInsets.all(8),
+                shortcuts: _terminalShortcuts,
+                keyboardAppearance: scheme.brightness,
+                onSecondaryTapDown: (details, _) => _showContextMenu(details),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: session.status == SessionStatus.connecting
+                    ? _ConnectingOverlay(
+                        target: session.host.target,
+                        background: terminalTheme.background,
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

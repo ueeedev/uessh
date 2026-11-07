@@ -9,6 +9,7 @@ import '../features/snippets/snippets_page.dart';
 import '../features/terminal/sessions_providers.dart';
 import '../features/terminal/terminal_page.dart';
 import '../widgets/fade_through_stack.dart';
+import '../widgets/window_drag_area.dart';
 import 'navigation.dart';
 
 class _Destination {
@@ -102,31 +103,39 @@ class _SideNav extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/branding/logo.png',
-                    key: const ValueKey('app-logo'),
-                    width: 40,
-                    height: 40,
-                    filterQuality: FilterQuality.medium,
-                    semanticLabel: 'uessh logo',
-                  ),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      'uessh',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w600,
+            // Top of the sidebar doubles as the title bar on macOS.
+            WindowDragArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16 + trafficLightInset,
+                  12,
+                  16,
+                ),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/branding/logo.png',
+                      key: const ValueKey('app-logo'),
+                      width: 40,
+                      height: 40,
+                      filterQuality: FilterQuality.medium,
+                      semanticLabel: 'uessh logo',
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        'uessh',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             for (final d in AppDestination.values)

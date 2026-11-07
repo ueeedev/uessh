@@ -17,11 +17,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  const options = WindowOptions(
+  final options = WindowOptions(
     title: 'uessh',
     size: Size(1200, 760),
     minimumSize: Size(800, 520),
     center: true,
+    // macOS: no title bar; content goes to the top edge and the traffic
+    // lights float over the sidebar. Windows keeps its system title bar.
+    titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : null,
+    windowButtonVisibility: true,
   );
   windowManager.waitUntilReadyToShow(options, () async {
     await windowManager.show();
