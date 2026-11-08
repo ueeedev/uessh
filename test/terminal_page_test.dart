@@ -121,6 +121,77 @@ void main() {
     );
   });
 
+  group('switching tabs with ⌘/Ctrl + number', () {
+    Future<SessionsNotifier> pumpThreeTabs(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        ProviderScope(overrides: env.overrides, child: const UesshApp()),
+      );
+      await settleIo(tester);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(UesshApp)),
+      );
+      final notifier = container.read(sessionsProvider.notifier);
+      for (final name in ['one', 'two', 'three']) {
+        // Port 1 is refused at once, so the tabs settle as "failed".
+        notifier.open(
+          Host(
+            id: name,
+            label: name,
+            address: '127.0.0.1',
+            port: 1,
+            username: 'root',
+            authMethod: AuthMethod.password,
+          ),
+        );
+      }
+      await tester.tap(find.text('终端'));
+      await settleIo(tester);
+      await tester.pumpAndSettle();
+      return notifier;
+    }
+
+    Future<void> press(
+      WidgetTester tester,
+      LogicalKeyboardKey mod,
+      LogicalKeyboardKey digit,
+    ) async {
+      await tester.sendKeyDownEvent(mod);
+      await tester.sendKeyEvent(digit);
+      await tester.sendKeyUpEvent(mod);
+      await tester.pumpAndSettle();
+    }
+
+    for (final (platform, mod) in [
+      (TargetPlatform.macOS, LogicalKeyboardKey.metaLeft),
+      (TargetPlatform.windows, LogicalKeyboardKey.controlLeft),
+    ]) {
+      testWidgets('${platform.name}: 1, 2, 9 = last; missing tab ignored', (
+        tester,
+      ) async {
+        debugDefaultTargetPlatformOverride = platform;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+        final notifier = await pumpThreeTabs(tester);
+        String? active() => notifier.state.active?.host.id;
+        expect(active(), 'three');
+
+        await press(tester, mod, LogicalKeyboardKey.digit1);
+        expect(active(), 'one');
+        await press(tester, mod, LogicalKeyboardKey.digit2);
+        expect(active(), 'two');
+        await press(tester, mod, LogicalKeyboardKey.digit9);
+        expect(active(), 'three');
+        await press(tester, mod, LogicalKeyboardKey.digit5);
+        expect(active(), 'three', reason: 'no 5th tab');
+        await press(tester, mod, LogicalKeyboardKey.digit1);
+        expect(active(), 'one');
+        debugDefaultTargetPlatformOverride = null;
+      });
+    }
+  });
+
   group('closing tabs', () {
     /// A session stuck in "connecting": the server accepts the TCP
     /// connection but never speaks SSH.

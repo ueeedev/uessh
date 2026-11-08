@@ -68,12 +68,21 @@ class TerminalPage extends ConsumerWidget {
     // The terminal maps ⌘W/Ctrl+W to CloseTabIntent itself (so the shell
     // doesn't get it); Shortcuts here cover focus elsewhere on the page.
     return Shortcuts(
-      shortcuts: {closeTabActivator: const CloseTabIntent()},
+      shortcuts: {
+        closeTabActivator: const CloseTabIntent(),
+        ...switchTabShortcuts,
+      },
       child: Actions(
         actions: {
           CloseTabIntent: CallbackAction<CloseTabIntent>(
             onInvoke: (_) {
               closeActive();
+              return null;
+            },
+          ),
+          SwitchTabIntent: CallbackAction<SwitchTabIntent>(
+            onInvoke: (intent) {
+              if (isVisible) switchToTab(ref, intent.number);
               return null;
             },
           ),
@@ -638,6 +647,46 @@ SingleActivator get closeTabActivator =>
     ? const SingleActivator(LogicalKeyboardKey.keyW, meta: true)
     : const SingleActivator(LogicalKeyboardKey.keyW, control: true);
 
+/// Go to terminal tab [number] (1-based): ⌘1–⌘9 on macOS, Ctrl+1–Ctrl+9
+/// elsewhere. 9 always means the last tab, as in browsers.
+class SwitchTabIntent extends Intent {
+  const SwitchTabIntent(this.number);
+
+  final int number;
+}
+
+const _digitKeys = [
+  LogicalKeyboardKey.digit1,
+  LogicalKeyboardKey.digit2,
+  LogicalKeyboardKey.digit3,
+  LogicalKeyboardKey.digit4,
+  LogicalKeyboardKey.digit5,
+  LogicalKeyboardKey.digit6,
+  LogicalKeyboardKey.digit7,
+  LogicalKeyboardKey.digit8,
+  LogicalKeyboardKey.digit9,
+];
+
+Map<ShortcutActivator, Intent> get switchTabShortcuts {
+  final mac = defaultTargetPlatform == TargetPlatform.macOS;
+  return {
+    for (var i = 0; i < _digitKeys.length; i++)
+      SingleActivator(_digitKeys[i], meta: mac, control: !mac): SwitchTabIntent(
+        i + 1,
+      ),
+  };
+}
+
+/// Activates tab [number] (1-based; 9 = last). Does nothing if there is
+/// no such tab.
+void switchToTab(WidgetRef ref, int number) {
+  final sessions = ref.read(sessionsProvider).sessions;
+  if (sessions.isEmpty) return;
+  final index = number == 9 ? sessions.length - 1 : number - 1;
+  if (index >= sessions.length) return;
+  ref.read(sessionsProvider.notifier).activate(sessions[index].id);
+}
+
 /// Closes [session]'s tab, asking first while it is connected or
 /// connecting. Tabs whose connection already failed or ended close
 /// straight away: there is nothing left to lose.
@@ -681,6 +730,7 @@ Map<ShortcutActivator, Intent> get _terminalShortcuts {
   if (defaultTargetPlatform == TargetPlatform.macOS) {
     return {
       closeTabActivator: const CloseTabIntent(),
+      ...switchTabShortcuts,
       const SingleActivator(LogicalKeyboardKey.keyC, meta: true):
           CopySelectionTextIntent.copy,
       const SingleActivator(LogicalKeyboardKey.keyV, meta: true):
@@ -692,6 +742,7 @@ Map<ShortcutActivator, Intent> get _terminalShortcuts {
   return {
     // Takes Ctrl+W from the shell (where it deletes a word), as asked.
     closeTabActivator: const CloseTabIntent(),
+    ...switchTabShortcuts,
     const SingleActivator(LogicalKeyboardKey.keyC, control: true, shift: true):
         CopySelectionTextIntent.copy,
     const SingleActivator(LogicalKeyboardKey.keyV, control: true, shift: true):

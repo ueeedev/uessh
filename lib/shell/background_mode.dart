@@ -72,6 +72,14 @@ class BackgroundMode with TrayListener, WindowListener {
   Future<void> start() async {
     windowManager.addListener(this);
     trayManager.addListener(this);
+    // Every close comes to onWindowClose, which hides or quits. (On macOS,
+    // letting the system close the window could quit the whole app even
+    // with background mode on.)
+    try {
+      await windowManager.setPreventClose(true);
+    } catch (e, st) {
+      log.error('app', 'setPreventClose failed', e, st);
+    }
     _container.listen(
       settingsProvider.select((s) => s.runInBackground),
       (_, on) => _apply(on),
@@ -88,7 +96,6 @@ class BackgroundMode with TrayListener, WindowListener {
   Future<void> _apply(bool on) async {
     _enabled = on;
     try {
-      await windowManager.setPreventClose(on);
       if (on) {
         await trayManager.setIcon(
           _isMac
@@ -141,7 +148,7 @@ class BackgroundMode with TrayListener, WindowListener {
   }
 
   Future<void> _quit() async {
-    log.info('app', 'Quit from tray menu');
+    log.info('app', 'Quit');
     await windowManager.setPreventClose(false);
     await trayManager.destroy();
     await windowManager.destroy();
@@ -151,8 +158,11 @@ class BackgroundMode with TrayListener, WindowListener {
 
   @override
   void onWindowClose() {
-    // Only reached while preventClose is on, i.e. background mode.
-    if (_enabled) windowManager.hide();
+    if (_enabled) {
+      windowManager.hide();
+    } else {
+      _quit();
+    }
   }
 
   // --- TrayListener ---

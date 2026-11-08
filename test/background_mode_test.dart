@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uessh/app.dart';
@@ -93,5 +94,78 @@ void main() {
       () => SettingsStore(dataDir: env.dataDir).load(),
     ))!;
     expect(saved.runInBackground, isFalse);
+  });
+
+  group('closing the window', () {
+    late TestEnv env;
+    late List<String> calls;
+
+    setUp(() {
+      env = TestEnv();
+      calls = [];
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      for (final name in ['window_manager', 'tray_manager']) {
+        messenger.setMockMethodCallHandler(MethodChannel(name), (call) async {
+          calls.add(
+            call.method == 'setPreventClose'
+                ? 'setPreventClose:${(call.arguments as Map)['isPreventClose']}'
+                : call.method,
+          );
+          return null;
+        });
+      }
+    });
+    tearDown(() {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      for (final name in ['window_manager', 'tray_manager']) {
+        messenger.setMockMethodCallHandler(MethodChannel(name), null);
+      }
+      env.dispose();
+    });
+
+    Future<BackgroundMode> start(bool runInBackground) async {
+      env.settings = AppSettings(
+        language: AppLanguage.zh,
+        runInBackground: runInBackground,
+      );
+      final container = ProviderContainer(overrides: env.overrides);
+      addTearDown(container.dispose);
+      final mode = BackgroundMode(container);
+      await mode.start();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      return mode;
+    }
+
+    test('the app always handles close itself', () async {
+      await start(true);
+      expect(calls, contains('setPreventClose:true'));
+      expect(calls, isNot(contains('setPreventClose:false')));
+      calls.clear();
+      await start(false);
+      expect(calls, contains('setPreventClose:true'));
+    });
+
+    test(
+      'background mode on: the window hides, the app keeps running',
+      () async {
+        final mode = await start(true);
+        calls.clear();
+        mode.onWindowClose();
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        expect(calls, contains('hide'));
+        expect(calls, isNot(contains('destroy')));
+      },
+    );
+
+    test('background mode off: closing the window quits', () async {
+      final mode = await start(false);
+      calls.clear();
+      mode.onWindowClose();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(calls, contains('destroy'));
+      expect(calls, isNot(contains('hide')));
+    });
   });
 }
