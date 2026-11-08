@@ -1,17 +1,9 @@
-# uessh
+<div align=center>
 
-Material 3 SSH client
+<h1>UESSH</h1>
 
-## Getting Started
+<img src="assets/images/logo.png" width=200></img>
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+<p>使用 Flutter 开发的SSH工具，正在绝赞开发中～</p>
+目前还处于开发阶段，但是小伙伴们可以通过releases页面下载到最新的发行版尝鲜哦～
+</div>
