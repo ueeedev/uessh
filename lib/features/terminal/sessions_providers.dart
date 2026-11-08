@@ -4,6 +4,7 @@ import '../../core/app_providers.dart';
 import '../hosts/host.dart';
 import '../hosts/hosts_providers.dart';
 import '../keys/keys_providers.dart';
+import '../settings/settings_providers.dart';
 import 'known_hosts.dart';
 import 'session_prompts.dart';
 import 'terminal_session.dart';
@@ -54,12 +55,30 @@ class SessionsNotifier extends Notifier<SessionsState> {
       keys: ref.read(keyRepositoryProvider),
     );
     _open.add(session);
+    _recordLastConnected(session);
     state = SessionsState(
       sessions: [...state.sessions, session],
       activeId: session.id,
     );
     session.connect();
     return session;
+  }
+
+  /// Remembers the host each time this session's connection comes up
+  /// (for "last connected" on the hosts page).
+  void _recordLastConnected(TerminalSession session) {
+    var wasConnected = false;
+    session.addListener(() {
+      final connected = session.status == SessionStatus.connected;
+      if (connected && !wasConnected && ref.mounted) {
+        ref
+            .read(settingsProvider.notifier)
+            .update(
+              (s) => s.withLastConnected(session.host.id, DateTime.now()),
+            );
+      }
+      wasConnected = connected;
+    });
   }
 
   void activate(String id) =>

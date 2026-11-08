@@ -762,4 +762,66 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appLanguageEn => 'English';
+
+  @override
+  String get newSession => '新建窗口';
+
+  @override
+  String get pickHostTitle => '选择要连接的主机';
+
+  @override
+  String get goAddHost => '去添加主机';
+
+  @override
+  String get pickHostHint => '↑↓ 选择，回车打开';
+
+  @override
+  String get overviewTotal => '主机总数';
+
+  @override
+  String overviewGroups(int count) {
+    return '$count 个分组';
+  }
+
+  @override
+  String get overviewOnline => '在线';
+
+  @override
+  String get overviewLost => '失联';
+
+  @override
+  String get overviewChecksOff => '检测已关闭';
+
+  @override
+  String get overviewLastConnected => '上次连接';
+
+  @override
+  String get overviewNoRecent => '还没有连接过主机';
+
+  @override
+  String get connect => '连接';
+
+  @override
+  String get timeJustNow => '刚刚';
+
+  @override
+  String timeMinutesAgo(int n) {
+    return '$n 分钟前';
+  }
+
+  @override
+  String timeHoursAgo(int n) {
+    return '$n 小时前';
+  }
+
+  @override
+  String timeDaysAgo(int n) {
+    return '$n 天前';
+  }
+
+  @override
+  String get showHostOverview => '显示主机概览';
+
+  @override
+  String get showHostOverviewSubtitle => '在主机页顶部显示主机数量、在线情况和上次连接';
 }

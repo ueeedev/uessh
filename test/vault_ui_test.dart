@@ -135,6 +135,8 @@ void main() {
     expect(find.text('修改主密码'), findsOneWidget);
 
     // Lock now, then unlock.
+    await tester.ensureVisible(find.text('立即锁定'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('立即锁定'));
     await tester.pumpAndSettle();
     expect(lockTitle, findsOneWidget);

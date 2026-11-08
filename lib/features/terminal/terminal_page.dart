@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +10,9 @@ import '../../widgets/fade_through_stack.dart';
 import '../../widgets/page_scaffold.dart';
 import '../../widgets/window_drag_area.dart';
 import '../../widgets/shape_morph_indicator.dart';
+import '../settings/app_settings.dart';
 import '../settings/settings_providers.dart';
+import 'host_picker.dart';
 import 'info_panel.dart';
 import 'sessions_providers.dart';
 import 'terminal_session.dart';
@@ -32,6 +35,14 @@ class TerminalPage extends ConsumerWidget {
           icon: Icons.terminal,
           title: context.l10n.noSessionsTitle,
           message: context.l10n.noSessionsMessage,
+          action: Builder(
+            builder: (context) => FilledButton.icon(
+              key: const ValueKey('empty-new-session'),
+              onPressed: () => openHostPicker(context, ref),
+              icon: const Icon(Icons.add),
+              label: Text(context.l10n.newSession),
+            ),
+          ),
         ),
       );
     }
@@ -102,33 +113,43 @@ class TerminalPage extends ConsumerWidget {
             onToggleInfo: () => setInfo(!showInfo),
           ),
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  // Quicker than page switches: tabs are switched often.
-                  child: FadeThroughIndexedStack(
-                    duration: const Duration(milliseconds: 200),
-                    index: activeIndex < 0 ? 0 : activeIndex,
-                    children: [
-                      for (final s in state.sessions)
-                        TerminalPane(
-                          key: ValueKey(s.id),
-                          session: s,
-                          isActive: isVisible && s.id == state.activeId,
-                        ),
-                    ],
+            child: LayoutBuilder(
+              builder: (context, constraints) => Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    // Quicker than page switches: tabs are switched often.
+                    child: FadeThroughIndexedStack(
+                      duration: const Duration(milliseconds: 200),
+                      index: activeIndex < 0 ? 0 : activeIndex,
+                      children: [
+                        for (final s in state.sessions)
+                          TerminalPane(
+                            key: ValueKey(s.id),
+                            session: s,
+                            isActive: isVisible && s.id == state.activeId,
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                _SlidingPanel(
-                  open: showInfo,
-                  child: TerminalInfoPanel(
-                    key: ValueKey('info-${active.id}'),
-                    session: active,
-                    onClose: () => setInfo(false),
+                  _SlidingPanel(
+                    open: showInfo,
+                    // The panel may take at most 60% of the terminal page.
+                    available: constraints.maxWidth,
+                    width: ref.watch(
+                      settingsProvider.select((s) => s.infoPanelWidth),
+                    ),
+                    onWidthChanged: (w) => ref
+                        .read(settingsProvider.notifier)
+                        .update((s) => s.copyWith(infoPanelWidth: w)),
+                    child: TerminalInfoPanel(
+                      key: ValueKey('info-${active.id}'),
+                      session: active,
+                      onClose: () => setInfo(false),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -139,44 +160,152 @@ class TerminalPage extends ConsumerWidget {
 
 /// Slides its child in from the right edge; the terminal beside it
 /// shrinks to make room rather than being covered.
-class _SlidingPanel extends StatelessWidget {
-  const _SlidingPanel({required this.open, required this.child});
+/// The info panel: slides in from the right edge (the terminal shrinks to
+/// make room), and its width can be dragged with the handle between it
+/// and the terminal. Double-click the handle for the default width.
+class _SlidingPanel extends StatefulWidget {
+  const _SlidingPanel({
+    required this.open,
+    required this.available,
+    required this.width,
+    required this.onWidthChanged,
+    required this.child,
+  });
 
   final bool open;
+
+  /// Width of the whole terminal page.
+  final double available;
+
+  /// Saved width; [onWidthChanged] is called once a drag ends.
+  final double width;
+  final ValueChanged<double> onWidthChanged;
   final Widget child;
 
-  static const _gap = 12.0;
+  /// The gap left of the panel (holds the handle) and right of it.
+  static const gap = 12.0;
+
+  @override
+  State<_SlidingPanel> createState() => _SlidingPanelState();
+}
+
+class _SlidingPanelState extends State<_SlidingPanel> {
+  double? _dragWidth; // live width while dragging
+  bool _hover = false;
+
+  double get _width => _dragWidth ?? widget.width;
+
+  double _clamp(double w, double available) {
+    final max = (available * 0.6).clamp(
+      AppSettings.minInfoPanelWidth,
+      AppSettings.maxInfoPanelWidth,
+    );
+    return w.clamp(AppSettings.minInfoPanelWidth, max);
+  }
 
   @override
   Widget build(BuildContext context) {
+    const gap = _SlidingPanel.gap;
+    final available = widget.available;
+    final width = _clamp(_width, available);
     return TweenAnimationBuilder<double>(
-      tween: Tween(end: open ? 1 : 0),
+      tween: Tween(end: widget.open ? 1 : 0),
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       builder: (context, t, child) {
-        if (t == 0) return const SizedBox.shrink();
+        final panelWidth = (width + gap) * t;
         return SizedBox(
-          width: (infoPanelWidth + _gap) * t,
-          child: ClipRect(
-            child: OverflowBox(
-              alignment: Alignment.centerLeft,
-              minWidth: infoPanelWidth + _gap,
-              maxWidth: infoPanelWidth + _gap,
-              child: Opacity(opacity: t, child: child),
-            ),
+          width: gap + panelWidth,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _handle(context, t == 1, available),
+              if (t > 0)
+                SizedBox(
+                  width: panelWidth,
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.centerLeft,
+                      minWidth: width + gap,
+                      maxWidth: width + gap,
+                      child: Opacity(opacity: t, child: child),
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
       },
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, _gap, _gap),
+        padding: const EdgeInsets.fromLTRB(0, 0, gap, gap),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(terminalCardRadius),
-          child: child,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+
+  Widget _handle(BuildContext context, bool active, double available) {
+    const gap = _SlidingPanel.gap;
+    if (!active) return const SizedBox(width: gap);
+    final scheme = Theme.of(context).colorScheme;
+    final dragging = _dragWidth != null;
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        key: const ValueKey('info-panel-handle'),
+        behavior: HitTestBehavior.opaque,
+        // Count from the press point, so the edge tracks the pointer
+        // exactly (the drag-detection distance isn't lost).
+        dragStartBehavior: DragStartBehavior.down,
+        onHorizontalDragStart: (_) => setState(() => _dragWidth = widget.width),
+        // Dragging left widens the panel.
+        onHorizontalDragUpdate: (d) =>
+            setState(() => _dragWidth = _clamp(_width - d.delta.dx, available)),
+        onHorizontalDragEnd: (_) {
+          final w = _clamp(_width, available);
+          setState(() => _dragWidth = null);
+          widget.onWidthChanged(w);
+        },
+        onDoubleTap: () =>
+            widget.onWidthChanged(AppSettings.defaultInfoPanelWidth),
+        child: SizedBox(
+          width: gap,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: gap),
+            child: Center(
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 150),
+                opacity: _hover || dragging ? 1 : 0,
+                child: Container(
+                  width: 4,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: dragging ? scheme.primary : scheme.outline,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
+
+/// The strip behind the tabs is the page colour; the selected tab takes
+/// the terminal's background so it reads as the top of that window.
+Color tabStripColor(ColorScheme scheme) => scheme.surfaceContainer;
+
+const _tabWidth = 210.0;
+
+/// The "+" after the tabs.
+const newTabButtonSize = 32.0;
+const _tabHeight = 38.0;
 
 class _TabStrip extends ConsumerWidget {
   const _TabStrip({
@@ -193,41 +322,87 @@ class _TabStrip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Empty space in the tab strip doubles as the title bar on macOS.
     return WindowDragArea(
-      child: SizedBox(
-        height: 48,
-        child: Row(
-          children: [
-            Expanded(child: _tabs(ref)),
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: IconButton(
-                tooltip: infoOpen
-                    ? context.l10n.hideInfoPanel
-                    : context.l10n.showInfoPanel,
-                isSelected: infoOpen,
-                icon: const Icon(Icons.view_sidebar_outlined),
-                selectedIcon: const Icon(Icons.view_sidebar),
-                onPressed: onToggleInfo,
+      child: ColoredBox(
+        key: const ValueKey('tab-strip'),
+        color: tabStripColor(Theme.of(context).colorScheme),
+        child: SizedBox(
+          height: 48,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(child: _tabs(ref)),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 0, 8, 4),
+                child: IconButton(
+                  tooltip: infoOpen
+                      ? context.l10n.hideInfoPanel
+                      : context.l10n.showInfoPanel,
+                  isSelected: infoOpen,
+                  icon: const Icon(Icons.view_sidebar_outlined),
+                  selectedIcon: const Icon(Icons.view_sidebar),
+                  onPressed: onToggleInfo,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _tabs(WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child: ListView.separated(
+    final sessions = state.sessions;
+    return SizedBox(
+      height: _tabHeight,
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: state.sessions.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 4),
+        // Start past the terminal card's rounded corner (12 margin + 16
+        // radius) plus the selected tab's curved foot, so the foot meets
+        // the card's straight top edge.
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12 + terminalCardRadius + BrowserTabPainter.foot,
+        ),
+        clipBehavior: Clip.none,
+        // Tabs, then the "+" right after the last one (as in browsers).
+        itemCount: sessions.length + 1,
         itemBuilder: (context, i) {
-          final s = state.sessions[i];
-          return _SessionTab(
+          if (i == sessions.length) {
+            return Padding(
+              padding: const EdgeInsets.only(left: 6),
+              child: Center(
+                // Builder: the picker anchors to this button's own box.
+                child: Builder(
+                  builder: (buttonContext) => IconButton(
+                    key: const ValueKey('new-tab'),
+                    tooltip: context.l10n.newSession,
+                    // Fixed square so the highlight is a circle around the
+                    // icon (the default 48px button got squashed to fit
+                    // the tab row and looked off-centre).
+                    style: IconButton.styleFrom(
+                      fixedSize: const Size.square(newTabButtonSize),
+                      minimumSize: const Size.square(newTabButtonSize),
+                      padding: EdgeInsets.zero,
+                      // No extra 48px touch area around it either.
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    iconSize: 20,
+                    icon: const Icon(Icons.add),
+                    onPressed: () => openHostPicker(buttonContext, ref),
+                  ),
+                ),
+              ),
+            );
+          }
+          final s = sessions[i];
+          final selected = s.id == state.activeId;
+          final nextSelected =
+              i + 1 < sessions.length && sessions[i + 1].id == state.activeId;
+          return BrowserTab(
+            key: ValueKey('tab-${s.id}'),
             session: s,
-            selected: s.id == state.activeId,
+            selected: selected,
+            // Thin separator between two unselected tabs, as in browsers.
+            showDivider: !selected && !nextSelected && i + 1 < sessions.length,
             onTap: () => ref.read(sessionsProvider.notifier).activate(s.id),
             onClose: () => requestCloseSession(context, ref, s),
           );
@@ -237,66 +412,171 @@ class _TabStrip extends ConsumerWidget {
   }
 }
 
-class _SessionTab extends StatelessWidget {
-  const _SessionTab({
+/// One tab, drawn like a browser tab: the selected one has rounded top
+/// corners and curves out at the bottom into the page below (same colour),
+/// the others are flat with a soft highlight on hover.
+class BrowserTab extends StatefulWidget {
+  const BrowserTab({
+    super.key,
     required this.session,
     required this.selected,
+    required this.showDivider,
     required this.onTap,
     required this.onClose,
   });
 
   final TerminalSession session;
   final bool selected;
+  final bool showDivider;
   final VoidCallback onTap;
   final VoidCallback onClose;
+
+  @override
+  State<BrowserTab> createState() => _BrowserTabState();
+}
+
+class _BrowserTabState extends State<BrowserTab> {
+  bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return ListenableBuilder(
-      listenable: session,
-      builder: (context, _) {
-        final fg = selected
-            ? scheme.onSecondaryContainer
-            : scheme.onSurfaceVariant;
-        return Material(
-          color: selected ? scheme.secondaryContainer : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12, right: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _StatusDot(status: session.status),
-                  const SizedBox(width: 8),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 180),
-                    child: Text(
-                      session.host.displayName,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(color: fg),
+    final selected = widget.selected;
+    final fg = selected ? scheme.onSurface : scheme.onSurfaceVariant;
+    // Same colour as the terminal window below, so the tab and the window
+    // read as one piece.
+    final tabColor = terminalThemeFor(scheme).background;
+    final hoverColor = scheme.onSurface.withValues(alpha: 0.06);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: SizedBox(
+          width: _tabWidth,
+          height: _tabHeight,
+          child: CustomPaint(
+            painter: BrowserTabPainter(
+              fill: selected ? tabColor : null,
+              hover: !selected && _hover ? hoverColor : null,
+              divider: widget.showDivider && !_hover
+                  ? scheme.outlineVariant
+                  : null,
+            ),
+            child: ListenableBuilder(
+              listenable: widget.session,
+              builder: (context, _) => Padding(
+                padding: const EdgeInsets.only(left: 14, right: 4),
+                child: Row(
+                  children: [
+                    _StatusDot(status: widget.session.status),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.session.host.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: fg,
+                          fontWeight: selected ? FontWeight.w600 : null,
+                        ),
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: context.l10n.close,
-                    iconSize: 16,
-                    visualDensity: VisualDensity.compact,
-                    color: fg,
-                    icon: const Icon(Icons.close),
-                    onPressed: onClose,
-                  ),
-                ],
+                    IconButton(
+                      tooltip: context.l10n.close,
+                      iconSize: 16,
+                      visualDensity: VisualDensity.compact,
+                      color: fg,
+                      icon: const Icon(Icons.close),
+                      onPressed: widget.onClose,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
+}
+
+/// Paints the browser-style tab background.
+class BrowserTabPainter extends CustomPainter {
+  const BrowserTabPainter({this.fill, this.hover, this.divider});
+
+  /// Selected tab colour (null = not selected).
+  final Color? fill;
+
+  /// Hover highlight for an unselected tab.
+  final Color? hover;
+
+  /// Separator on the right edge.
+  final Color? divider;
+
+  static const radius = 10.0; // top corners
+  static const foot = 8.0; // outward curves at the bottom
+
+  /// The selected tab's outline: rounded top, and bottom corners that
+  /// curve outwards (extending [foot] past each side) into the page.
+  static Path tabPath(Size size) {
+    final w = size.width, h = size.height;
+    return Path()
+      ..moveTo(-foot, h)
+      ..arcToPoint(
+        Offset(0, h - foot),
+        radius: const Radius.circular(foot),
+        clockwise: false,
+      )
+      ..lineTo(0, radius)
+      ..arcToPoint(
+        const Offset(radius, 0),
+        radius: const Radius.circular(radius),
+      )
+      ..lineTo(w - radius, 0)
+      ..arcToPoint(Offset(w, radius), radius: const Radius.circular(radius))
+      ..lineTo(w, h - foot)
+      ..arcToPoint(
+        Offset(w + foot, h),
+        radius: const Radius.circular(foot),
+        clockwise: false,
+      )
+      ..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (fill != null) {
+      canvas.drawPath(tabPath(size), Paint()..color = fill!);
+      return;
+    }
+    if (hover != null) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTRB(2, 3, size.width - 2, size.height - 3),
+          const Radius.circular(8),
+        ),
+        Paint()..color = hover!,
+      );
+    }
+    if (divider != null) {
+      final x = size.width - 0.5;
+      canvas.drawLine(
+        Offset(x, size.height * 0.28),
+        Offset(x, size.height * 0.72),
+        Paint()
+          ..color = divider!
+          ..strokeWidth = 1,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(BrowserTabPainter old) =>
+      old.fill != fill || old.hover != hover || old.divider != divider;
 }
 
 class _StatusDot extends StatelessWidget {
@@ -338,6 +618,15 @@ class _StatusDot extends StatelessWidget {
 
 /// Copy / paste shortcuts. Windows uses Ctrl+Shift so plain Ctrl+C, Ctrl+V
 /// and Ctrl+A still reach the shell.
+/// Shows the host list under the widget at [context] (e.g. the "+"
+/// button) and opens a new session for the chosen host.
+Future<void> openHostPicker(BuildContext context, WidgetRef ref) async {
+  final box = context.findRenderObject() as RenderBox?;
+  final anchor = box == null ? null : box.localToGlobal(Offset.zero) & box.size;
+  final host = await showHostPicker(context, anchor: anchor);
+  if (host != null) ref.read(sessionsProvider.notifier).open(host);
+}
+
 /// Close the current terminal tab: ⌘W on macOS, Ctrl+W elsewhere.
 class CloseTabIntent extends Intent {
   const CloseTabIntent();
@@ -498,7 +787,7 @@ class _TerminalPaneState extends State<TerminalPane> {
     return ListenableBuilder(
       listenable: session,
       builder: (context, _) => Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        padding: const EdgeInsets.fromLTRB(12, 0, 0, 12),
         // Terminal window as a rounded card.
         child: ClipRRect(
           key: const ValueKey('terminal-card'),

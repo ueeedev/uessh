@@ -808,4 +808,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLanguageEn => 'English';
+
+  @override
+  String get newSession => 'New session';
+
+  @override
+  String get pickHostTitle => 'Choose a host to connect to';
+
+  @override
+  String get goAddHost => 'Add a host';
+
+  @override
+  String get pickHostHint => '↑↓ to choose, Enter to open';
+
+  @override
+  String get overviewTotal => 'Total hosts';
+
+  @override
+  String overviewGroups(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count groups',
+      one: '1 group',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get overviewOnline => 'Online';
+
+  @override
+  String get overviewLost => 'Unreachable';
+
+  @override
+  String get overviewChecksOff => 'Checks off';
+
+  @override
+  String get overviewLastConnected => 'Last connected';
+
+  @override
+  String get overviewNoRecent => 'No connections yet';
+
+  @override
+  String get connect => 'Connect';
+
+  @override
+  String get timeJustNow => 'just now';
+
+  @override
+  String timeMinutesAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n minutes ago',
+      one: '1 minute ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeHoursAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n hours ago',
+      one: '1 hour ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String timeDaysAgo(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n days ago',
+      one: '1 day ago',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get showHostOverview => 'Show host overview';
+
+  @override
+  String get showHostOverviewSubtitle =>
+      'Host counts, status and your last connection at the top of the Hosts page';
 }

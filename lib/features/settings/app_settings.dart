@@ -25,7 +25,11 @@ class AppSettings {
     this.checkMethod = ReachabilityMethod.ping,
     this.autoLockMinutes = defaultAutoLock,
     this.showTerminalInfo = false,
+    this.infoPanelWidth = defaultInfoPanelWidth,
     this.language = AppLanguage.system,
+    this.showHostOverview = true,
+    this.lastConnectedHostId,
+    this.lastConnectedAt,
   });
 
   /// Lock after this many idle minutes (master password only); 0 = never.
@@ -47,7 +51,23 @@ class AppSettings {
   /// Whether the info panel beside the terminal is open.
   final bool showTerminalInfo;
 
+  /// Width of the info panel, set by dragging its edge.
+  final double infoPanelWidth;
+  static const defaultInfoPanelWidth = 300.0;
+  static const minInfoPanelWidth = 240.0;
+  static const maxInfoPanelWidth = 560.0;
+
   final AppLanguage language;
+
+  /// Overview cards at the top of the hosts page.
+  final bool showHostOverview;
+
+  /// The host of the most recent successful SSH connection, and when.
+  final String? lastConnectedHostId;
+  final DateTime? lastConnectedAt;
+
+  AppSettings withLastConnected(String hostId, DateTime at) =>
+      _copy(lastConnectedHostId: hostId, lastConnectedAt: at);
 
   Duration get checkInterval => Duration(seconds: checkIntervalSeconds);
 
@@ -61,7 +81,33 @@ class AppSettings {
     ReachabilityMethod? checkMethod,
     int? autoLockMinutes,
     bool? showTerminalInfo,
+    double? infoPanelWidth,
     AppLanguage? language,
+    bool? showHostOverview,
+  }) => _copy(
+    themeMode: themeMode,
+    followSystemAccent: followSystemAccent,
+    checkIntervalSeconds: checkIntervalSeconds,
+    checkMethod: checkMethod,
+    autoLockMinutes: autoLockMinutes,
+    showTerminalInfo: showTerminalInfo,
+    infoPanelWidth: infoPanelWidth,
+    language: language,
+    showHostOverview: showHostOverview,
+  );
+
+  AppSettings _copy({
+    ThemeMode? themeMode,
+    bool? followSystemAccent,
+    int? checkIntervalSeconds,
+    ReachabilityMethod? checkMethod,
+    int? autoLockMinutes,
+    bool? showTerminalInfo,
+    double? infoPanelWidth,
+    AppLanguage? language,
+    bool? showHostOverview,
+    String? lastConnectedHostId,
+    DateTime? lastConnectedAt,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     followSystemAccent: followSystemAccent ?? this.followSystemAccent,
@@ -69,7 +115,11 @@ class AppSettings {
     checkMethod: checkMethod ?? this.checkMethod,
     autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
     showTerminalInfo: showTerminalInfo ?? this.showTerminalInfo,
+    infoPanelWidth: infoPanelWidth ?? this.infoPanelWidth,
     language: language ?? this.language,
+    showHostOverview: showHostOverview ?? this.showHostOverview,
+    lastConnectedHostId: lastConnectedHostId ?? this.lastConnectedHostId,
+    lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
   );
 
   Map<String, Object?> toJson() => {
@@ -79,7 +129,12 @@ class AppSettings {
     'checkMethod': checkMethod.name,
     'autoLockMinutes': autoLockMinutes,
     'showTerminalInfo': showTerminalInfo,
+    'infoPanelWidth': infoPanelWidth,
     'language': language.name,
+    'showHostOverview': showHostOverview,
+    if (lastConnectedHostId != null) 'lastConnectedHostId': lastConnectedHostId,
+    if (lastConnectedAt != null)
+      'lastConnectedAt': lastConnectedAt!.toIso8601String(),
   };
 
   /// Unknown or invalid values fall back to defaults.
@@ -102,7 +157,15 @@ class AppSettings {
           ? autoLock
           : d.autoLockMinutes,
       showTerminalInfo: json['showTerminalInfo'] as bool? ?? d.showTerminalInfo,
+      infoPanelWidth:
+          ((json['infoPanelWidth'] as num?)?.toDouble() ?? d.infoPanelWidth)
+              .clamp(minInfoPanelWidth, maxInfoPanelWidth),
       language: AppLanguage.values.asNameMap()[json['language']] ?? d.language,
+      showHostOverview: json['showHostOverview'] as bool? ?? d.showHostOverview,
+      lastConnectedHostId: json['lastConnectedHostId'] as String?,
+      lastConnectedAt: DateTime.tryParse(
+        json['lastConnectedAt'] as String? ?? '',
+      ),
     );
   }
 }

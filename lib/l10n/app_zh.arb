@@ -461,5 +461,51 @@
     }
   },
   "appLanguageZh": "简体中文",
-  "appLanguageEn": "English"
+  "appLanguageEn": "English",
+  "newSession": "新建窗口",
+  "pickHostTitle": "选择要连接的主机",
+  "goAddHost": "去添加主机",
+  "pickHostHint": "↑↓ 选择，回车打开",
+  "overviewTotal": "主机总数",
+  "overviewGroups": "{count} 个分组",
+  "@overviewGroups": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overviewOnline": "在线",
+  "overviewLost": "失联",
+  "overviewChecksOff": "检测已关闭",
+  "overviewLastConnected": "上次连接",
+  "overviewNoRecent": "还没有连接过主机",
+  "connect": "连接",
+  "timeJustNow": "刚刚",
+  "timeMinutesAgo": "{n} 分钟前",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{n} 小时前",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{n} 天前",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "showHostOverview": "显示主机概览",
+  "showHostOverviewSubtitle": "在主机页顶部显示主机数量、在线情况和上次连接"
 }

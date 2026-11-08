@@ -97,6 +97,15 @@ class SettingsPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+                SwitchListTile(
+                  key: const ValueKey('show-overview'),
+                  secondary: const Icon(Icons.dashboard_outlined),
+                  title: Text(context.l10n.showHostOverview),
+                  subtitle: Text(context.l10n.showHostOverviewSubtitle),
+                  value: s.showHostOverview,
+                  onChanged: (v) =>
+                      update((s) => s.copyWith(showHostOverview: v)),
+                ),
               ],
             ),
           ),

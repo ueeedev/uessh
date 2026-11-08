@@ -111,6 +111,16 @@ class _SideNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    Widget item(AppDestination d) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: _NavItem(
+        destination: _destinations[d]!,
+        selected: d == current,
+        count: d == AppDestination.terminal ? sessionCount : 0,
+        onTap: () => onSelect(d),
+      ),
+    );
+
     return Material(
       color: scheme.surfaceContainer,
       child: SizedBox(
@@ -154,18 +164,11 @@ class _SideNav extends StatelessWidget {
               ),
             ),
             for (final d in AppDestination.values)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 2,
-                ),
-                child: _NavItem(
-                  destination: _destinations[d]!,
-                  selected: d == current,
-                  count: d == AppDestination.terminal ? sessionCount : 0,
-                  onTap: () => onSelect(d),
-                ),
-              ),
+              if (d != AppDestination.settings) item(d),
+            // Settings sits at the bottom, apart from the main pages.
+            const Spacer(),
+            item(AppDestination.settings),
+            const SizedBox(height: 12),
           ],
         ),
       ),

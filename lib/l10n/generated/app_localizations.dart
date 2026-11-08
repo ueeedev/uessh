@@ -1471,6 +1471,114 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'English'**
   String get appLanguageEn;
+
+  /// No description provided for @newSession.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建窗口'**
+  String get newSession;
+
+  /// No description provided for @pickHostTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择要连接的主机'**
+  String get pickHostTitle;
+
+  /// No description provided for @goAddHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'去添加主机'**
+  String get goAddHost;
+
+  /// No description provided for @pickHostHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'↑↓ 选择，回车打开'**
+  String get pickHostHint;
+
+  /// No description provided for @overviewTotal.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机总数'**
+  String get overviewTotal;
+
+  /// No description provided for @overviewGroups.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个分组'**
+  String overviewGroups(int count);
+
+  /// No description provided for @overviewOnline.
+  ///
+  /// In zh, this message translates to:
+  /// **'在线'**
+  String get overviewOnline;
+
+  /// No description provided for @overviewLost.
+  ///
+  /// In zh, this message translates to:
+  /// **'失联'**
+  String get overviewLost;
+
+  /// No description provided for @overviewChecksOff.
+  ///
+  /// In zh, this message translates to:
+  /// **'检测已关闭'**
+  String get overviewChecksOff;
+
+  /// No description provided for @overviewLastConnected.
+  ///
+  /// In zh, this message translates to:
+  /// **'上次连接'**
+  String get overviewLastConnected;
+
+  /// No description provided for @overviewNoRecent.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有连接过主机'**
+  String get overviewNoRecent;
+
+  /// No description provided for @connect.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接'**
+  String get connect;
+
+  /// No description provided for @timeJustNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'刚刚'**
+  String get timeJustNow;
+
+  /// No description provided for @timeMinutesAgo.
+  ///
+  /// In zh, this message translates to:
+  /// **'{n} 分钟前'**
+  String timeMinutesAgo(int n);
+
+  /// No description provided for @timeHoursAgo.
+  ///
+  /// In zh, this message translates to:
+  /// **'{n} 小时前'**
+  String timeHoursAgo(int n);
+
+  /// No description provided for @timeDaysAgo.
+  ///
+  /// In zh, this message translates to:
+  /// **'{n} 天前'**
+  String timeDaysAgo(int n);
+
+  /// No description provided for @showHostOverview.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示主机概览'**
+  String get showHostOverview;
+
+  /// No description provided for @showHostOverviewSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'在主机页顶部显示主机数量、在线情况和上次连接'**
+  String get showHostOverviewSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -6,6 +6,7 @@ import '../../widgets/page_scaffold.dart';
 import '../terminal/sessions_providers.dart';
 import 'host.dart';
 import 'host_editor_sheet.dart';
+import 'host_overview.dart';
 import 'hosts_providers.dart';
 import 'reachability.dart';
 import '../settings/settings_providers.dart';
@@ -85,8 +86,19 @@ class _HostsPageState extends ConsumerState<HostsPage> {
           }
           // Headers only make sense once there is at least one group.
           final showHeaders = data.groups.isNotEmpty;
+          // Overview on top (hidden while searching, or when turned off).
+          final showOverview =
+              _query.isEmpty &&
+              ref.watch(settingsProvider.select((s) => s.showHostOverview));
           return CustomScrollView(
             slivers: [
+              if (showOverview)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: HostOverview(data: data),
+                  ),
+                ),
               for (final section in sections) ...[
                 if (showHeaders)
                   SliverToBoxAdapter(

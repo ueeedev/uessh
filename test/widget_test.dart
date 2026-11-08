@@ -152,6 +152,20 @@ void main() {
     expect(find.byIcon(Icons.terminal), findsNothing, reason: 'old icon gone');
   });
 
+  testWidgets('Settings is pinned to the bottom of the sidebar', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    final settings = tester.getRect(find.text('设置'));
+    final forwarding = tester.getRect(find.text('转发'));
+    expect(
+      settings.top - forwarding.bottom,
+      greaterThan(200),
+      reason: 'separated from the main pages',
+    );
+    expect(800 - settings.bottom, lessThan(50), reason: 'near the bottom');
+  });
+
   testWidgets('each nav item is one button holding icon and label', (
     tester,
   ) async {
