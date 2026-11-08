@@ -2,6 +2,70 @@ import 'dart:math';
 
 enum AuthMethod { password, key }
 
+/// What the host card shows on its left.
+enum HostIconKind {
+  /// First letter of the name.
+  letter,
+
+  /// One of `hostIconChoices`.
+  icon,
+
+  /// Flag of the country the host's IP is in (looked up with ipwho.is).
+  flag,
+}
+
+/// A host's card icon: the kind, plus a symbol and color where they apply.
+class HostIcon {
+  const HostIcon({this.kind = HostIconKind.letter, this.symbol, this.color});
+
+  static const letter = HostIcon();
+
+  final HostIconKind kind;
+
+  /// Key in `hostIconChoices`, for [HostIconKind.icon].
+  final String? symbol;
+
+  /// ARGB seed color for the letter / icon; null follows the app accent.
+  final int? color;
+
+  bool get isDefault => this == letter;
+
+  HostIcon copyWith({HostIconKind? kind, String? symbol, Object? color = _k}) =>
+      HostIcon(
+        kind: kind ?? this.kind,
+        symbol: symbol ?? this.symbol,
+        color: identical(color, _k) ? this.color : color as int?,
+      );
+
+  static const _k = Object();
+
+  Map<String, Object?> toJson() => {
+    'kind': kind.name,
+    if (symbol != null) 'symbol': symbol,
+    if (color != null) 'color': color,
+  };
+
+  factory HostIcon.fromJson(Object? json) {
+    if (json is! Map) return letter;
+    return HostIcon(
+      kind:
+          HostIconKind.values.asNameMap()[json['kind']] ?? HostIconKind.letter,
+      symbol: json['symbol'] as String?,
+      color: (json['color'] as num?)?.toInt(),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is HostIcon &&
+      other.kind == kind &&
+      other.symbol == symbol &&
+      other.color == color;
+
+  @override
+  int get hashCode => Object.hash(kind, symbol, color);
+}
+
 /// Short random id for hosts and groups.
 String generateId() {
   final rand = Random.secure().nextInt(1 << 32).toRadixString(36);
@@ -20,6 +84,7 @@ class Host {
     required this.authMethod,
     this.groupId,
     this.keyId,
+    this.icon = HostIcon.letter,
   });
 
   final String id;
@@ -35,6 +100,9 @@ class Host {
   /// A saved key (Keys page) to log in with. Null with [AuthMethod.key]
   /// means the host has its own pasted key.
   final String? keyId;
+
+  /// What the card shows on its left.
+  final HostIcon icon;
 
   String get displayName => label.isNotEmpty ? label : address;
 
@@ -54,6 +122,7 @@ class Host {
     AuthMethod? authMethod,
     Object? groupId = _keep,
     Object? keyId = _keep,
+    HostIcon? icon,
   }) => Host(
     id: id,
     label: label ?? this.label,
@@ -63,6 +132,7 @@ class Host {
     authMethod: authMethod ?? this.authMethod,
     groupId: identical(groupId, _keep) ? this.groupId : groupId as String?,
     keyId: identical(keyId, _keep) ? this.keyId : keyId as String?,
+    icon: icon ?? this.icon,
   );
 
   Map<String, Object?> toJson() => {
@@ -74,6 +144,7 @@ class Host {
     'authMethod': authMethod.name,
     if (groupId != null) 'groupId': groupId,
     if (keyId != null) 'keyId': keyId,
+    if (!icon.isDefault) 'icon': icon.toJson(),
   };
 
   factory Host.fromJson(Map<String, Object?> json) => Host(
@@ -87,6 +158,7 @@ class Host {
         AuthMethod.password,
     groupId: json['groupId'] as String?,
     keyId: json['keyId'] as String?,
+    icon: HostIcon.fromJson(json['icon']),
   );
 }
 

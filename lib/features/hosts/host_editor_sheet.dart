@@ -8,6 +8,7 @@ import '../../theme/terminal_theme.dart';
 import '../../widgets/app_dropdown.dart';
 import '../../widgets/side_sheet.dart';
 import 'host.dart';
+import 'host_icon_picker.dart';
 import '../keys/keys_providers.dart';
 import 'hosts_providers.dart';
 import '../../l10n/l10n.dart';
@@ -41,6 +42,9 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
   final _passphrase = TextEditingController();
 
   late AuthMethod _authMethod = widget.host?.authMethod ?? AuthMethod.password;
+
+  /// Card icon: letter, symbol or flag.
+  late HostIcon _icon = widget.host?.icon ?? HostIcon.letter;
 
   /// Selected existing group (null = ungrouped).
   late String? _groupId = widget.host?.groupId;
@@ -78,6 +82,7 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
     _groupId,
     _newGroupName,
     _keyId,
+    _icon,
   ];
 
   void _updateDirty() {
@@ -183,6 +188,7 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
       authMethod: _authMethod,
       groupId: _newGroupName == null ? _groupId : null,
       keyId: _authMethod == AuthMethod.key && _usesSavedKey ? _keyId : null,
+      icon: _icon,
     );
     final secrets = _authMethod == AuthMethod.password
         ? HostSecrets(password: _password.text)
@@ -424,6 +430,19 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
                         ),
                       ],
                     ],
+                    const SizedBox(height: 24),
+                    // Less used options, folded away at the bottom.
+                    MoreSettings(
+                      child: HostIconPicker(
+                        value: _icon,
+                        label: _label,
+                        address: _address,
+                        onChanged: (icon) {
+                          setState(() => _icon = icon);
+                          _updateDirty();
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -690,6 +709,86 @@ class _KeySource extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A "More settings" button that unfolds [child] below it, then scrolls
+/// it into view.
+class MoreSettings extends StatefulWidget {
+  const MoreSettings({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<MoreSettings> createState() => _MoreSettingsState();
+}
+
+class _MoreSettingsState extends State<MoreSettings> {
+  static const _duration = Duration(milliseconds: 250);
+  final _contentKey = GlobalKey();
+  bool _open = false;
+
+  Future<void> _toggle() async {
+    setState(() => _open = !_open);
+    if (!_open) return;
+    await Future<void>.delayed(_duration);
+    final ctx = _contentKey.currentContext;
+    if (ctx != null && ctx.mounted) {
+      await Scrollable.ensureVisible(
+        ctx,
+        duration: _duration,
+        curve: Curves.easeOutCubic,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Expanded(child: Divider()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: TextButton.icon(
+                key: const ValueKey('more-settings'),
+                onPressed: _toggle,
+                style: TextButton.styleFrom(
+                  foregroundColor: scheme.onSurfaceVariant,
+                ),
+                iconAlignment: IconAlignment.end,
+                icon: AnimatedRotation(
+                  turns: _open ? 0.5 : 0,
+                  duration: _duration,
+                  curve: Curves.easeOutCubic,
+                  child: const Icon(Icons.expand_more),
+                ),
+                label: Text(
+                  _open ? context.l10n.lessSettings : context.l10n.moreSettings,
+                ),
+              ),
+            ),
+            const Expanded(child: Divider()),
+          ],
+        ),
+        AnimatedSize(
+          duration: _duration,
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: _open
+              ? Padding(
+                  key: _contentKey,
+                  padding: const EdgeInsets.only(top: 12),
+                  child: widget.child,
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
     );
   }
 }

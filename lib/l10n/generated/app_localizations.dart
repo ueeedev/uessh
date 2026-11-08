@@ -1580,6 +1580,54 @@ abstract class AppLocalizations {
   /// **'在主机页顶部显示主机数量、在线情况和上次连接'**
   String get showHostOverviewSubtitle;
 
+  /// No description provided for @hostIcon.
+  ///
+  /// In zh, this message translates to:
+  /// **'图标'**
+  String get hostIcon;
+
+  /// No description provided for @iconLetter.
+  ///
+  /// In zh, this message translates to:
+  /// **'字母'**
+  String get iconLetter;
+
+  /// No description provided for @iconSymbol.
+  ///
+  /// In zh, this message translates to:
+  /// **'图标'**
+  String get iconSymbol;
+
+  /// No description provided for @iconFlag.
+  ///
+  /// In zh, this message translates to:
+  /// **'国旗'**
+  String get iconFlag;
+
+  /// No description provided for @iconColorAuto.
+  ///
+  /// In zh, this message translates to:
+  /// **'跟随主题色'**
+  String get iconColorAuto;
+
+  /// No description provided for @iconFlagHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'按主机 IP 查询所在国家/地区并显示国旗（IP 会发送给 ipwho.is）。查不到时（如内网地址）显示首字母。'**
+  String get iconFlagHint;
+
+  /// No description provided for @moreSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'更多设置'**
+  String get moreSettings;
+
+  /// No description provided for @lessSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起'**
+  String get lessSettings;
+
   /// No description provided for @trayShow.
   ///
   /// In zh, this message translates to:

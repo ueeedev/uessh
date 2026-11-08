@@ -5,6 +5,7 @@ import '../../shell/navigation.dart';
 import '../../widgets/page_scaffold.dart';
 import '../terminal/sessions_providers.dart';
 import 'host.dart';
+import 'host_avatar.dart';
 import 'host_editor_sheet.dart';
 import 'host_overview.dart';
 import 'hosts_providers.dart';
@@ -443,7 +444,6 @@ class HostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -453,11 +453,7 @@ class HostCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
           child: Row(
             children: [
-              CircleAvatar(
-                backgroundColor: scheme.primaryContainer,
-                foregroundColor: scheme.onPrimaryContainer,
-                child: Text(host.displayName.characters.first.toUpperCase()),
-              ),
+              HostAvatar(host: host),
               const SizedBox(width: 16),
               Expanded(
                 child: Row(

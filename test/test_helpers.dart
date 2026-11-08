@@ -8,6 +8,7 @@ import 'package:uessh/core/app_providers.dart';
 import 'package:uessh/core/secret_store.dart';
 import 'package:uessh/core/vault.dart';
 import 'package:uessh/features/hosts/host.dart';
+import 'package:uessh/features/hosts/host_geo.dart';
 import 'package:uessh/features/hosts/reachability.dart';
 import 'package:uessh/features/settings/app_settings.dart';
 import 'package:uessh/features/settings/settings_providers.dart';
@@ -19,7 +20,8 @@ class TestEnv {
   TestEnv()
     : dataDir = Directory.systemTemp.createTempSync('uessh_test_'),
       secrets = MemorySecretStore(),
-      reachability = FakeReachabilityChecker() {
+      reachability = FakeReachabilityChecker(),
+      geo = FakeGeoApi() {
     PackageInfo.setMockInitialValues(
       appName: 'uessh',
       packageName: 'dev.ueee.uessh',
@@ -32,6 +34,9 @@ class TestEnv {
   final Directory dataDir;
   final MemorySecretStore secrets;
   final FakeReachabilityChecker reachability;
+
+  /// Stands in for ipwho.is; tests never go online.
+  final FakeGeoApi geo;
 
   /// Unlocked, local mode, memory only. Tests of the lock screen replace
   /// it with a real vault (see vault_ui_test.dart).
@@ -47,6 +52,7 @@ class TestEnv {
     // is English, so pin the language.
     initialSettingsProvider.overrideWithValue(settings),
     reachabilityCheckerProvider.overrideWithValue(reachability),
+    geoApiProvider.overrideWithValue(geo),
   ];
 
   void dispose() {
@@ -95,6 +101,45 @@ class FakeReachabilityChecker implements ReachabilityChecker {
   Future<Duration?> check(Host host, ReachabilityMethod method) async {
     calls.add((address: host.address, method: method));
     return up[host.address];
+  }
+}
+
+/// Answers like ipwho.is from [places] (ip -> country code) and records
+/// what was asked. Names in [dns] resolve to IPs; anything else must be
+/// an IP already.
+class FakeGeoApi implements GeoApi {
+  final places = <String, String>{};
+  final dns = <String, String>{};
+  final lookups = <String>[];
+  final downloads = <Uri>[];
+
+  static const flagSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2">'
+      '<rect width="3" height="2" fill="#de2910"/></svg>';
+
+  @override
+  Future<InternetAddress?> resolve(String address) async =>
+      InternetAddress.tryParse(dns[address] ?? address);
+
+  @override
+  Future<Map<String, Object?>> lookup(String ip) async {
+    lookups.add(ip);
+    final code = places[ip];
+    if (code == null) return {'success': false, 'message': 'Not found'};
+    return {
+      'success': true,
+      'country': 'Country $code',
+      'country_code': code,
+      'region': 'Region',
+      'city': 'City',
+      'flag': {'img': 'https://cdn.ipwhois.io/flags/${code.toLowerCase()}.svg'},
+    };
+  }
+
+  @override
+  Future<String> download(Uri url) async {
+    downloads.add(url);
+    return flagSvg;
   }
 }
 

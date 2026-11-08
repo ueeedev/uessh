@@ -897,6 +897,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Host counts, status and your last connection at the top of the Hosts page';
 
   @override
+  String get hostIcon => 'Icon';
+
+  @override
+  String get iconLetter => 'Letter';
+
+  @override
+  String get iconSymbol => 'Symbol';
+
+  @override
+  String get iconFlag => 'Flag';
+
+  @override
+  String get iconColorAuto => 'Theme color';
+
+  @override
+  String get iconFlagHint =>
+      'Shows the flag of the country the host\'s IP is in (the IP is sent to ipwho.is). Falls back to the first letter when unknown, e.g. for LAN addresses.';
+
+  @override
+  String get moreSettings => 'More settings';
+
+  @override
+  String get lessSettings => 'Fewer settings';
+
+  @override
   String get trayShow => 'Show uessh';
 
   @override

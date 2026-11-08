@@ -104,6 +104,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // On: validation first.
+    await scrollTo(tester, find.widgetWithText(SwitchListTile, '主密码'));
     await tester.tap(find.widgetWithText(SwitchListTile, '主密码'));
     await tester.pumpAndSettle();
     expect(find.text('设置主密码'), findsOneWidget);
@@ -145,6 +146,7 @@ void main() {
     await pumpUntil(tester, () => lockTitle.evaluate().isEmpty);
 
     // Off: needs the current password.
+    await scrollTo(tester, find.widgetWithText(SwitchListTile, '主密码'));
     await tester.tap(find.widgetWithText(SwitchListTile, '主密码'));
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, '当前主密码'), 'nope');

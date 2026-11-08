@@ -826,6 +826,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get showHostOverviewSubtitle => '在主机页顶部显示主机数量、在线情况和上次连接';
 
   @override
+  String get hostIcon => '图标';
+
+  @override
+  String get iconLetter => '字母';
+
+  @override
+  String get iconSymbol => '图标';
+
+  @override
+  String get iconFlag => '国旗';
+
+  @override
+  String get iconColorAuto => '跟随主题色';
+
+  @override
+  String get iconFlagHint =>
+      '按主机 IP 查询所在国家/地区并显示国旗（IP 会发送给 ipwho.is）。查不到时（如内网地址）显示首字母。';
+
+  @override
+  String get moreSettings => '更多设置';
+
+  @override
+  String get lessSettings => '收起';
+
+  @override
   String get trayShow => '显示 uessh';
 
   @override

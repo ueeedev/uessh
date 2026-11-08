@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/l10n.dart';
 import '../../shell/navigation.dart';
 import '../hosts/host.dart';
+import '../hosts/host_avatar.dart';
 import '../hosts/hosts_page.dart' show ReachabilityDot, buildHostSections;
 import '../hosts/hosts_providers.dart';
 
@@ -285,15 +286,7 @@ class _HostRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundColor: scheme.primaryContainer,
-                    foregroundColor: scheme.onPrimaryContainer,
-                    child: Text(
-                      host.displayName.characters.first.toUpperCase(),
-                      style: theme.textTheme.labelMedium,
-                    ),
-                  ),
+                  HostAvatar(host: host, size: 28),
                   const SizedBox(width: 12),
                   ReachabilityDot(hostId: host.id),
                   Expanded(
