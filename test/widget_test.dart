@@ -159,6 +159,7 @@ void main() {
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
     final label = find.byKey(const ValueKey('app-version'));
+    await scrollTo(tester, label);
     expect(find.text('uessh 0.1.1 (2)'), findsOneWidget);
 
     // Inside the scrolling list (not pinned), below the last section.

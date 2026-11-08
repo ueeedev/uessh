@@ -246,5 +246,11 @@
   "timeHoursAgo": "{n, plural, =1{1 hour ago} other{{n} hours ago}}",
   "timeDaysAgo": "{n, plural, =1{1 day ago} other{{n} days ago}}",
   "showHostOverview": "Show host overview",
-  "showHostOverviewSubtitle": "Host counts, status and your last connection at the top of the Hosts page"
+  "showHostOverviewSubtitle": "Host counts, status and your last connection at the top of the Hosts page",
+  "trayShow": "Show uessh",
+  "trayQuickConnect": "Quick connect",
+  "trayQuit": "Quit uessh",
+  "runInBackground": "Keep running in background",
+  "runInBackgroundSubtitle": "Shows an icon in the menu bar or system tray; closing the window keeps uessh and its SSH sessions running",
+  "general": "General"
 }

@@ -824,4 +824,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get showHostOverviewSubtitle => '在主机页顶部显示主机数量、在线情况和上次连接';
+
+  @override
+  String get trayShow => '显示 uessh';
+
+  @override
+  String get trayQuickConnect => '快速连接';
+
+  @override
+  String get trayQuit => '退出 uessh';
+
+  @override
+  String get runInBackground => '后台常驻';
+
+  @override
+  String get runInBackgroundSubtitle => '在菜单栏或任务栏显示图标；关闭窗口后继续在后台运行，SSH 连接不会断开';
+
+  @override
+  String get general => '通用';
 }

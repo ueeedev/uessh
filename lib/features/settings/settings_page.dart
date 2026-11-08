@@ -37,6 +37,18 @@ class SettingsPage extends ConsumerWidget {
       title: context.l10n.navSettings,
       child: ListView(
         children: [
+          _SectionTitle(context.l10n.general),
+          Card(
+            child: SwitchListTile(
+              key: const ValueKey('run-in-background'),
+              secondary: const Icon(Icons.push_pin_outlined),
+              title: Text(context.l10n.runInBackground),
+              subtitle: Text(context.l10n.runInBackgroundSubtitle),
+              value: s.runInBackground,
+              onChanged: (v) => update((s) => s.copyWith(runInBackground: v)),
+            ),
+          ),
+          const SizedBox(height: 24),
           _SectionTitle(context.l10n.appearance),
           Card(
             child: Column(

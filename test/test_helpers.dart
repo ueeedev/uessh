@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/widgets.dart' show ListView, Scrollable;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -126,5 +127,21 @@ Future<void> pumpUntil(
     // Advance the fake clock too, so route transitions can finish.
     await tester.pump(const Duration(milliseconds: 20));
   }
+  await tester.pumpAndSettle();
+}
+
+/// Scrolls the page's list until [finder] is built and on screen (lists
+/// build lazily, so far-down items don't exist until scrolled to).
+Future<void> scrollTo(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(
+    finder,
+    300,
+    scrollable: find
+        .descendant(
+          of: find.byType(ListView),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
   await tester.pumpAndSettle();
 }

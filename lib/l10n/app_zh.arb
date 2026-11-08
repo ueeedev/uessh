@@ -507,5 +507,11 @@
     }
   },
   "showHostOverview": "显示主机概览",
-  "showHostOverviewSubtitle": "在主机页顶部显示主机数量、在线情况和上次连接"
+  "showHostOverviewSubtitle": "在主机页顶部显示主机数量、在线情况和上次连接",
+  "trayShow": "显示 uessh",
+  "trayQuickConnect": "快速连接",
+  "trayQuit": "退出 uessh",
+  "runInBackground": "后台常驻",
+  "runInBackgroundSubtitle": "在菜单栏或任务栏显示图标；关闭窗口后继续在后台运行，SSH 连接不会断开",
+  "general": "通用"
 }

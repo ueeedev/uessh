@@ -1579,6 +1579,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'在主机页顶部显示主机数量、在线情况和上次连接'**
   String get showHostOverviewSubtitle;
+
+  /// No description provided for @trayShow.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示 uessh'**
+  String get trayShow;
+
+  /// No description provided for @trayQuickConnect.
+  ///
+  /// In zh, this message translates to:
+  /// **'快速连接'**
+  String get trayQuickConnect;
+
+  /// No description provided for @trayQuit.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出 uessh'**
+  String get trayQuit;
+
+  /// No description provided for @runInBackground.
+  ///
+  /// In zh, this message translates to:
+  /// **'后台常驻'**
+  String get runInBackground;
+
+  /// No description provided for @runInBackgroundSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'在菜单栏或任务栏显示图标；关闭窗口后继续在后台运行，SSH 连接不会断开'**
+  String get runInBackgroundSubtitle;
+
+  /// No description provided for @general.
+  ///
+  /// In zh, this message translates to:
+  /// **'通用'**
+  String get general;
 }
 
 class _AppLocalizationsDelegate

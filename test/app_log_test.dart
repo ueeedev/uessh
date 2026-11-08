@@ -57,7 +57,7 @@ void main() {
 
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const ValueKey('open-log')));
+    await scrollTo(tester, find.byKey(const ValueKey('open-log')));
     await tester.tap(find.byKey(const ValueKey('open-log')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Connected to root@10.0.0.1'), findsOneWidget);

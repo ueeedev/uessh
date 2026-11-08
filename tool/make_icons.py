@@ -12,12 +12,17 @@ of other Dock icons.
 design/sidebar-logo-source.png (art with its own frame, transparent
 background) becomes the sidebar logo, assets/branding/logo.png.
 
+The tray icons are drawn here: a monochrome template for the macOS menu
+bar (assets/tray/tray_icon_macos.png: a terminal window with cat ears and
+a ">_" cut out; macOS tints it) and the app icon for the Windows
+notification area (assets/tray/tray_icon.ico).
+
 Needs Pillow (pip install pillow).
 """
 
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_SOURCE = ROOT / "design" / "app-icon-source.png"
@@ -26,6 +31,8 @@ MAC_DIR = ROOT / "macos" / "Runner" / "Assets.xcassets" / "AppIcon.appiconset"
 WIN_ICO = ROOT / "windows" / "runner" / "resources" / "app_icon.ico"
 SIDEBAR_LOGO = ROOT / "assets" / "branding" / "logo.png"
 PREVIEW = ROOT / "design" / "app-icon-macos-1024.png"
+TRAY_MAC = ROOT / "assets" / "tray" / "tray_icon_macos.png"
+TRAY_WIN = ROOT / "assets" / "tray" / "tray_icon.ico"
 
 CANVAS = 1024
 ARTWORK = 824  # Apple icon grid
@@ -81,6 +88,33 @@ def on_mac_grid(art: Image.Image) -> Image.Image:
     return canvas
 
 
+def tray_template(size: int = 44) -> Image.Image:
+    """Black-on-transparent menu bar icon (macOS colours template images).
+
+    Drawn at 8x and scaled down for smooth edges; 44px = 22pt @2x.
+    """
+    s = 8
+    n = size * s
+    img = Image.new("L", (n, n), 0)
+    d = ImageDraw.Draw(img)
+    u = n / 22  # one unit of a 22-unit grid
+
+    # Cat ears.
+    d.polygon([(4 * u, 8 * u), (5.2 * u, 1.8 * u), (9.4 * u, 6 * u)], fill=255)
+    d.polygon([(18 * u, 8 * u), (16.8 * u, 1.8 * u), (12.6 * u, 6 * u)], fill=255)
+    # Terminal window body.
+    d.rounded_rectangle([2.2 * u, 5.2 * u, 19.8 * u, 19.8 * u], radius=3.4 * u, fill=255)
+    # ">_" cut out of it.
+    w = 1.7 * u
+    d.line([(6.2 * u, 9.6 * u), (9.4 * u, 12.4 * u), (6.2 * u, 15.2 * u)], fill=0, width=int(w), joint="curve")
+    d.line([(11.2 * u, 15.6 * u), (15.6 * u, 15.6 * u)], fill=0, width=int(w))
+
+    alpha = img.resize((size, size), Image.LANCZOS)
+    out = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    out.putalpha(alpha)
+    return out
+
+
 def main() -> None:
     app = Image.open(APP_SOURCE).convert("RGBA")
 
@@ -95,6 +129,10 @@ def main() -> None:
     sidebar = trimmed_square(Image.open(SIDEBAR_SOURCE).convert("RGBA"))
     sidebar.resize((256, 256), Image.LANCZOS).save(SIDEBAR_LOGO, optimize=True)
 
+    tray_template().save(TRAY_MAC, optimize=True)
+    rounded(app, 256).save(TRAY_WIN, sizes=[(s, s) for s in (16, 20, 24, 32, 48)])
+
+    print("tray icons ->", TRAY_MAC.parent.relative_to(ROOT))
     print("macOS app icon ->", MAC_DIR.relative_to(ROOT))
     print("Windows app icon ->", WIN_ICO.relative_to(ROOT))
     print("sidebar logo ->", SIDEBAR_LOGO.relative_to(ROOT))

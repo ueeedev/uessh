@@ -11,6 +11,7 @@ import 'core/app_log.dart';
 import 'core/secret_store.dart';
 import 'core/vault.dart';
 import 'features/hosts/host_repository.dart';
+import 'shell/background_mode.dart';
 import 'features/settings/app_settings.dart';
 import 'features/settings/settings_providers.dart';
 
@@ -43,16 +44,18 @@ Future<void> main() async {
   final settings = await SettingsStore(dataDir: dataDir).load();
   final vault = await _openVault(dataDir);
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        dataDirProvider.overrideWithValue(dataDir),
-        initialSettingsProvider.overrideWithValue(settings),
-        vaultProvider.overrideWithValue(vault),
-      ],
-      child: const UesshApp(),
-    ),
+  // One container for the app and the tray/background service.
+  final container = ProviderContainer(
+    overrides: [
+      dataDirProvider.overrideWithValue(dataDir),
+      initialSettingsProvider.overrideWithValue(settings),
+      vaultProvider.overrideWithValue(vault),
+    ],
   );
+  runApp(
+    UncontrolledProviderScope(container: container, child: const UesshApp()),
+  );
+  await BackgroundMode(container).start();
 }
 
 /// Opens the encrypted vault. The first time (no vault yet), secrets saved

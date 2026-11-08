@@ -895,4 +895,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get showHostOverviewSubtitle =>
       'Host counts, status and your last connection at the top of the Hosts page';
+
+  @override
+  String get trayShow => 'Show uessh';
+
+  @override
+  String get trayQuickConnect => 'Quick connect';
+
+  @override
+  String get trayQuit => 'Quit uessh';
+
+  @override
+  String get runInBackground => 'Keep running in background';
+
+  @override
+  String get runInBackgroundSubtitle =>
+      'Shows an icon in the menu bar or system tray; closing the window keeps uessh and its SSH sessions running';
+
+  @override
+  String get general => 'General';
 }

@@ -28,6 +28,7 @@ class AppSettings {
     this.infoPanelWidth = defaultInfoPanelWidth,
     this.language = AppLanguage.system,
     this.showHostOverview = true,
+    this.runInBackground = true,
     this.lastConnectedHostId,
     this.lastConnectedAt,
   });
@@ -62,6 +63,9 @@ class AppSettings {
   /// Overview cards at the top of the hosts page.
   final bool showHostOverview;
 
+  /// Menu bar / tray icon; closing the window hides it instead of quitting.
+  final bool runInBackground;
+
   /// The host of the most recent successful SSH connection, and when.
   final String? lastConnectedHostId;
   final DateTime? lastConnectedAt;
@@ -84,6 +88,7 @@ class AppSettings {
     double? infoPanelWidth,
     AppLanguage? language,
     bool? showHostOverview,
+    bool? runInBackground,
   }) => _copy(
     themeMode: themeMode,
     followSystemAccent: followSystemAccent,
@@ -94,6 +99,7 @@ class AppSettings {
     infoPanelWidth: infoPanelWidth,
     language: language,
     showHostOverview: showHostOverview,
+    runInBackground: runInBackground,
   );
 
   AppSettings _copy({
@@ -106,6 +112,7 @@ class AppSettings {
     double? infoPanelWidth,
     AppLanguage? language,
     bool? showHostOverview,
+    bool? runInBackground,
     String? lastConnectedHostId,
     DateTime? lastConnectedAt,
   }) => AppSettings(
@@ -118,6 +125,7 @@ class AppSettings {
     infoPanelWidth: infoPanelWidth ?? this.infoPanelWidth,
     language: language ?? this.language,
     showHostOverview: showHostOverview ?? this.showHostOverview,
+    runInBackground: runInBackground ?? this.runInBackground,
     lastConnectedHostId: lastConnectedHostId ?? this.lastConnectedHostId,
     lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
   );
@@ -132,6 +140,7 @@ class AppSettings {
     'infoPanelWidth': infoPanelWidth,
     'language': language.name,
     'showHostOverview': showHostOverview,
+    'runInBackground': runInBackground,
     if (lastConnectedHostId != null) 'lastConnectedHostId': lastConnectedHostId,
     if (lastConnectedAt != null)
       'lastConnectedAt': lastConnectedAt!.toIso8601String(),
@@ -162,6 +171,7 @@ class AppSettings {
               .clamp(minInfoPanelWidth, maxInfoPanelWidth),
       language: AppLanguage.values.asNameMap()[json['language']] ?? d.language,
       showHostOverview: json['showHostOverview'] as bool? ?? d.showHostOverview,
+      runInBackground: json['runInBackground'] as bool? ?? d.runInBackground,
       lastConnectedHostId: json['lastConnectedHostId'] as String?,
       lastConnectedAt: DateTime.tryParse(
         json['lastConnectedAt'] as String? ?? '',
