@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/l10n.dart';
-import '../../shell/navigation.dart';
 import '../settings/settings_providers.dart';
 import '../terminal/sessions_providers.dart';
 import 'host.dart';
@@ -201,10 +200,8 @@ class _LastConnectedCard extends ConsumerWidget {
           : FilledButton.tonalIcon(
               key: const ValueKey('overview-connect'),
               onPressed: () {
+                // Opens (and shows) its own tab.
                 ref.read(sessionsProvider.notifier).open(h);
-                ref
-                    .read(navigationProvider.notifier)
-                    .go(AppDestination.terminal);
               },
               icon: const Icon(Icons.terminal, size: 18),
               label: Text(l.connect),

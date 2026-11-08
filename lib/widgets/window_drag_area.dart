@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -45,7 +46,7 @@ class WindowDragArea extends StatelessWidget {
             key: const ValueKey('window-drag-surface'),
             behavior: HitTestBehavior.opaque,
             onPanStart: (_) => windowManager.startDragging(),
-            onDoubleTap: _toggleMaximize,
+            onDoubleTap: toggleMaximize,
           ),
         ),
         child,
@@ -54,11 +55,83 @@ class WindowDragArea extends StatelessWidget {
   }
 }
 
-Future<void> _toggleMaximize() async {
+/// Maximizes the window, or restores it if it already is.
+Future<void> toggleMaximize() async {
   if (await windowManager.isMaximized()) {
     await windowManager.unmaximize();
   } else {
     await windowManager.maximize();
+  }
+}
+
+/// Title-bar behaviour for an area whose empty parts are covered by other
+/// widgets (e.g. the tab strip's list): drag on a spot where [isBlank] is
+/// true moves the window, double-click there maximizes / restores it.
+///
+/// Works on raw pointer events, outside the gesture arena, so the
+/// widgets inside keep their taps and drags with no delay.
+class TitleBarListener extends StatefulWidget {
+  const TitleBarListener({
+    super.key,
+    required this.isBlank,
+    required this.child,
+  });
+
+  final bool Function(Offset local) isBlank;
+  final Widget child;
+
+  @override
+  State<TitleBarListener> createState() => _TitleBarListenerState();
+}
+
+class _TitleBarListenerState extends State<TitleBarListener> {
+  Offset? _down;
+  bool _dragging = false;
+  Duration? _lastUp;
+  Offset? _lastUpAt;
+
+  static const _slop = 4.0;
+  static const _doubleClick = Duration(milliseconds: 500);
+
+  @override
+  Widget build(BuildContext context) {
+    if (!usesCustomTitleBar) return widget.child;
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (e) {
+        _down = e.buttons == kPrimaryButton && widget.isBlank(e.localPosition)
+            ? e.position
+            : null;
+        _dragging = false;
+      },
+      onPointerMove: (e) {
+        final down = _down;
+        if (down == null || _dragging) return;
+        if ((e.position - down).distance > _slop) {
+          _dragging = true;
+          _lastUp = null;
+          windowManager.startDragging();
+        }
+      },
+      onPointerUp: (e) {
+        final down = _down;
+        _down = null;
+        if (down == null || _dragging) return;
+        final last = _lastUp, lastAt = _lastUpAt;
+        if (last != null &&
+            lastAt != null &&
+            e.timeStamp - last < _doubleClick &&
+            (e.position - lastAt).distance < 8) {
+          _lastUp = null;
+          toggleMaximize();
+        } else {
+          _lastUp = e.timeStamp;
+          _lastUpAt = e.position;
+        }
+      },
+      onPointerCancel: (_) => _down = null,
+      child: widget.child,
+    );
   }
 }
 
@@ -138,7 +211,7 @@ class _WindowCaptionButtonsState extends State<WindowCaptionButtons>
         ),
         _CaptionButton(
           kind: _maximized ? _Caption.restore : _Caption.maximize,
-          onPressed: _toggleMaximize,
+          onPressed: toggleMaximize,
         ),
         _CaptionButton(
           kind: _Caption.close,

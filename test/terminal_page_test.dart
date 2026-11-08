@@ -52,7 +52,7 @@ void main() {
             authMethod: AuthMethod.password,
           ),
         );
-    await tester.tap(find.text('终端'));
+    await tester.pump(); // opening a session shows its tab
     await pumpUntil(tester, () => find.text('重新连接').evaluate().isNotEmpty);
   }
 
@@ -147,7 +147,7 @@ void main() {
           ),
         );
       }
-      await tester.tap(find.text('终端'));
+      await tester.pump(); // opening a session shows its tab
       await settleIo(tester);
       await tester.pumpAndSettle();
       return notifier;
@@ -177,15 +177,23 @@ void main() {
         String? active() => notifier.state.active?.host.id;
         expect(active(), 'three');
 
+        bool home() => notifier.state.homeActive;
+        // 1 is the workbench; SSH tabs follow; 9 is the last tab.
         await press(tester, mod, LogicalKeyboardKey.digit1);
-        expect(active(), 'one');
+        expect(home(), isTrue);
         await press(tester, mod, LogicalKeyboardKey.digit2);
+        expect(home(), isFalse);
+        expect(active(), 'one');
+        await press(tester, mod, LogicalKeyboardKey.digit3);
         expect(active(), 'two');
         await press(tester, mod, LogicalKeyboardKey.digit9);
         expect(active(), 'three');
         await press(tester, mod, LogicalKeyboardKey.digit5);
-        expect(active(), 'three', reason: 'no 5th tab');
+        expect(active(), 'three', reason: 'no 4th SSH tab');
+        // Also from the workbench.
         await press(tester, mod, LogicalKeyboardKey.digit1);
+        await press(tester, mod, LogicalKeyboardKey.digit2);
+        expect(home(), isFalse);
         expect(active(), 'one');
         debugDefaultTargetPlatformOverride = null;
       });
@@ -228,7 +236,7 @@ void main() {
               authMethod: AuthMethod.password,
             ),
           );
-      await tester.tap(find.text('终端'));
+      await tester.pump(); // opening a session shows its tab
       // The connecting animation never settles, so pump by time.
       for (var i = 0; i < 10; i++) {
         await tester.runAsync(
@@ -270,7 +278,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(tab, findsNothing);
-      expect(find.text('没有打开的会话'), findsOneWidget);
+      // No SSH tabs left: back on the workbench.
+      expect(find.byKey(const ValueKey('home-card')), findsOneWidget);
       debugDefaultTargetPlatformOverride = null;
     });
 
@@ -304,7 +313,8 @@ void main() {
       await tester.tap(find.byTooltip('关闭').first);
       await tester.pumpAndSettle();
       expect(confirm, findsNothing);
-      expect(find.text('没有打开的会话'), findsOneWidget);
+      // No SSH tabs left: back on the workbench.
+      expect(find.byKey(const ValueKey('home-card')), findsOneWidget);
     });
   });
 
@@ -494,7 +504,7 @@ void main() {
       expect(find.byType(BrowserTab), findsNWidgets(2));
     });
 
-    testWidgets('empty terminal page has a "new session" button', (
+    testWidgets('no SSH tabs: the workbench tab, and "+" opens the picker', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 800);
@@ -504,9 +514,11 @@ void main() {
         ProviderScope(overrides: env.overrides, child: const UesshApp()),
       );
       await settleIo(tester);
-      await tester.tap(find.text('终端'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('empty-new-session')));
+      expect(find.byKey(const ValueKey('home-tab')), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-card')), findsOneWidget);
+      expect(find.byType(BrowserTab), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('new-tab')));
       await tester.pumpAndSettle();
       expect(picker, findsOneWidget);
 

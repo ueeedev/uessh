@@ -1663,6 +1663,1182 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'通用'**
   String get general;
+
+  /// No description provided for @aiAssistant.
+  ///
+  /// In zh, this message translates to:
+  /// **'AI 助手'**
+  String get aiAssistant;
+
+  /// No description provided for @aiShowPanel.
+  ///
+  /// In zh, this message translates to:
+  /// **'AI 助手'**
+  String get aiShowPanel;
+
+  /// No description provided for @aiHidePanel.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏 AI 助手'**
+  String get aiHidePanel;
+
+  /// No description provided for @aiClosePanel.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭 AI 助手'**
+  String get aiClosePanel;
+
+  /// No description provided for @aiNewChat.
+  ///
+  /// In zh, this message translates to:
+  /// **'新对话'**
+  String get aiNewChat;
+
+  /// No description provided for @aiSetupTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有配置 AI 供应商'**
+  String get aiSetupTitle;
+
+  /// No description provided for @aiSetupBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'在设置里填入 API Key 后即可使用。支持 Claude、ChatGPT、DeepSeek、Gemini、Grok 和自定义接口。'**
+  String get aiSetupBody;
+
+  /// No description provided for @aiOpenSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'前往设置'**
+  String get aiOpenSettings;
+
+  /// No description provided for @aiInputHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入问题，Enter 发送，Shift+Enter 换行'**
+  String get aiInputHint;
+
+  /// No description provided for @aiPickModel.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择模型'**
+  String get aiPickModel;
+
+  /// No description provided for @aiLoadingModels.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在加载模型…'**
+  String get aiLoadingModels;
+
+  /// No description provided for @aiModelsFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法获取模型列表'**
+  String get aiModelsFailed;
+
+  /// No description provided for @aiNoModels.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有可用模型'**
+  String get aiNoModels;
+
+  /// No description provided for @aiRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get aiRetry;
+
+  /// No description provided for @aiManageProviders.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理 AI 供应商…'**
+  String get aiManageProviders;
+
+  /// No description provided for @aiAttachOn.
+  ///
+  /// In zh, this message translates to:
+  /// **'附带终端输出：开（最近 80 行）'**
+  String get aiAttachOn;
+
+  /// No description provided for @aiAttachOff.
+  ///
+  /// In zh, this message translates to:
+  /// **'附带终端输出：关'**
+  String get aiAttachOff;
+
+  /// No description provided for @aiSend.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送'**
+  String get aiSend;
+
+  /// No description provided for @aiStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止'**
+  String get aiStop;
+
+  /// No description provided for @aiCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制'**
+  String get aiCopied;
+
+  /// No description provided for @aiPasteToTerminal.
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴到终端（不会执行）'**
+  String get aiPasteToTerminal;
+
+  /// No description provided for @aiReasoning.
+  ///
+  /// In zh, this message translates to:
+  /// **'思考过程'**
+  String get aiReasoning;
+
+  /// No description provided for @aiRefused.
+  ///
+  /// In zh, this message translates to:
+  /// **'模型拒绝回答这个问题。'**
+  String get aiRefused;
+
+  /// No description provided for @aiTruncated.
+  ///
+  /// In zh, this message translates to:
+  /// **'回答过长，已被截断。'**
+  String get aiTruncated;
+
+  /// No description provided for @aiNoKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'这个供应商还没有 API Key'**
+  String get aiNoKey;
+
+  /// No description provided for @aiWithTerminal.
+  ///
+  /// In zh, this message translates to:
+  /// **'已附带终端输出'**
+  String get aiWithTerminal;
+
+  /// No description provided for @aiStopped.
+  ///
+  /// In zh, this message translates to:
+  /// **'已停止'**
+  String get aiStopped;
+
+  /// No description provided for @aiSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'AI 助手'**
+  String get aiSection;
+
+  /// No description provided for @aiProviderConfigured.
+  ///
+  /// In zh, this message translates to:
+  /// **'已配置'**
+  String get aiProviderConfigured;
+
+  /// No description provided for @aiProviderNotConfigured.
+  ///
+  /// In zh, this message translates to:
+  /// **'未配置'**
+  String get aiProviderNotConfigured;
+
+  /// No description provided for @aiAddCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加自定义供应商'**
+  String get aiAddCustom;
+
+  /// No description provided for @aiCustomProvider.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义供应商'**
+  String get aiCustomProvider;
+
+  /// No description provided for @aiApiKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'API Key'**
+  String get aiApiKey;
+
+  /// No description provided for @aiApiKeyKeep.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存；留空则保持不变'**
+  String get aiApiKeyKeep;
+
+  /// No description provided for @aiGetKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'获取 API Key'**
+  String get aiGetKey;
+
+  /// No description provided for @aiBaseUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'接口地址'**
+  String get aiBaseUrl;
+
+  /// No description provided for @aiBaseUrlRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入接口地址'**
+  String get aiBaseUrlRequired;
+
+  /// No description provided for @aiBaseUrlInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入以 http:// 或 https:// 开头的地址'**
+  String get aiBaseUrlInvalid;
+
+  /// No description provided for @aiProviderName.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get aiProviderName;
+
+  /// No description provided for @aiNameRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入名称'**
+  String get aiNameRequired;
+
+  /// No description provided for @aiProtocol.
+  ///
+  /// In zh, this message translates to:
+  /// **'接口格式'**
+  String get aiProtocol;
+
+  /// No description provided for @aiProtocolOpenai.
+  ///
+  /// In zh, this message translates to:
+  /// **'OpenAI 兼容'**
+  String get aiProtocolOpenai;
+
+  /// No description provided for @aiProtocolAnthropic.
+  ///
+  /// In zh, this message translates to:
+  /// **'Anthropic'**
+  String get aiProtocolAnthropic;
+
+  /// No description provided for @aiExtraModels.
+  ///
+  /// In zh, this message translates to:
+  /// **'额外模型'**
+  String get aiExtraModels;
+
+  /// No description provided for @aiExtraModelsHelper.
+  ///
+  /// In zh, this message translates to:
+  /// **'接口不提供模型列表时，在这里填写模型 ID，用逗号分隔'**
+  String get aiExtraModelsHelper;
+
+  /// No description provided for @aiTest.
+  ///
+  /// In zh, this message translates to:
+  /// **'测试连接'**
+  String get aiTest;
+
+  /// No description provided for @aiTesting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在测试…'**
+  String get aiTesting;
+
+  /// No description provided for @aiKeyStored.
+  ///
+  /// In zh, this message translates to:
+  /// **'API Key 加密保存在本机保险库里，不会写入配置文件。'**
+  String get aiKeyStored;
+
+  /// No description provided for @aiRemoveProvider.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除'**
+  String get aiRemoveProvider;
+
+  /// No description provided for @aiRemoveTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除这个供应商？'**
+  String get aiRemoveTitle;
+
+  /// No description provided for @aiRemoveBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'会删除它的 API Key 和设置。'**
+  String get aiRemoveBody;
+
+  /// No description provided for @aiKeyRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入 API Key'**
+  String get aiKeyRequired;
+
+  /// No description provided for @aiBaseUrlDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'留空使用默认地址：{url}'**
+  String aiBaseUrlDefault(String url);
+
+  /// No description provided for @aiTestOk.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接成功，可用模型 {count} 个'**
+  String aiTestOk(int count);
+
+  /// No description provided for @aiTestFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接失败：{error}'**
+  String aiTestFailed(String error);
+
+  /// No description provided for @aiToolRun.
+  ///
+  /// In zh, this message translates to:
+  /// **'执行命令'**
+  String get aiToolRun;
+
+  /// No description provided for @aiToolReadTerminal.
+  ///
+  /// In zh, this message translates to:
+  /// **'读取终端'**
+  String get aiToolReadTerminal;
+
+  /// No description provided for @aiToolWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待你允许'**
+  String get aiToolWaiting;
+
+  /// No description provided for @aiToolRunning.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行中'**
+  String get aiToolRunning;
+
+  /// No description provided for @aiToolDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get aiToolDone;
+
+  /// No description provided for @aiToolDenied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已拒绝'**
+  String get aiToolDenied;
+
+  /// No description provided for @aiToolFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get aiToolFailed;
+
+  /// No description provided for @aiToolMayChange.
+  ///
+  /// In zh, this message translates to:
+  /// **'这条命令可能会修改服务器，你允许后才会执行。'**
+  String get aiToolMayChange;
+
+  /// No description provided for @aiToolAskAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'按当前设置，每条命令都需要你允许。'**
+  String get aiToolAskAll;
+
+  /// No description provided for @aiAllow.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许执行'**
+  String get aiAllow;
+
+  /// No description provided for @aiDeny.
+  ///
+  /// In zh, this message translates to:
+  /// **'拒绝'**
+  String get aiDeny;
+
+  /// No description provided for @aiShowOutput.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示输出'**
+  String get aiShowOutput;
+
+  /// No description provided for @aiHideOutput.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起输出'**
+  String get aiHideOutput;
+
+  /// No description provided for @aiNoOutput.
+  ///
+  /// In zh, this message translates to:
+  /// **'（没有输出）'**
+  String get aiNoOutput;
+
+  /// No description provided for @aiStepLimit.
+  ///
+  /// In zh, this message translates to:
+  /// **'已达到单条消息的步骤上限；回复「继续」可以接着做。'**
+  String get aiStepLimit;
+
+  /// No description provided for @aiToolMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'命令执行'**
+  String get aiToolMode;
+
+  /// No description provided for @aiToolModeSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许 AI 在当前连接的主机上执行命令来排查和处理问题'**
+  String get aiToolModeSubtitle;
+
+  /// No description provided for @aiToolModeOff.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get aiToolModeOff;
+
+  /// No description provided for @aiToolModeAsk.
+  ///
+  /// In zh, this message translates to:
+  /// **'每条命令都询问'**
+  String get aiToolModeAsk;
+
+  /// No description provided for @aiToolModeAuto.
+  ///
+  /// In zh, this message translates to:
+  /// **'只读命令自动执行'**
+  String get aiToolModeAuto;
+
+  /// No description provided for @aiToolExit.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出码 {code}'**
+  String aiToolExit(int code);
+
+  /// No description provided for @aiToolModeAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全量允许（不再询问）'**
+  String get aiToolModeAll;
+
+  /// No description provided for @aiAllowAllTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许 AI 执行所有命令？'**
+  String get aiAllowAllTitle;
+
+  /// No description provided for @aiAllowAllBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，AI 执行任何命令都不再询问你，包括删除文件、修改配置、重启服务等。它能做当前 SSH 用户能做的一切，误操作可能造成数据丢失或服务中断。建议只在测试机上使用。'**
+  String get aiAllowAllBody;
+
+  /// No description provided for @aiAllowAllConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'仍要开启'**
+  String get aiAllowAllConfirm;
+
+  /// No description provided for @splitRight.
+  ///
+  /// In zh, this message translates to:
+  /// **'向右拆分'**
+  String get splitRight;
+
+  /// No description provided for @splitDown.
+  ///
+  /// In zh, this message translates to:
+  /// **'向下拆分'**
+  String get splitDown;
+
+  /// No description provided for @zoomPane.
+  ///
+  /// In zh, this message translates to:
+  /// **'最大化窗格'**
+  String get zoomPane;
+
+  /// No description provided for @restorePane.
+  ///
+  /// In zh, this message translates to:
+  /// **'还原窗格'**
+  String get restorePane;
+
+  /// No description provided for @moveToNewTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'拆分到新标签'**
+  String get moveToNewTab;
+
+  /// No description provided for @closePane.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭窗格'**
+  String get closePane;
+
+  /// No description provided for @broadcastOn.
+  ///
+  /// In zh, this message translates to:
+  /// **'广播输入到所有窗格'**
+  String get broadcastOn;
+
+  /// No description provided for @broadcastOff.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止广播输入'**
+  String get broadcastOff;
+
+  /// No description provided for @broadcasting.
+  ///
+  /// In zh, this message translates to:
+  /// **'广播中'**
+  String get broadcasting;
+
+  /// No description provided for @workspaceFull.
+  ///
+  /// In zh, this message translates to:
+  /// **'一个工作区最多放 9 个窗格'**
+  String get workspaceFull;
+
+  /// No description provided for @closeWorkspaceTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭这个工作区？'**
+  String get closeWorkspaceTitle;
+
+  /// No description provided for @dropHere.
+  ///
+  /// In zh, this message translates to:
+  /// **'放到这里'**
+  String get dropHere;
+
+  /// No description provided for @closeWorkspaceBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'会关闭其中的 {count} 个连接。'**
+  String closeWorkspaceBody(int count);
+
+  /// No description provided for @workspaceName.
+  ///
+  /// In zh, this message translates to:
+  /// **'工作区 {n}'**
+  String workspaceName(int n);
+
+  /// No description provided for @renameWorkspaceHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'点击重命名'**
+  String get renameWorkspaceHint;
+
+  /// No description provided for @aiHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'历史对话'**
+  String get aiHistory;
+
+  /// No description provided for @aiHistoryEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有历史对话'**
+  String get aiHistoryEmpty;
+
+  /// No description provided for @aiHistoryThisHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'这台主机'**
+  String get aiHistoryThisHost;
+
+  /// No description provided for @aiHistoryOtherHosts.
+  ///
+  /// In zh, this message translates to:
+  /// **'其他主机'**
+  String get aiHistoryOtherHosts;
+
+  /// No description provided for @aiHistoryDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除这条对话'**
+  String get aiHistoryDelete;
+
+  /// No description provided for @aiBackToChat.
+  ///
+  /// In zh, this message translates to:
+  /// **'返回对话'**
+  String get aiBackToChat;
+
+  /// No description provided for @aiClearHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除 AI 对话记录'**
+  String get aiClearHistory;
+
+  /// No description provided for @aiClearHistorySubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'对话记录加密保存在本机，最多保留 200 条'**
+  String get aiClearHistorySubtitle;
+
+  /// No description provided for @aiClearHistoryTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除所有 AI 对话记录？'**
+  String get aiClearHistoryTitle;
+
+  /// No description provided for @aiClearHistoryBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'所有主机的 AI 对话都会被删除，无法恢复。'**
+  String get aiClearHistoryBody;
+
+  /// No description provided for @aiClear.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除'**
+  String get aiClear;
+
+  /// No description provided for @filesShow.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件'**
+  String get filesShow;
+
+  /// No description provided for @filesHide.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭文件'**
+  String get filesHide;
+
+  /// No description provided for @filesBack.
+  ///
+  /// In zh, this message translates to:
+  /// **'后退'**
+  String get filesBack;
+
+  /// No description provided for @filesForward.
+  ///
+  /// In zh, this message translates to:
+  /// **'前进'**
+  String get filesForward;
+
+  /// No description provided for @filesUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'上一级'**
+  String get filesUp;
+
+  /// No description provided for @filesRefresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新'**
+  String get filesRefresh;
+
+  /// No description provided for @filesFollow.
+  ///
+  /// In zh, this message translates to:
+  /// **'跟随终端当前目录'**
+  String get filesFollow;
+
+  /// No description provided for @filesShowHidden.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示隐藏文件'**
+  String get filesShowHidden;
+
+  /// No description provided for @filesHideHidden.
+  ///
+  /// In zh, this message translates to:
+  /// **'不显示隐藏文件'**
+  String get filesHideHidden;
+
+  /// No description provided for @viewIcons.
+  ///
+  /// In zh, this message translates to:
+  /// **'图标'**
+  String get viewIcons;
+
+  /// No description provided for @viewList.
+  ///
+  /// In zh, this message translates to:
+  /// **'列表'**
+  String get viewList;
+
+  /// No description provided for @viewColumns.
+  ///
+  /// In zh, this message translates to:
+  /// **'分栏'**
+  String get viewColumns;
+
+  /// No description provided for @viewGallery.
+  ///
+  /// In zh, this message translates to:
+  /// **'画廊'**
+  String get viewGallery;
+
+  /// No description provided for @colName.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get colName;
+
+  /// No description provided for @colModified.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改日期'**
+  String get colModified;
+
+  /// No description provided for @colSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'大小'**
+  String get colSize;
+
+  /// No description provided for @colKind.
+  ///
+  /// In zh, this message translates to:
+  /// **'种类'**
+  String get colKind;
+
+  /// No description provided for @filesEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'空文件夹'**
+  String get filesEmpty;
+
+  /// No description provided for @filesNotConnected.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接后才能浏览文件'**
+  String get filesNotConnected;
+
+  /// No description provided for @filesLocating.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在定位终端目录…'**
+  String get filesLocating;
+
+  /// No description provided for @filesOpen.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开'**
+  String get filesOpen;
+
+  /// No description provided for @filesCdHere.
+  ///
+  /// In zh, this message translates to:
+  /// **'在终端中进入'**
+  String get filesCdHere;
+
+  /// No description provided for @filesCopyPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制路径'**
+  String get filesCopyPath;
+
+  /// No description provided for @filesDownload.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载…'**
+  String get filesDownload;
+
+  /// No description provided for @filesNoPreview.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有预览'**
+  String get filesNoPreview;
+
+  /// No description provided for @filesPermissions.
+  ///
+  /// In zh, this message translates to:
+  /// **'权限'**
+  String get filesPermissions;
+
+  /// No description provided for @kindFolder.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件夹'**
+  String get kindFolder;
+
+  /// No description provided for @kindImage.
+  ///
+  /// In zh, this message translates to:
+  /// **'图片'**
+  String get kindImage;
+
+  /// No description provided for @kindText.
+  ///
+  /// In zh, this message translates to:
+  /// **'文本'**
+  String get kindText;
+
+  /// No description provided for @kindCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'代码'**
+  String get kindCode;
+
+  /// No description provided for @kindArchive.
+  ///
+  /// In zh, this message translates to:
+  /// **'压缩包'**
+  String get kindArchive;
+
+  /// No description provided for @kindVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频'**
+  String get kindVideo;
+
+  /// No description provided for @kindAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'音频'**
+  String get kindAudio;
+
+  /// No description provided for @kindPdf.
+  ///
+  /// In zh, this message translates to:
+  /// **'PDF 文稿'**
+  String get kindPdf;
+
+  /// No description provided for @kindDocument.
+  ///
+  /// In zh, this message translates to:
+  /// **'文档'**
+  String get kindDocument;
+
+  /// No description provided for @kindExecutable.
+  ///
+  /// In zh, this message translates to:
+  /// **'可执行文件'**
+  String get kindExecutable;
+
+  /// No description provided for @kindFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件'**
+  String get kindFile;
+
+  /// No description provided for @kindLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'替身'**
+  String get kindLink;
+
+  /// No description provided for @filesItems.
+  ///
+  /// In zh, this message translates to:
+  /// **'{n} 项'**
+  String filesItems(int n);
+
+  /// No description provided for @filesError.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法打开：{error}'**
+  String filesError(String error);
+
+  /// No description provided for @filesDownloaded.
+  ///
+  /// In zh, this message translates to:
+  /// **'已下载到 {path}'**
+  String filesDownloaded(String path);
+
+  /// No description provided for @filesDownloading.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在下载 {name}…'**
+  String filesDownloading(String name);
+
+  /// No description provided for @aiAddProvider.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加 AI 供应商'**
+  String get aiAddProvider;
+
+  /// No description provided for @aiNoProviders.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有添加 AI 供应商'**
+  String get aiNoProviders;
+
+  /// No description provided for @aiNoProvidersHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加一个供应商并填入 API Key，就可以在终端页使用 AI 助手'**
+  String get aiNoProvidersHint;
+
+  /// No description provided for @aiAlreadyAdded.
+  ///
+  /// In zh, this message translates to:
+  /// **'已添加'**
+  String get aiAlreadyAdded;
+
+  /// No description provided for @filesUpload.
+  ///
+  /// In zh, this message translates to:
+  /// **'上传文件…'**
+  String get filesUpload;
+
+  /// No description provided for @filesUploadHere.
+  ///
+  /// In zh, this message translates to:
+  /// **'上传文件到这里…'**
+  String get filesUploadHere;
+
+  /// No description provided for @dropResolving.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在获取当前目录…'**
+  String get dropResolving;
+
+  /// No description provided for @uploadNotConnected.
+  ///
+  /// In zh, this message translates to:
+  /// **'未连接，无法上传'**
+  String get uploadNotConnected;
+
+  /// No description provided for @overwriteTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'替换已有的项目？'**
+  String get overwriteTitle;
+
+  /// No description provided for @overwriteReplace.
+  ///
+  /// In zh, this message translates to:
+  /// **'替换'**
+  String get overwriteReplace;
+
+  /// No description provided for @overwriteSkip.
+  ///
+  /// In zh, this message translates to:
+  /// **'跳过'**
+  String get overwriteSkip;
+
+  /// No description provided for @dropToUpload.
+  ///
+  /// In zh, this message translates to:
+  /// **'松开上传到 {path}'**
+  String dropToUpload(String path);
+
+  /// No description provided for @uploadProgress.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在上传到 {path}'**
+  String uploadProgress(String path);
+
+  /// No description provided for @uploadDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'已上传 {count} 个文件到 {path}'**
+  String uploadDone(int count, String path);
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'上传失败：{error}'**
+  String uploadFailed(String error);
+
+  /// No description provided for @overwriteBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'{path} 里已有同名项目：{names}'**
+  String overwriteBody(String path, String names);
+
+  /// No description provided for @uploadCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{done}/{total} 个文件'**
+  String uploadCount(int done, int total);
+
+  /// No description provided for @aiToolHiddenChars.
+  ///
+  /// In zh, this message translates to:
+  /// **'命令里有不可见或反向的字符（已标成 <U+…>），可能和看上去的不一样，请仔细确认。'**
+  String get aiToolHiddenChars;
+
+  /// No description provided for @aiToolOnHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'在 {host} 上执行'**
+  String aiToolOnHost(String host);
+
+  /// No description provided for @aiPasteRunsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'粘贴后会直接执行'**
+  String get aiPasteRunsTitle;
+
+  /// No description provided for @aiPasteAnyway.
+  ///
+  /// In zh, this message translates to:
+  /// **'仍要粘贴'**
+  String get aiPasteAnyway;
+
+  /// No description provided for @aiPasteRunsBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'这台服务器的 Shell 没有开启安全粘贴，多行内容粘贴后，前 {n} 行会像按了回车一样立即执行。'**
+  String aiPasteRunsBody(int n);
+
+  /// No description provided for @aiBaseUrlHttps.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要使用 https://，否则 API Key 会明文传输（本机 http://localhost 除外）'**
+  String get aiBaseUrlHttps;
+
+  /// No description provided for @aiAllowAllActive.
+  ///
+  /// In zh, this message translates to:
+  /// **'全量允许已开启：AI 执行任何命令都不会询问你。点此去设置更改'**
+  String get aiAllowAllActive;
+
+  /// No description provided for @workbench.
+  ///
+  /// In zh, this message translates to:
+  /// **'工作台'**
+  String get workbench;
+
+  /// No description provided for @reconnectingIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'{seconds} 秒后自动重连（第 {attempt}/{total} 次）'**
+  String reconnectingIn(int seconds, int attempt, int total);
+
+  /// No description provided for @reconnectGaveUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'已重连 {count} 次仍未成功，停止自动重连'**
+  String reconnectGaveUp(int count);
+
+  /// No description provided for @reconnectBanner.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接已断开，{seconds} 秒后重连（{attempt}/{total}）'**
+  String reconnectBanner(int seconds, int attempt, int total);
+
+  /// No description provided for @reconnectingNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在重连（{attempt}/{total}）…'**
+  String reconnectingNow(int attempt, int total);
+
+  /// No description provided for @reconnectNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'立即重连'**
+  String get reconnectNow;
+
+  /// No description provided for @settingsReconnect.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动重连'**
+  String get settingsReconnect;
+
+  /// No description provided for @settingsReconnectSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 连接意外断开后自动重新连接；输入 exit 退出不会重连'**
+  String get settingsReconnectSubtitle;
+
+  /// No description provided for @settingsReconnectAttempts.
+  ///
+  /// In zh, this message translates to:
+  /// **'重连次数'**
+  String get settingsReconnectAttempts;
+
+  /// No description provided for @settingsReconnectDelay.
+  ///
+  /// In zh, this message translates to:
+  /// **'重连间隔'**
+  String get settingsReconnectDelay;
+
+  /// No description provided for @reconnectAttemptsValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 次'**
+  String reconnectAttemptsValue(int count);
+
+  /// No description provided for @reconnectDelayValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{seconds} 秒'**
+  String reconnectDelayValue(int seconds);
+
+  /// No description provided for @sshSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 连接'**
+  String get sshSection;
+
+  /// No description provided for @settingsHighlight.
+  ///
+  /// In zh, this message translates to:
+  /// **'命令语法高亮'**
+  String get settingsHighlight;
+
+  /// No description provided for @settingsHighlightSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'在终端里为正在输入的命令着色，只在本机显示，不修改服务器'**
+  String get settingsHighlightSubtitle;
+
+  /// No description provided for @highlightCommand.
+  ///
+  /// In zh, this message translates to:
+  /// **'命令'**
+  String get highlightCommand;
+
+  /// No description provided for @highlightDangerous.
+  ///
+  /// In zh, this message translates to:
+  /// **'危险命令'**
+  String get highlightDangerous;
+
+  /// No description provided for @highlightOption.
+  ///
+  /// In zh, this message translates to:
+  /// **'选项'**
+  String get highlightOption;
+
+  /// No description provided for @highlightString.
+  ///
+  /// In zh, this message translates to:
+  /// **'字符串'**
+  String get highlightString;
+
+  /// No description provided for @highlightVariable.
+  ///
+  /// In zh, this message translates to:
+  /// **'变量'**
+  String get highlightVariable;
+
+  /// No description provided for @highlightOperator.
+  ///
+  /// In zh, this message translates to:
+  /// **'管道/重定向'**
+  String get highlightOperator;
+
+  /// No description provided for @highlightComment.
+  ///
+  /// In zh, this message translates to:
+  /// **'注释'**
+  String get highlightComment;
+
+  /// No description provided for @highlightResetAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部恢复默认'**
+  String get highlightResetAll;
+
+  /// No description provided for @highlightDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认颜色'**
+  String get highlightDefault;
 }
 
 class _AppLocalizationsDelegate

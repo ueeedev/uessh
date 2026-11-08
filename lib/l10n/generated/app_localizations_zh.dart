@@ -867,4 +867,643 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get general => '通用';
+
+  @override
+  String get aiAssistant => 'AI 助手';
+
+  @override
+  String get aiShowPanel => 'AI 助手';
+
+  @override
+  String get aiHidePanel => '隐藏 AI 助手';
+
+  @override
+  String get aiClosePanel => '关闭 AI 助手';
+
+  @override
+  String get aiNewChat => '新对话';
+
+  @override
+  String get aiSetupTitle => '还没有配置 AI 供应商';
+
+  @override
+  String get aiSetupBody =>
+      '在设置里填入 API Key 后即可使用。支持 Claude、ChatGPT、DeepSeek、Gemini、Grok 和自定义接口。';
+
+  @override
+  String get aiOpenSettings => '前往设置';
+
+  @override
+  String get aiInputHint => '输入问题，Enter 发送，Shift+Enter 换行';
+
+  @override
+  String get aiPickModel => '选择模型';
+
+  @override
+  String get aiLoadingModels => '正在加载模型…';
+
+  @override
+  String get aiModelsFailed => '无法获取模型列表';
+
+  @override
+  String get aiNoModels => '没有可用模型';
+
+  @override
+  String get aiRetry => '重试';
+
+  @override
+  String get aiManageProviders => '管理 AI 供应商…';
+
+  @override
+  String get aiAttachOn => '附带终端输出：开（最近 80 行）';
+
+  @override
+  String get aiAttachOff => '附带终端输出：关';
+
+  @override
+  String get aiSend => '发送';
+
+  @override
+  String get aiStop => '停止';
+
+  @override
+  String get aiCopied => '已复制';
+
+  @override
+  String get aiPasteToTerminal => '粘贴到终端（不会执行）';
+
+  @override
+  String get aiReasoning => '思考过程';
+
+  @override
+  String get aiRefused => '模型拒绝回答这个问题。';
+
+  @override
+  String get aiTruncated => '回答过长，已被截断。';
+
+  @override
+  String get aiNoKey => '这个供应商还没有 API Key';
+
+  @override
+  String get aiWithTerminal => '已附带终端输出';
+
+  @override
+  String get aiStopped => '已停止';
+
+  @override
+  String get aiSection => 'AI 助手';
+
+  @override
+  String get aiProviderConfigured => '已配置';
+
+  @override
+  String get aiProviderNotConfigured => '未配置';
+
+  @override
+  String get aiAddCustom => '添加自定义供应商';
+
+  @override
+  String get aiCustomProvider => '自定义供应商';
+
+  @override
+  String get aiApiKey => 'API Key';
+
+  @override
+  String get aiApiKeyKeep => '已保存；留空则保持不变';
+
+  @override
+  String get aiGetKey => '获取 API Key';
+
+  @override
+  String get aiBaseUrl => '接口地址';
+
+  @override
+  String get aiBaseUrlRequired => '请输入接口地址';
+
+  @override
+  String get aiBaseUrlInvalid => '请输入以 http:// 或 https:// 开头的地址';
+
+  @override
+  String get aiProviderName => '名称';
+
+  @override
+  String get aiNameRequired => '请输入名称';
+
+  @override
+  String get aiProtocol => '接口格式';
+
+  @override
+  String get aiProtocolOpenai => 'OpenAI 兼容';
+
+  @override
+  String get aiProtocolAnthropic => 'Anthropic';
+
+  @override
+  String get aiExtraModels => '额外模型';
+
+  @override
+  String get aiExtraModelsHelper => '接口不提供模型列表时，在这里填写模型 ID，用逗号分隔';
+
+  @override
+  String get aiTest => '测试连接';
+
+  @override
+  String get aiTesting => '正在测试…';
+
+  @override
+  String get aiKeyStored => 'API Key 加密保存在本机保险库里，不会写入配置文件。';
+
+  @override
+  String get aiRemoveProvider => '移除';
+
+  @override
+  String get aiRemoveTitle => '移除这个供应商？';
+
+  @override
+  String get aiRemoveBody => '会删除它的 API Key 和设置。';
+
+  @override
+  String get aiKeyRequired => '请输入 API Key';
+
+  @override
+  String aiBaseUrlDefault(String url) {
+    return '留空使用默认地址：$url';
+  }
+
+  @override
+  String aiTestOk(int count) {
+    return '连接成功，可用模型 $count 个';
+  }
+
+  @override
+  String aiTestFailed(String error) {
+    return '连接失败：$error';
+  }
+
+  @override
+  String get aiToolRun => '执行命令';
+
+  @override
+  String get aiToolReadTerminal => '读取终端';
+
+  @override
+  String get aiToolWaiting => '等待你允许';
+
+  @override
+  String get aiToolRunning => '运行中';
+
+  @override
+  String get aiToolDone => '完成';
+
+  @override
+  String get aiToolDenied => '已拒绝';
+
+  @override
+  String get aiToolFailed => '失败';
+
+  @override
+  String get aiToolMayChange => '这条命令可能会修改服务器，你允许后才会执行。';
+
+  @override
+  String get aiToolAskAll => '按当前设置，每条命令都需要你允许。';
+
+  @override
+  String get aiAllow => '允许执行';
+
+  @override
+  String get aiDeny => '拒绝';
+
+  @override
+  String get aiShowOutput => '显示输出';
+
+  @override
+  String get aiHideOutput => '收起输出';
+
+  @override
+  String get aiNoOutput => '（没有输出）';
+
+  @override
+  String get aiStepLimit => '已达到单条消息的步骤上限；回复「继续」可以接着做。';
+
+  @override
+  String get aiToolMode => '命令执行';
+
+  @override
+  String get aiToolModeSubtitle => '允许 AI 在当前连接的主机上执行命令来排查和处理问题';
+
+  @override
+  String get aiToolModeOff => '关闭';
+
+  @override
+  String get aiToolModeAsk => '每条命令都询问';
+
+  @override
+  String get aiToolModeAuto => '只读命令自动执行';
+
+  @override
+  String aiToolExit(int code) {
+    return '退出码 $code';
+  }
+
+  @override
+  String get aiToolModeAll => '全量允许（不再询问）';
+
+  @override
+  String get aiAllowAllTitle => '允许 AI 执行所有命令？';
+
+  @override
+  String get aiAllowAllBody =>
+      '开启后，AI 执行任何命令都不再询问你，包括删除文件、修改配置、重启服务等。它能做当前 SSH 用户能做的一切，误操作可能造成数据丢失或服务中断。建议只在测试机上使用。';
+
+  @override
+  String get aiAllowAllConfirm => '仍要开启';
+
+  @override
+  String get splitRight => '向右拆分';
+
+  @override
+  String get splitDown => '向下拆分';
+
+  @override
+  String get zoomPane => '最大化窗格';
+
+  @override
+  String get restorePane => '还原窗格';
+
+  @override
+  String get moveToNewTab => '拆分到新标签';
+
+  @override
+  String get closePane => '关闭窗格';
+
+  @override
+  String get broadcastOn => '广播输入到所有窗格';
+
+  @override
+  String get broadcastOff => '停止广播输入';
+
+  @override
+  String get broadcasting => '广播中';
+
+  @override
+  String get workspaceFull => '一个工作区最多放 9 个窗格';
+
+  @override
+  String get closeWorkspaceTitle => '关闭这个工作区？';
+
+  @override
+  String get dropHere => '放到这里';
+
+  @override
+  String closeWorkspaceBody(int count) {
+    return '会关闭其中的 $count 个连接。';
+  }
+
+  @override
+  String workspaceName(int n) {
+    return '工作区 $n';
+  }
+
+  @override
+  String get renameWorkspaceHint => '点击重命名';
+
+  @override
+  String get aiHistory => '历史对话';
+
+  @override
+  String get aiHistoryEmpty => '还没有历史对话';
+
+  @override
+  String get aiHistoryThisHost => '这台主机';
+
+  @override
+  String get aiHistoryOtherHosts => '其他主机';
+
+  @override
+  String get aiHistoryDelete => '删除这条对话';
+
+  @override
+  String get aiBackToChat => '返回对话';
+
+  @override
+  String get aiClearHistory => '清除 AI 对话记录';
+
+  @override
+  String get aiClearHistorySubtitle => '对话记录加密保存在本机，最多保留 200 条';
+
+  @override
+  String get aiClearHistoryTitle => '清除所有 AI 对话记录？';
+
+  @override
+  String get aiClearHistoryBody => '所有主机的 AI 对话都会被删除，无法恢复。';
+
+  @override
+  String get aiClear => '清除';
+
+  @override
+  String get filesShow => '文件';
+
+  @override
+  String get filesHide => '关闭文件';
+
+  @override
+  String get filesBack => '后退';
+
+  @override
+  String get filesForward => '前进';
+
+  @override
+  String get filesUp => '上一级';
+
+  @override
+  String get filesRefresh => '刷新';
+
+  @override
+  String get filesFollow => '跟随终端当前目录';
+
+  @override
+  String get filesShowHidden => '显示隐藏文件';
+
+  @override
+  String get filesHideHidden => '不显示隐藏文件';
+
+  @override
+  String get viewIcons => '图标';
+
+  @override
+  String get viewList => '列表';
+
+  @override
+  String get viewColumns => '分栏';
+
+  @override
+  String get viewGallery => '画廊';
+
+  @override
+  String get colName => '名称';
+
+  @override
+  String get colModified => '修改日期';
+
+  @override
+  String get colSize => '大小';
+
+  @override
+  String get colKind => '种类';
+
+  @override
+  String get filesEmpty => '空文件夹';
+
+  @override
+  String get filesNotConnected => '连接后才能浏览文件';
+
+  @override
+  String get filesLocating => '正在定位终端目录…';
+
+  @override
+  String get filesOpen => '打开';
+
+  @override
+  String get filesCdHere => '在终端中进入';
+
+  @override
+  String get filesCopyPath => '复制路径';
+
+  @override
+  String get filesDownload => '下载…';
+
+  @override
+  String get filesNoPreview => '没有预览';
+
+  @override
+  String get filesPermissions => '权限';
+
+  @override
+  String get kindFolder => '文件夹';
+
+  @override
+  String get kindImage => '图片';
+
+  @override
+  String get kindText => '文本';
+
+  @override
+  String get kindCode => '代码';
+
+  @override
+  String get kindArchive => '压缩包';
+
+  @override
+  String get kindVideo => '视频';
+
+  @override
+  String get kindAudio => '音频';
+
+  @override
+  String get kindPdf => 'PDF 文稿';
+
+  @override
+  String get kindDocument => '文档';
+
+  @override
+  String get kindExecutable => '可执行文件';
+
+  @override
+  String get kindFile => '文件';
+
+  @override
+  String get kindLink => '替身';
+
+  @override
+  String filesItems(int n) {
+    return '$n 项';
+  }
+
+  @override
+  String filesError(String error) {
+    return '无法打开：$error';
+  }
+
+  @override
+  String filesDownloaded(String path) {
+    return '已下载到 $path';
+  }
+
+  @override
+  String filesDownloading(String name) {
+    return '正在下载 $name…';
+  }
+
+  @override
+  String get aiAddProvider => '添加 AI 供应商';
+
+  @override
+  String get aiNoProviders => '还没有添加 AI 供应商';
+
+  @override
+  String get aiNoProvidersHint => '添加一个供应商并填入 API Key，就可以在终端页使用 AI 助手';
+
+  @override
+  String get aiAlreadyAdded => '已添加';
+
+  @override
+  String get filesUpload => '上传文件…';
+
+  @override
+  String get filesUploadHere => '上传文件到这里…';
+
+  @override
+  String get dropResolving => '正在获取当前目录…';
+
+  @override
+  String get uploadNotConnected => '未连接，无法上传';
+
+  @override
+  String get overwriteTitle => '替换已有的项目？';
+
+  @override
+  String get overwriteReplace => '替换';
+
+  @override
+  String get overwriteSkip => '跳过';
+
+  @override
+  String dropToUpload(String path) {
+    return '松开上传到 $path';
+  }
+
+  @override
+  String uploadProgress(String path) {
+    return '正在上传到 $path';
+  }
+
+  @override
+  String uploadDone(int count, String path) {
+    return '已上传 $count 个文件到 $path';
+  }
+
+  @override
+  String uploadFailed(String error) {
+    return '上传失败：$error';
+  }
+
+  @override
+  String overwriteBody(String path, String names) {
+    return '$path 里已有同名项目：$names';
+  }
+
+  @override
+  String uploadCount(int done, int total) {
+    return '$done/$total 个文件';
+  }
+
+  @override
+  String get aiToolHiddenChars => '命令里有不可见或反向的字符（已标成 <U+…>），可能和看上去的不一样，请仔细确认。';
+
+  @override
+  String aiToolOnHost(String host) {
+    return '在 $host 上执行';
+  }
+
+  @override
+  String get aiPasteRunsTitle => '粘贴后会直接执行';
+
+  @override
+  String get aiPasteAnyway => '仍要粘贴';
+
+  @override
+  String aiPasteRunsBody(int n) {
+    return '这台服务器的 Shell 没有开启安全粘贴，多行内容粘贴后，前 $n 行会像按了回车一样立即执行。';
+  }
+
+  @override
+  String get aiBaseUrlHttps =>
+      '需要使用 https://，否则 API Key 会明文传输（本机 http://localhost 除外）';
+
+  @override
+  String get aiAllowAllActive => '全量允许已开启：AI 执行任何命令都不会询问你。点此去设置更改';
+
+  @override
+  String get workbench => '工作台';
+
+  @override
+  String reconnectingIn(int seconds, int attempt, int total) {
+    return '$seconds 秒后自动重连（第 $attempt/$total 次）';
+  }
+
+  @override
+  String reconnectGaveUp(int count) {
+    return '已重连 $count 次仍未成功，停止自动重连';
+  }
+
+  @override
+  String reconnectBanner(int seconds, int attempt, int total) {
+    return '连接已断开，$seconds 秒后重连（$attempt/$total）';
+  }
+
+  @override
+  String reconnectingNow(int attempt, int total) {
+    return '正在重连（$attempt/$total）…';
+  }
+
+  @override
+  String get reconnectNow => '立即重连';
+
+  @override
+  String get settingsReconnect => '自动重连';
+
+  @override
+  String get settingsReconnectSubtitle => 'SSH 连接意外断开后自动重新连接；输入 exit 退出不会重连';
+
+  @override
+  String get settingsReconnectAttempts => '重连次数';
+
+  @override
+  String get settingsReconnectDelay => '重连间隔';
+
+  @override
+  String reconnectAttemptsValue(int count) {
+    return '$count 次';
+  }
+
+  @override
+  String reconnectDelayValue(int seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String get sshSection => 'SSH 连接';
+
+  @override
+  String get settingsHighlight => '命令语法高亮';
+
+  @override
+  String get settingsHighlightSubtitle => '在终端里为正在输入的命令着色，只在本机显示，不修改服务器';
+
+  @override
+  String get highlightCommand => '命令';
+
+  @override
+  String get highlightDangerous => '危险命令';
+
+  @override
+  String get highlightOption => '选项';
+
+  @override
+  String get highlightString => '字符串';
+
+  @override
+  String get highlightVariable => '变量';
+
+  @override
+  String get highlightOperator => '管道/重定向';
+
+  @override
+  String get highlightComment => '注释';
+
+  @override
+  String get highlightResetAll => '全部恢复默认';
+
+  @override
+  String get highlightDefault => '默认颜色';
 }

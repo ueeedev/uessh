@@ -160,7 +160,8 @@ void main() {
     await tester.pumpAndSettle();
     final label = find.byKey(const ValueKey('app-version'));
     await scrollTo(tester, label);
-    expect(find.text('uessh 0.1.1 (2)'), findsOneWidget);
+    expect(find.text('uessh 0.1.1'), findsOneWidget);
+    expect(find.textContaining('(2)'), findsNothing, reason: 'no build number');
 
     // Inside the scrolling list (not pinned), below the last section.
     final list = find.ancestor(of: label, matching: find.byType(ListView));

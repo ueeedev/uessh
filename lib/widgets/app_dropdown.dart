@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AppDropdownEntry<T> {
-  const AppDropdownEntry({required this.value, required this.label, this.icon});
+  const AppDropdownEntry({
+    required this.value,
+    required this.label,
+    this.icon,
+    this.color,
+  });
 
   final T value;
   final String label;
   final IconData? icon;
+
+  /// Text and icon color, for entries that need to stand out (e.g. a
+  /// dangerous choice). When selected, the field shows it too, with icon.
+  final Color? color;
 }
 
 /// M3 outlined dropdown whose menu animates open and closed (it grows from
@@ -87,7 +96,9 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
                     foregroundColor: scheme.onSecondaryContainer,
                   )
                 : null,
-            leadingIcon: e.icon == null ? null : Icon(e.icon, size: 20),
+            leadingIcon: e.icon == null
+                ? null
+                : Icon(e.icon, size: 20, color: e.color),
             trailingIcon: e.value == widget.value
                 ? const Icon(Icons.check, size: 18)
                 : null,
@@ -96,7 +107,11 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
             },
             child: SizedBox(
               width: width - 80,
-              child: Text(e.label, overflow: TextOverflow.ellipsis),
+              child: Text(
+                e.label,
+                overflow: TextOverflow.ellipsis,
+                style: e.color == null ? null : TextStyle(color: e.color),
+              ),
             ),
           ),
       ],
@@ -117,11 +132,23 @@ class _AppDropdownState<T> extends State<AppDropdown<T>> {
               child: const Icon(Icons.arrow_drop_down),
             ),
           ),
-          child: Text(
-            _selected?.label ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyLarge,
+          child: Row(
+            children: [
+              if (_selected?.color != null && _selected?.icon != null) ...[
+                Icon(_selected!.icon, size: 20, color: _selected!.color),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Text(
+                  _selected?.label ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: _selected?.color,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

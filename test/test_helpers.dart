@@ -1,10 +1,14 @@
 import 'dart:io';
 
-import 'package:flutter/widgets.dart' show ListView, Scrollable;
+import 'package:flutter/widgets.dart' show AxisDirection, Scrollable;
+import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:uessh/app.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uessh/core/app_providers.dart';
+import 'package:uessh/features/ai/ai_client.dart';
+import 'package:uessh/features/ai/ai_config.dart';
 import 'package:uessh/core/secret_store.dart';
 import 'package:uessh/core/vault.dart';
 import 'package:uessh/features/hosts/host.dart';
@@ -21,7 +25,8 @@ class TestEnv {
     : dataDir = Directory.systemTemp.createTempSync('uessh_test_'),
       secrets = MemorySecretStore(),
       reachability = FakeReachabilityChecker(),
-      geo = FakeGeoApi() {
+      geo = FakeGeoApi(),
+      ai = FakeAiClient() {
     PackageInfo.setMockInitialValues(
       appName: 'uessh',
       packageName: 'dev.ueee.uessh',
@@ -38,6 +43,9 @@ class TestEnv {
   /// Stands in for ipwho.is; tests never go online.
   final FakeGeoApi geo;
 
+  /// Stands in for AI providers.
+  final FakeAiClient ai;
+
   /// Unlocked, local mode, memory only. Tests of the lock screen replace
   /// it with a real vault (see vault_ui_test.dart).
   Vault vault = Vault.unlockedInMemory();
@@ -53,6 +61,7 @@ class TestEnv {
     initialSettingsProvider.overrideWithValue(settings),
     reachabilityCheckerProvider.overrideWithValue(reachability),
     geoApiProvider.overrideWithValue(geo),
+    aiClientProvider.overrideWithValue(ai),
   ];
 
   void dispose() {
@@ -143,6 +152,71 @@ class FakeGeoApi implements GeoApi {
   }
 }
 
+/// Replies with [reply] split into a few chunks (or the next entry of
+/// [script]), and records requests.
+class FakeAiClient implements AiClient {
+  String reply = 'Hello **world**\n\n```bash\ndf -h\n```';
+
+  /// Scripted replies, used in order before falling back to [reply]. An
+  /// entry without [AiDone] gets one with its text and no tool calls.
+  final script = <List<AiDelta>>[];
+  Map<String, List<String>> models = {};
+  final requests =
+      <
+        ({
+          String provider,
+          String model,
+          String system,
+          List<AiTurn> turns,
+          List<AiTool> tools,
+        })
+      >[];
+
+  @override
+  Stream<AiDelta> chat({
+    required AiProvider provider,
+    required String apiKey,
+    required String model,
+    required String system,
+    required List<AiTurn> turns,
+    List<AiTool> tools = const [],
+  }) async* {
+    requests.add((
+      provider: provider.id,
+      model: model,
+      system: system,
+      turns: turns,
+      tools: tools,
+    ));
+    if (script.isNotEmpty) {
+      final deltas = script.removeAt(0);
+      final text = StringBuffer();
+      var done = false;
+      for (final d in deltas) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        if (d is AiText) text.write(d.text);
+        if (d is AiDone) done = true;
+        yield d;
+      }
+      if (!done) yield AiDone(AiTurn.assistant(text.toString()));
+      return;
+    }
+    final step = (reply.length / 3).ceil();
+    for (var i = 0; i < reply.length; i += step) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      yield AiText(
+        reply.substring(i, i + step > reply.length ? reply.length : i + step),
+      );
+    }
+    yield AiDone(AiTurn.assistant(reply));
+  }
+
+  @override
+  Future<List<String>> listModels(AiProvider provider, String apiKey) async =>
+      models[provider.id] ??
+      ['${provider.id}-model-a', '${provider.id}-model-b'];
+}
+
 /// File I/O completes on the real event loop, but widget tests run on a
 /// fake clock. Each await in a disk operation needs a real-time turn
 /// followed by a pump, so alternate the two a few times.
@@ -178,15 +252,28 @@ Future<void> pumpUntil(
 /// Scrolls the page's list until [finder] is built and on screen (lists
 /// build lazily, so far-down items don't exist until scrolled to).
 Future<void> scrollTo(WidgetTester tester, Finder finder) async {
+  // Load the AI settings outside the fake clock first: the settings card
+  // starts loading them once it's scrolled into view, and a load started
+  // under the fake clock never finishes.
+  final app = find.byType(UesshApp);
+  if (app.evaluate().isNotEmpty) {
+    final c = ProviderScope.containerOf(tester.element(app));
+    await tester.runAsync(() => c.read(aiConfigProvider.future));
+    await tester.pump();
+  }
   await tester.scrollUntilVisible(
     finder,
     300,
+    // The page's own (vertical) list, not the tab strip at the top.
     scrollable: find
-        .descendant(
-          of: find.byType(ListView),
-          matching: find.byType(Scrollable),
+        .byWidgetPredicate(
+          (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
         )
         .first,
   );
+  // Cards scrolled into view may load files first (AI settings) and
+  // change height; bring the target back into view after.
+  await settleIo(tester);
+  await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
 }

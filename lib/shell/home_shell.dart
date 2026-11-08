@@ -6,10 +6,8 @@ import '../features/hosts/hosts_page.dart';
 import '../features/keys/keys_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/snippets/snippets_page.dart';
-import '../features/terminal/sessions_providers.dart';
 import '../features/terminal/terminal_page.dart';
 import '../widgets/fade_through_stack.dart';
-import '../widgets/window_drag_area.dart';
 import 'navigation.dart';
 import '../l10n/l10n.dart';
 
@@ -27,11 +25,6 @@ final _destinations = {
     (l) => l.navHosts,
     Icons.dns_outlined,
     Icons.dns,
-  ),
-  AppDestination.terminal: _Destination(
-    (l) => l.navTerminal,
-    Icons.terminal_outlined,
-    Icons.terminal,
   ),
   AppDestination.keys: _Destination(
     (l) => l.navKeys,
@@ -55,56 +48,56 @@ final _destinations = {
   ),
 };
 
-class HomeShell extends ConsumerWidget {
+/// The window: a tab strip across the top whose first, pinned tab is the
+/// workbench ([HomeView]); the other tabs are SSH workspaces.
+class HomeShell extends StatelessWidget {
   const HomeShell({super.key});
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(body: TerminalPage());
+}
+
+/// The workbench: navigation on the left and its pages (hosts, keys,
+/// snippets, forwarding, settings).
+class HomeView extends ConsumerWidget {
+  const HomeView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(navigationProvider);
-    final sessionCount = ref.watch(
-      sessionsProvider.select((s) => s.sessions.length),
-    );
-    return Scaffold(
-      body: Row(
-        children: [
-          _SideNav(
-            current: current,
-            sessionCount: sessionCount,
-            onSelect: (d) => ref.read(navigationProvider.notifier).go(d),
+    return Row(
+      children: [
+        _SideNav(
+          current: current,
+          onSelect: (d) => ref.read(navigationProvider.notifier).go(d),
+        ),
+        Expanded(
+          child: FadeThroughIndexedStack(
+            index: current.index,
+            children: const [
+              HostsPage(),
+              KeysPage(),
+              SnippetsPage(),
+              ForwardingPage(),
+              SettingsPage(),
+            ],
           ),
-          Expanded(
-            child: FadeThroughIndexedStack(
-              index: current.index,
-              children: [
-                const HostsPage(),
-                TerminalPage(isVisible: current == AppDestination.terminal),
-                const KeysPage(),
-                const SnippetsPage(),
-                const ForwardingPage(),
-                const SettingsPage(),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-const _navWidth = 188.0;
+/// Width of the workbench's navigation sidebar.
+const sideNavWidth = 188.0;
 
 /// Left navigation. Each destination is one pill-shaped button holding both
 /// icon and label (like M3 navigation drawer items), so hover, press and the
 /// selected highlight cover the whole row.
 class _SideNav extends StatelessWidget {
-  const _SideNav({
-    required this.current,
-    required this.sessionCount,
-    required this.onSelect,
-  });
+  const _SideNav({required this.current, required this.onSelect});
 
   final AppDestination current;
-  final int sessionCount;
   final ValueChanged<AppDestination> onSelect;
 
   @override
@@ -116,50 +109,47 @@ class _SideNav extends StatelessWidget {
       child: _NavItem(
         destination: _destinations[d]!,
         selected: d == current,
-        count: d == AppDestination.terminal ? sessionCount : 0,
+        count: 0,
         onTap: () => onSelect(d),
       ),
     );
 
     return Material(
-      color: scheme.surfaceContainer,
+      color: scheme.surfaceContainerLow,
       child: SizedBox(
-        width: _navWidth,
+        width: sideNavWidth,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top of the sidebar doubles as the title bar.
-            WindowDragArea(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16 + trafficLightInset,
-                  12,
-                  16,
-                ),
-                child: Row(
-                  children: [
-                    Image.asset(
-                      'assets/branding/logo.png',
-                      key: const ValueKey('app-logo'),
-                      width: 40,
-                      height: 40,
-                      filterQuality: FilterQuality.medium,
-                      semanticLabel: 'uessh logo',
-                    ),
-                    const SizedBox(width: 10),
-                    Flexible(
-                      child: Text(
-                        'uessh',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w600,
+            // The tab strip above is the title bar now.
+            Builder(
+              builder: (context) => Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+                child: IgnorePointer(
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/branding/logo.png',
+                        key: const ValueKey('app-logo'),
+                        width: 40,
+                        height: 40,
+                        filterQuality: FilterQuality.medium,
+                        semanticLabel: 'uessh logo',
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          'uessh',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

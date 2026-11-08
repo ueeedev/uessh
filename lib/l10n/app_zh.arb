@@ -521,5 +521,393 @@
   "trayQuit": "退出 uessh",
   "runInBackground": "后台常驻",
   "runInBackgroundSubtitle": "在菜单栏或任务栏显示图标；关闭窗口后继续在后台运行，SSH 连接不会断开",
-  "general": "通用"
+  "general": "通用",
+  "aiAssistant": "AI 助手",
+  "aiShowPanel": "AI 助手",
+  "aiHidePanel": "隐藏 AI 助手",
+  "aiClosePanel": "关闭 AI 助手",
+  "aiNewChat": "新对话",
+  "aiSetupTitle": "还没有配置 AI 供应商",
+  "aiSetupBody": "在设置里填入 API Key 后即可使用。支持 Claude、ChatGPT、DeepSeek、Gemini、Grok 和自定义接口。",
+  "aiOpenSettings": "前往设置",
+  "aiInputHint": "输入问题，Enter 发送，Shift+Enter 换行",
+  "aiPickModel": "选择模型",
+  "aiLoadingModels": "正在加载模型…",
+  "aiModelsFailed": "无法获取模型列表",
+  "aiNoModels": "没有可用模型",
+  "aiRetry": "重试",
+  "aiManageProviders": "管理 AI 供应商…",
+  "aiAttachOn": "附带终端输出：开（最近 80 行）",
+  "aiAttachOff": "附带终端输出：关",
+  "aiSend": "发送",
+  "aiStop": "停止",
+  "aiCopied": "已复制",
+  "aiPasteToTerminal": "粘贴到终端（不会执行）",
+  "aiReasoning": "思考过程",
+  "aiRefused": "模型拒绝回答这个问题。",
+  "aiTruncated": "回答过长，已被截断。",
+  "aiNoKey": "这个供应商还没有 API Key",
+  "aiWithTerminal": "已附带终端输出",
+  "aiStopped": "已停止",
+  "aiSection": "AI 助手",
+  "aiProviderConfigured": "已配置",
+  "aiProviderNotConfigured": "未配置",
+  "aiAddCustom": "添加自定义供应商",
+  "aiCustomProvider": "自定义供应商",
+  "aiApiKey": "API Key",
+  "aiApiKeyKeep": "已保存；留空则保持不变",
+  "aiGetKey": "获取 API Key",
+  "aiBaseUrl": "接口地址",
+  "aiBaseUrlRequired": "请输入接口地址",
+  "aiBaseUrlInvalid": "请输入以 http:// 或 https:// 开头的地址",
+  "aiProviderName": "名称",
+  "aiNameRequired": "请输入名称",
+  "aiProtocol": "接口格式",
+  "aiProtocolOpenai": "OpenAI 兼容",
+  "aiProtocolAnthropic": "Anthropic",
+  "aiExtraModels": "额外模型",
+  "aiExtraModelsHelper": "接口不提供模型列表时，在这里填写模型 ID，用逗号分隔",
+  "aiTest": "测试连接",
+  "aiTesting": "正在测试…",
+  "aiKeyStored": "API Key 加密保存在本机保险库里，不会写入配置文件。",
+  "aiRemoveProvider": "移除",
+  "aiRemoveTitle": "移除这个供应商？",
+  "aiRemoveBody": "会删除它的 API Key 和设置。",
+  "aiKeyRequired": "请输入 API Key",
+  "aiBaseUrlDefault": "留空使用默认地址：{url}",
+  "@aiBaseUrlDefault": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTestOk": "连接成功，可用模型 {count} 个",
+  "@aiTestOk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiTestFailed": "连接失败：{error}",
+  "@aiTestFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "aiToolRun": "执行命令",
+  "aiToolReadTerminal": "读取终端",
+  "aiToolWaiting": "等待你允许",
+  "aiToolRunning": "运行中",
+  "aiToolDone": "完成",
+  "aiToolDenied": "已拒绝",
+  "aiToolFailed": "失败",
+  "aiToolMayChange": "这条命令可能会修改服务器，你允许后才会执行。",
+  "aiToolAskAll": "按当前设置，每条命令都需要你允许。",
+  "aiAllow": "允许执行",
+  "aiDeny": "拒绝",
+  "aiShowOutput": "显示输出",
+  "aiHideOutput": "收起输出",
+  "aiNoOutput": "（没有输出）",
+  "aiStepLimit": "已达到单条消息的步骤上限；回复「继续」可以接着做。",
+  "aiToolMode": "命令执行",
+  "aiToolModeSubtitle": "允许 AI 在当前连接的主机上执行命令来排查和处理问题",
+  "aiToolModeOff": "关闭",
+  "aiToolModeAsk": "每条命令都询问",
+  "aiToolModeAuto": "只读命令自动执行",
+  "aiToolExit": "退出码 {code}",
+  "@aiToolExit": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "aiToolModeAll": "全量允许（不再询问）",
+  "aiAllowAllTitle": "允许 AI 执行所有命令？",
+  "aiAllowAllBody": "开启后，AI 执行任何命令都不再询问你，包括删除文件、修改配置、重启服务等。它能做当前 SSH 用户能做的一切，误操作可能造成数据丢失或服务中断。建议只在测试机上使用。",
+  "aiAllowAllConfirm": "仍要开启",
+  "splitRight": "向右拆分",
+  "splitDown": "向下拆分",
+  "zoomPane": "最大化窗格",
+  "restorePane": "还原窗格",
+  "moveToNewTab": "拆分到新标签",
+  "closePane": "关闭窗格",
+  "broadcastOn": "广播输入到所有窗格",
+  "broadcastOff": "停止广播输入",
+  "broadcasting": "广播中",
+  "workspaceFull": "一个工作区最多放 9 个窗格",
+  "closeWorkspaceTitle": "关闭这个工作区？",
+  "dropHere": "放到这里",
+  "closeWorkspaceBody": "会关闭其中的 {count} 个连接。",
+  "@closeWorkspaceBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "workspaceName": "工作区 {n}",
+  "@workspaceName": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "renameWorkspaceHint": "点击重命名",
+  "aiHistory": "历史对话",
+  "aiHistoryEmpty": "还没有历史对话",
+  "aiHistoryThisHost": "这台主机",
+  "aiHistoryOtherHosts": "其他主机",
+  "aiHistoryDelete": "删除这条对话",
+  "aiBackToChat": "返回对话",
+  "aiClearHistory": "清除 AI 对话记录",
+  "aiClearHistorySubtitle": "对话记录加密保存在本机，最多保留 200 条",
+  "aiClearHistoryTitle": "清除所有 AI 对话记录？",
+  "aiClearHistoryBody": "所有主机的 AI 对话都会被删除，无法恢复。",
+  "aiClear": "清除",
+  "filesShow": "文件",
+  "filesHide": "关闭文件",
+  "filesBack": "后退",
+  "filesForward": "前进",
+  "filesUp": "上一级",
+  "filesRefresh": "刷新",
+  "filesFollow": "跟随终端当前目录",
+  "filesShowHidden": "显示隐藏文件",
+  "filesHideHidden": "不显示隐藏文件",
+  "viewIcons": "图标",
+  "viewList": "列表",
+  "viewColumns": "分栏",
+  "viewGallery": "画廊",
+  "colName": "名称",
+  "colModified": "修改日期",
+  "colSize": "大小",
+  "colKind": "种类",
+  "filesEmpty": "空文件夹",
+  "filesNotConnected": "连接后才能浏览文件",
+  "filesLocating": "正在定位终端目录…",
+  "filesOpen": "打开",
+  "filesCdHere": "在终端中进入",
+  "filesCopyPath": "复制路径",
+  "filesDownload": "下载…",
+  "filesNoPreview": "没有预览",
+  "filesPermissions": "权限",
+  "kindFolder": "文件夹",
+  "kindImage": "图片",
+  "kindText": "文本",
+  "kindCode": "代码",
+  "kindArchive": "压缩包",
+  "kindVideo": "视频",
+  "kindAudio": "音频",
+  "kindPdf": "PDF 文稿",
+  "kindDocument": "文档",
+  "kindExecutable": "可执行文件",
+  "kindFile": "文件",
+  "kindLink": "替身",
+  "filesItems": "{n} 项",
+  "@filesItems": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "filesError": "无法打开：{error}",
+  "@filesError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDownloaded": "已下载到 {path}",
+  "@filesDownloaded": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDownloading": "正在下载 {name}…",
+  "@filesDownloading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiAddProvider": "添加 AI 供应商",
+  "aiNoProviders": "还没有添加 AI 供应商",
+  "aiNoProvidersHint": "添加一个供应商并填入 API Key，就可以在终端页使用 AI 助手",
+  "aiAlreadyAdded": "已添加",
+  "filesUpload": "上传文件…",
+  "filesUploadHere": "上传文件到这里…",
+  "dropResolving": "正在获取当前目录…",
+  "uploadNotConnected": "未连接，无法上传",
+  "overwriteTitle": "替换已有的项目？",
+  "overwriteReplace": "替换",
+  "overwriteSkip": "跳过",
+  "dropToUpload": "松开上传到 {path}",
+  "@dropToUpload": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadProgress": "正在上传到 {path}",
+  "@uploadProgress": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadDone": "已上传 {count} 个文件到 {path}",
+  "@uploadDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadFailed": "上传失败：{error}",
+  "@uploadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "overwriteBody": "{path} 里已有同名项目：{names}",
+  "@overwriteBody": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadCount": "{done}/{total} 个文件",
+  "@uploadCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "aiToolHiddenChars": "命令里有不可见或反向的字符（已标成 <U+…>），可能和看上去的不一样，请仔细确认。",
+  "aiToolOnHost": "在 {host} 上执行",
+  "@aiToolOnHost": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "aiPasteRunsTitle": "粘贴后会直接执行",
+  "aiPasteAnyway": "仍要粘贴",
+  "aiPasteRunsBody": "这台服务器的 Shell 没有开启安全粘贴，多行内容粘贴后，前 {n} 行会像按了回车一样立即执行。",
+  "@aiPasteRunsBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiBaseUrlHttps": "需要使用 https://，否则 API Key 会明文传输（本机 http://localhost 除外）",
+  "aiAllowAllActive": "全量允许已开启：AI 执行任何命令都不会询问你。点此去设置更改",
+  "workbench": "工作台",
+  "reconnectingIn": "{seconds} 秒后自动重连（第 {attempt}/{total} 次）",
+  "@reconnectingIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      },
+      "attempt": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectGaveUp": "已重连 {count} 次仍未成功，停止自动重连",
+  "@reconnectGaveUp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectBanner": "连接已断开，{seconds} 秒后重连（{attempt}/{total}）",
+  "@reconnectBanner": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      },
+      "attempt": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectingNow": "正在重连（{attempt}/{total}）…",
+  "@reconnectingNow": {
+    "placeholders": {
+      "attempt": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectNow": "立即重连",
+  "settingsReconnect": "自动重连",
+  "settingsReconnectSubtitle": "SSH 连接意外断开后自动重新连接；输入 exit 退出不会重连",
+  "settingsReconnectAttempts": "重连次数",
+  "settingsReconnectDelay": "重连间隔",
+  "reconnectAttemptsValue": "{count} 次",
+  "@reconnectAttemptsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reconnectDelayValue": "{seconds} 秒",
+  "@reconnectDelayValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "sshSection": "SSH 连接",
+  "settingsHighlight": "命令语法高亮",
+  "settingsHighlightSubtitle": "在终端里为正在输入的命令着色，只在本机显示，不修改服务器",
+  "highlightCommand": "命令",
+  "highlightDangerous": "危险命令",
+  "highlightOption": "选项",
+  "highlightString": "字符串",
+  "highlightVariable": "变量",
+  "highlightOperator": "管道/重定向",
+  "highlightComment": "注释",
+  "highlightResetAll": "全部恢复默认",
+  "highlightDefault": "默认颜色"
 }

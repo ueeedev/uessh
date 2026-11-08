@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../shell/navigation.dart';
 import '../../widgets/page_scaffold.dart';
 import '../terminal/sessions_providers.dart';
 import 'host.dart';
@@ -26,9 +25,11 @@ class HostsPage extends ConsumerStatefulWidget {
 class _HostsPageState extends ConsumerState<HostsPage> {
   String _query = '';
 
+  /// The clicked host card (double-click connects).
+  String? _selectedId;
+
   void _connect(Host host) {
     ref.read(sessionsProvider.notifier).open(host);
-    ref.read(navigationProvider.notifier).go(AppDestination.terminal);
   }
 
   @override
@@ -130,6 +131,8 @@ class _HostsPageState extends ConsumerState<HostsPage> {
                       final host = section.hosts[i];
                       return HostCard(
                         host: host,
+                        selected: host.id == _selectedId,
+                        onSelect: () => setState(() => _selectedId = host.id),
                         onConnect: () => _connect(host),
                         onEdit: () => showHostEditor(context, host: host),
                       );
@@ -429,53 +432,105 @@ class _GroupNameDialogState extends State<GroupNameDialog> {
   }
 }
 
-class HostCard extends StatelessWidget {
+class HostCard extends StatefulWidget {
   const HostCard({
     super.key,
     required this.host,
     required this.onConnect,
     required this.onEdit,
+    this.selected = false,
+    this.onSelect,
   });
 
   final Host host;
+
+  /// Double-click: open an SSH session.
   final VoidCallback onConnect;
+
+  /// Single click: select the card.
+  final VoidCallback? onSelect;
+  final bool selected;
   final VoidCallback onEdit;
+
+  /// Two clicks this close together count as a double-click.
+  static const doubleClickTime = Duration(milliseconds: 400);
+
+  @override
+  State<HostCard> createState() => _HostCardState();
+}
+
+class _HostCardState extends State<HostCard> {
+  /// When the pointer last went down on the card, and the click before.
+  Duration? _downAt;
+  Duration? _lastClick;
+
+  // Timed here rather than with a double-tap recognizer: that would make
+  // every click on the card (and its edit button) wait to rule out a
+  // second one. A click selects at once; a second one soon after
+  // connects.
+  void _click() {
+    final now = _downAt;
+    final last = _lastClick;
+    if (now != null && last != null && now - last < HostCard.doubleClickTime) {
+      _lastClick = null;
+      widget.onConnect();
+    } else {
+      _lastClick = now;
+      widget.onSelect?.call();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final host = widget.host;
+    final selected = widget.selected;
+    final onEdit = widget.onEdit;
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onConnect,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
-          child: Row(
-            children: [
-              HostAvatar(host: host),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Row(
-                  children: [
-                    ReachabilityDot(hostId: host.id),
-                    Expanded(
-                      child: Text(
-                        host.displayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium,
+      color: selected ? scheme.secondaryContainer : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: selected ? scheme.primary : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: Listener(
+        onPointerDown: (e) => _downAt = e.timeStamp,
+        child: InkWell(
+          // Click selects; double-click connects (as in a file manager).
+          onTap: _click,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
+            child: Row(
+              children: [
+                HostAvatar(host: host),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Row(
+                    children: [
+                      ReachabilityDot(hostId: host.id),
+                      Expanded(
+                        child: Text(
+                          host.displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              IconButton(
-                tooltip: context.l10n.edit,
-                icon: const Icon(Icons.edit_outlined),
-                onPressed: onEdit,
-              ),
-            ],
+                IconButton(
+                  tooltip: context.l10n.edit,
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: onEdit,
+                ),
+              ],
+            ),
           ),
         ),
       ),

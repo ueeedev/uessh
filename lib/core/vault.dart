@@ -203,6 +203,36 @@ class Vault {
     await _save();
   }
 
+  /// Encrypts [plain] with the vault's data key, for data kept outside the
+  /// vault file (e.g. AI chat history). Throws [VaultLockedException]
+  /// while locked. Data sealed before a [reset] can't be opened after it.
+  Future<Map<String, String>> seal(List<int> plain) async {
+    final key = _dataKey;
+    if (key == null) throw VaultLockedException();
+    final box = await _aes.encrypt(
+      plain,
+      secretKey: SecretKey(key),
+      nonce: _aes.newNonce(),
+      aad: _blobAad,
+    );
+    return _Box(box.nonce, box.cipherText, box.mac.bytes).toJson();
+  }
+
+  /// Decrypts what [seal] returned. Throws if locked, or if the data was
+  /// changed or sealed with another key.
+  Future<List<int>> unseal(Map<String, Object?> sealed) async {
+    final key = _dataKey;
+    if (key == null) throw VaultLockedException();
+    final box = _Box.fromJson(sealed);
+    return _aes.decrypt(
+      SecretBox(box.cipherText, nonce: box.nonce, mac: Mac(box.mac)),
+      secretKey: SecretKey(key),
+      aad: _blobAad,
+    );
+  }
+
+  static final _blobAad = utf8.encode('uessh-blob-v1');
+
   // --- internals ---
 
   Future<void> _checkPassword(String password) async {

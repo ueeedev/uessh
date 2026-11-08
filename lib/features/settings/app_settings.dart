@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/json_file.dart';
+import '../terminal/command_highlight.dart';
 
 /// How host reachability is checked.
 enum ReachabilityMethod {
@@ -15,7 +16,16 @@ enum ReachabilityMethod {
 
 /// UI language; [system] follows the OS (Chinese if it's Chinese,
 /// English otherwise).
+/// How the file browser shows a folder (as in the macOS Finder).
+enum FileViewMode { icons, list, columns, gallery }
+
+/// Side panels of the terminal page.
+enum TerminalPanel { info, ai }
+
 enum AppLanguage { system, zh, en }
+
+/// Same shape as the terminal's ReconnectPolicy.
+typedef ReconnectSettings = ({bool enabled, int attempts, Duration delay});
 
 class AppSettings {
   const AppSettings({
@@ -29,6 +39,16 @@ class AppSettings {
     this.language = AppLanguage.system,
     this.showHostOverview = true,
     this.runInBackground = true,
+    this.terminalPanel = TerminalPanel.info,
+    this.showFilePanel = false,
+    this.filePanelHeight = defaultFilePanelHeight,
+    this.fileViewMode = FileViewMode.list,
+    this.showHiddenFiles = false,
+    this.autoReconnect = true,
+    this.reconnectAttempts = defaultReconnectAttempts,
+    this.reconnectDelaySeconds = defaultReconnectDelay,
+    this.syntaxHighlight = true,
+    this.highlightColors = const {},
     this.lastConnectedHostId,
     this.lastConnectedAt,
   });
@@ -66,9 +86,52 @@ class AppSettings {
   /// Menu bar / tray icon; closing the window hides it instead of quitting.
   final bool runInBackground;
 
+  /// What the terminal page's side panel shows when open.
+  final TerminalPanel terminalPanel;
+
+  /// The file browser below the terminal.
+  final bool showFilePanel;
+  final double filePanelHeight;
+  final FileViewMode fileViewMode;
+  final bool showHiddenFiles;
+
+  /// Reconnect by itself after the connection drops.
+  final bool autoReconnect;
+  final int reconnectAttempts;
+  final int reconnectDelaySeconds;
+
+  static const defaultReconnectAttempts = 3;
+  static const reconnectAttemptChoices = [1, 2, 3, 5, 10];
+  static const defaultReconnectDelay = 3;
+  static const reconnectDelayChoices = [1, 3, 5, 10, 30, 60];
+
+  /// Colors the command being typed in the terminal.
+  final bool syntaxHighlight;
+
+  /// Colors changed from [defaultHighlightColors] (ARGB).
+  final Map<HighlightToken, int> highlightColors;
+
+  int highlightColor(HighlightToken t) =>
+      highlightColors[t] ?? defaultHighlightColors[t]!;
+
+  HighlightSettings get highlight => (
+    enabled: syntaxHighlight,
+    colors: {for (final t in HighlightToken.values) t: highlightColor(t)},
+  );
+
+  static const defaultFilePanelHeight = 280.0;
+  static const minFilePanelHeight = 160.0;
+  static const maxFilePanelHeight = 700.0;
+
   /// The host of the most recent successful SSH connection, and when.
   final String? lastConnectedHostId;
   final DateTime? lastConnectedAt;
+
+  ReconnectSettings get reconnect => (
+    enabled: autoReconnect,
+    attempts: reconnectAttempts,
+    delay: Duration(seconds: reconnectDelaySeconds),
+  );
 
   AppSettings withLastConnected(String hostId, DateTime at) =>
       _copy(lastConnectedHostId: hostId, lastConnectedAt: at);
@@ -89,6 +152,16 @@ class AppSettings {
     AppLanguage? language,
     bool? showHostOverview,
     bool? runInBackground,
+    TerminalPanel? terminalPanel,
+    bool? showFilePanel,
+    double? filePanelHeight,
+    FileViewMode? fileViewMode,
+    bool? showHiddenFiles,
+    bool? autoReconnect,
+    int? reconnectAttempts,
+    int? reconnectDelaySeconds,
+    bool? syntaxHighlight,
+    Map<HighlightToken, int>? highlightColors,
   }) => _copy(
     themeMode: themeMode,
     followSystemAccent: followSystemAccent,
@@ -100,6 +173,16 @@ class AppSettings {
     language: language,
     showHostOverview: showHostOverview,
     runInBackground: runInBackground,
+    terminalPanel: terminalPanel,
+    showFilePanel: showFilePanel,
+    filePanelHeight: filePanelHeight,
+    fileViewMode: fileViewMode,
+    showHiddenFiles: showHiddenFiles,
+    autoReconnect: autoReconnect,
+    reconnectAttempts: reconnectAttempts,
+    reconnectDelaySeconds: reconnectDelaySeconds,
+    syntaxHighlight: syntaxHighlight,
+    highlightColors: highlightColors,
   );
 
   AppSettings _copy({
@@ -113,6 +196,16 @@ class AppSettings {
     AppLanguage? language,
     bool? showHostOverview,
     bool? runInBackground,
+    TerminalPanel? terminalPanel,
+    bool? showFilePanel,
+    double? filePanelHeight,
+    FileViewMode? fileViewMode,
+    bool? showHiddenFiles,
+    bool? autoReconnect,
+    int? reconnectAttempts,
+    int? reconnectDelaySeconds,
+    bool? syntaxHighlight,
+    Map<HighlightToken, int>? highlightColors,
     String? lastConnectedHostId,
     DateTime? lastConnectedAt,
   }) => AppSettings(
@@ -126,6 +219,16 @@ class AppSettings {
     language: language ?? this.language,
     showHostOverview: showHostOverview ?? this.showHostOverview,
     runInBackground: runInBackground ?? this.runInBackground,
+    terminalPanel: terminalPanel ?? this.terminalPanel,
+    showFilePanel: showFilePanel ?? this.showFilePanel,
+    filePanelHeight: filePanelHeight ?? this.filePanelHeight,
+    fileViewMode: fileViewMode ?? this.fileViewMode,
+    showHiddenFiles: showHiddenFiles ?? this.showHiddenFiles,
+    autoReconnect: autoReconnect ?? this.autoReconnect,
+    reconnectAttempts: reconnectAttempts ?? this.reconnectAttempts,
+    reconnectDelaySeconds: reconnectDelaySeconds ?? this.reconnectDelaySeconds,
+    syntaxHighlight: syntaxHighlight ?? this.syntaxHighlight,
+    highlightColors: highlightColors ?? this.highlightColors,
     lastConnectedHostId: lastConnectedHostId ?? this.lastConnectedHostId,
     lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
   );
@@ -141,6 +244,19 @@ class AppSettings {
     'language': language.name,
     'showHostOverview': showHostOverview,
     'runInBackground': runInBackground,
+    'terminalPanel': terminalPanel.name,
+    'showFilePanel': showFilePanel,
+    'filePanelHeight': filePanelHeight,
+    'fileViewMode': fileViewMode.name,
+    'showHiddenFiles': showHiddenFiles,
+    'autoReconnect': autoReconnect,
+    'reconnectAttempts': reconnectAttempts,
+    'reconnectDelaySeconds': reconnectDelaySeconds,
+    'syntaxHighlight': syntaxHighlight,
+    if (highlightColors.isNotEmpty)
+      'highlightColors': {
+        for (final e in highlightColors.entries) e.key.name: e.value,
+      },
     if (lastConnectedHostId != null) 'lastConnectedHostId': lastConnectedHostId,
     if (lastConnectedAt != null)
       'lastConnectedAt': lastConnectedAt!.toIso8601String(),
@@ -172,6 +288,32 @@ class AppSettings {
       language: AppLanguage.values.asNameMap()[json['language']] ?? d.language,
       showHostOverview: json['showHostOverview'] as bool? ?? d.showHostOverview,
       runInBackground: json['runInBackground'] as bool? ?? d.runInBackground,
+      terminalPanel:
+          TerminalPanel.values.asNameMap()[json['terminalPanel']] ??
+          d.terminalPanel,
+      showFilePanel: json['showFilePanel'] as bool? ?? d.showFilePanel,
+      filePanelHeight:
+          ((json['filePanelHeight'] as num?)?.toDouble() ?? d.filePanelHeight)
+              .clamp(minFilePanelHeight, maxFilePanelHeight),
+      fileViewMode:
+          FileViewMode.values.asNameMap()[json['fileViewMode']] ??
+          d.fileViewMode,
+      showHiddenFiles: json['showHiddenFiles'] as bool? ?? d.showHiddenFiles,
+      autoReconnect: json['autoReconnect'] as bool? ?? d.autoReconnect,
+      reconnectAttempts:
+          ((json['reconnectAttempts'] as num?)?.toInt() ?? d.reconnectAttempts)
+              .clamp(1, 100),
+      reconnectDelaySeconds:
+          ((json['reconnectDelaySeconds'] as num?)?.toInt() ??
+                  d.reconnectDelaySeconds)
+              .clamp(1, 3600),
+      syntaxHighlight: json['syntaxHighlight'] as bool? ?? d.syntaxHighlight,
+      highlightColors: {
+        if (json['highlightColors'] case final Map<Object?, Object?> m)
+          for (final e in m.entries)
+            if (HighlightToken.values.asNameMap()[e.key] case final t?)
+              if (e.value case final int v) t: v,
+      },
       lastConnectedHostId: json['lastConnectedHostId'] as String?,
       lastConnectedAt: DateTime.tryParse(
         json['lastConnectedAt'] as String? ?? '',

@@ -11,7 +11,6 @@ import '../features/settings/app_settings.dart';
 import '../features/settings/settings_providers.dart';
 import '../features/terminal/sessions_providers.dart';
 import '../l10n/l10n.dart';
-import 'navigation.dart';
 
 /// What the tray menu should contain; kept free of plugin calls so it can
 /// be tested.
@@ -143,7 +142,6 @@ class BackgroundMode with TrayListener, WindowListener {
 
   Future<void> _connect(Host host) async {
     _container.read(sessionsProvider.notifier).open(host);
-    _container.read(navigationProvider.notifier).go(AppDestination.terminal);
     await _showWindow();
   }
 

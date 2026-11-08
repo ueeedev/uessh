@@ -2,7 +2,9 @@
 //   UESSH_TEST_HOST, UESSH_TEST_USER, UESSH_TEST_PASSWORD
 //   UESSH_TEST_PORT (optional, default 22)
 // Optional key auth: UESSH_TEST_KEY_FILE (+ UESSH_TEST_KEY_PASSPHRASE).
-// Only runs harmless `echo` commands on the server.
+// Only runs harmless commands on the server (echo, ls; the reconnect test
+// ends its own SSH session's process).
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -10,6 +12,7 @@ import 'package:uessh/features/hosts/host.dart';
 import 'package:uessh/features/hosts/host_repository.dart';
 import 'package:uessh/features/terminal/known_hosts.dart';
 import 'package:uessh/features/terminal/server_stats.dart';
+import 'package:uessh/features/files/remote_fs.dart';
 import 'package:uessh/features/terminal/terminal_session.dart';
 
 import 'test_helpers.dart';
@@ -76,6 +79,164 @@ void main() {
     );
     await waitForText(s, 'uessh-42-ok');
   }
+
+  test(
+    'broadcast: typing in one session runs in the other',
+    () async {
+      final host = hostWith(AuthMethod.password);
+      await repo.writeSecrets(host.id, HostSecrets(password: _password));
+      final a = sessionFor(host, FakePrompts());
+      final b = sessionFor(host, FakePrompts());
+      await a.connect();
+      await b.connect();
+      expect(b.status, SessionStatus.connected);
+      a.onUserInput = b.sendInput;
+      a.terminal.textInput('echo uessh-bcast-\$((40+2))\r');
+      await waitForText(a, 'uessh-bcast-42');
+      await waitForText(b, 'uessh-bcast-42');
+      a.dispose();
+      b.dispose();
+    },
+    skip: skipPassword,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
+
+  test(
+    'files: SFTP listing; the shell\'s folder follows cd (nested too)',
+    () async {
+      final host = hostWith(AuthMethod.password);
+      await repo.writeSecrets(host.id, HostSecrets(password: _password));
+      final s = sessionFor(host, FakePrompts());
+      await s.connect();
+      expect(s.status, SessionStatus.connected);
+
+      final fs = await s.remoteFs();
+      final root = await fs.list('/');
+      expect(root.map((e) => e.name), containsAll(['etc', 'tmp', 'usr']));
+      expect(root.firstWhere((e) => e.name == 'etc').isDir, isTrue);
+      final home = await fs.home();
+      expect(home, startsWith('/'));
+      final hosts = await fs.read('/etc/hostname', maxBytes: 200);
+      expect(hosts, isNotEmpty);
+
+      // Upload into a fresh folder, read it back, clean up.
+      final dir = '/tmp/uessh-up-${DateTime.now().microsecondsSinceEpoch}';
+      await fs.mkdir(dir);
+      await fs.mkdir(dir); // again: fine
+      final local = File(
+        '${Directory.systemTemp.createTempSync('uessh_live_').path}/a.txt',
+      )..writeAsStringSync('uessh upload ✓\n' * 2000);
+      var sent = 0;
+      await fs.upload(local, '$dir/a.txt', onProgress: (n) => sent = n);
+      expect(sent, local.lengthSync());
+      final back = await fs.read('$dir/a.txt', maxBytes: 1 << 20);
+      expect(back, local.readAsBytesSync());
+      final listed = await fs.list(dir);
+      expect(listed.single.name, 'a.txt');
+      expect(listed.single.size, local.lengthSync());
+      await s.exec('rm -rf ${shellQuote(dir)}');
+
+      expect(await s.shellCwd(), home, reason: 'starts at home');
+      s.terminal.textInput('cd /tmp\r');
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      expect(await s.shellCwd(), '/tmp');
+      // A nested shell: its folder wins.
+      s.terminal.textInput('bash\r');
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      s.terminal.textInput('cd /usr/share\r');
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      expect(await s.shellCwd(), '/usr/share');
+      s.dispose();
+    },
+    skip: skipPassword,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
+
+  test(
+    'shell folder without the LC_ marker (server refuses env)',
+    () async {
+      TerminalSession.debugNoShellMarker = true;
+      addTearDown(() => TerminalSession.debugNoShellMarker = false);
+      final host = hostWith(AuthMethod.password);
+      await repo.writeSecrets(host.id, HostSecrets(password: _password));
+      final s = sessionFor(host, FakePrompts());
+      await s.connect();
+      expect(s.status, SessionStatus.connected);
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+
+      s.terminal.textInput('cd /tmp\r');
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      expect(await s.shellCwd(), '/tmp');
+      s.terminal.textInput('bash\r');
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      s.terminal.textInput('cd /usr/share\r');
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      expect(await s.shellCwd(), '/usr/share');
+
+      // A second session on the same server: each finds its own shell.
+      final s2 = sessionFor(host, FakePrompts());
+      await Future<void>.delayed(const Duration(seconds: 2));
+      await s2.connect();
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      s2.terminal.textInput('cd /etc\r');
+      await Future<void>.delayed(const Duration(milliseconds: 800));
+      expect(await s2.shellCwd(), '/etc');
+      expect(await s.shellCwd(), '/usr/share');
+      s.dispose();
+      s2.dispose();
+    },
+    skip: skipPassword,
+    timeout: const Timeout(Duration(seconds: 90)),
+  );
+
+  test(
+    'exec: output, stderr and exit code, outside the terminal',
+    () async {
+      final host = hostWith(AuthMethod.password);
+      await repo.writeSecrets(host.id, HostSecrets(password: _password));
+      final s = sessionFor(host, FakePrompts());
+      await s.connect();
+      expect(s.status, SessionStatus.connected);
+
+      final ok = await s.exec('uname -s; echo err-line 1>&2');
+      expect(ok.stdout.trim(), 'Linux');
+      expect(ok.stderr.trim(), 'err-line');
+      expect(ok.exitCode, 0);
+
+      final fail = await s.exec('ls /definitely-not-here-uessh');
+      expect(fail.exitCode, isNot(0));
+      expect(fail.stderr, isNotEmpty);
+
+      final slow = await s.exec('sleep 5', timeout: const Duration(seconds: 1));
+      expect(slow.timedOut, isTrue);
+
+      final shown = await s.execShown('echo shown-\$((20+1)); echo e>&2');
+      expect(shown.exitCode, 0);
+      final screen = s.terminal.buffer.getText();
+      expect(screen, contains('── AI ──'));
+      expect(screen, contains(r'$ echo shown-'));
+      expect(screen, contains('shown-21'));
+      expect(screen, contains('✓ exit 0'));
+
+      // Stop: the command ends on the server too.
+      await s.exec('rm -f /tmp/uessh-stop-x');
+      final cancel = Completer<void>();
+      Timer(const Duration(milliseconds: 800), cancel.complete);
+      final watch = Stopwatch()..start();
+      await s.exec('sleep 3; touch /tmp/uessh-stop-x', cancel: cancel.future);
+      expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
+      await Future<void>.delayed(const Duration(seconds: 4));
+      final left = await s.exec('ls /tmp/uessh-stop-x 2>/dev/null');
+      expect(left.stdout.trim(), isEmpty, reason: 'killed before touch');
+
+      final big = await s.exec('seq 1 100000', maxBytes: 1000);
+      expect(big.truncated, isTrue);
+      expect(big.stdout.length, lessThanOrEqualTo(1000));
+      s.dispose();
+    },
+    skip: skipPassword,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
 
   test(
     'password login opens a working shell',
@@ -243,6 +404,51 @@ void main() {
     skip: (_host == null || _user == null || _keyFile == null)
         ? 'set UESSH_TEST_HOST / USER / KEY_FILE to run'
         : false,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
+
+  test(
+    'reconnect: a dropped connection comes back; exit does not reconnect',
+    () async {
+      final host = hostWith(AuthMethod.password);
+      await repo.writeSecrets(host.id, HostSecrets(password: _password));
+      final s = sessionFor(host, FakePrompts());
+      s.reconnectPolicy = () =>
+          (enabled: true, attempts: 3, delay: const Duration(seconds: 1));
+      await s.connect();
+      expect(s.status, SessionStatus.connected);
+
+      // The shell's parent is this session's sshd process: killing it drops
+      // the connection without an exit status, like a network failure.
+      s.terminal.textInput('kill -9 \$PPID\r');
+      final deadline = DateTime.now().add(const Duration(seconds: 20));
+      while (s.reconnectAttempt == 0 && s.status == SessionStatus.connected) {
+        if (DateTime.now().isAfter(deadline)) fail('connection never dropped');
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+      expect(s.reconnectAttempt, 1);
+      await waitForText(s, '1/3');
+      while (s.status != SessionStatus.connected) {
+        if (DateTime.now().isAfter(deadline)) fail('did not reconnect');
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      expect(s.reconnectAttempt, 0);
+      await runEcho(s);
+
+      // `exit` ends the shell with a status: no reconnect.
+      s.terminal.textInput('exit\r');
+      while (s.status == SessionStatus.connected) {
+        if (DateTime.now().isAfter(deadline.add(const Duration(seconds: 10)))) {
+          fail('exit did not close');
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+      await Future<void>.delayed(const Duration(seconds: 2));
+      expect(s.status, SessionStatus.closed);
+      expect(s.reconnectPending, isFalse);
+      s.dispose();
+    },
+    skip: skipPassword,
     timeout: const Timeout(Duration(seconds: 60)),
   );
 }

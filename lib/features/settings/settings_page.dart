@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../ai/ai_settings.dart';
+
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../widgets/app_dropdown.dart';
@@ -7,6 +10,7 @@ import '../security/master_password_dialog.dart';
 import '../security/vault_controller.dart';
 import '../../widgets/page_scaffold.dart';
 import 'app_settings.dart';
+import 'highlight_settings.dart';
 import 'log_sheet.dart';
 import 'settings_providers.dart';
 import '../../l10n/l10n.dart';
@@ -184,6 +188,87 @@ class SettingsPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
+          _SectionTitle(context.l10n.sshSection),
+          Card(
+            child: Column(
+              children: [
+                HighlightSettingsTiles(settings: s, update: update),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                SwitchListTile(
+                  key: const ValueKey('auto-reconnect'),
+                  secondary: const Icon(Icons.sync),
+                  title: Text(context.l10n.settingsReconnect),
+                  subtitle: Text(context.l10n.settingsReconnectSubtitle),
+                  value: s.autoReconnect,
+                  onChanged: (v) => update((s) => s.copyWith(autoReconnect: v)),
+                ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: !s.autoReconnect
+                      ? const SizedBox(width: double.infinity)
+                      : Column(
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.replay),
+                              title: Text(
+                                context.l10n.settingsReconnectAttempts,
+                              ),
+                              trailing: AppDropdown<int>(
+                                key: const ValueKey('reconnect-attempts'),
+                                width: 140,
+                                value: s.reconnectAttempts,
+                                onChanged: (v) => update(
+                                  (s) => s.copyWith(reconnectAttempts: v),
+                                ),
+                                entries: [
+                                  for (final v in {
+                                    ...AppSettings.reconnectAttemptChoices,
+                                    s.reconnectAttempts,
+                                  }.toList()..sort())
+                                    AppDropdownEntry(
+                                      value: v,
+                                      label: context.l10n
+                                          .reconnectAttemptsValue(v),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.hourglass_empty),
+                              title: Text(context.l10n.settingsReconnectDelay),
+                              trailing: AppDropdown<int>(
+                                key: const ValueKey('reconnect-delay'),
+                                width: 140,
+                                value: s.reconnectDelaySeconds,
+                                onChanged: (v) => update(
+                                  (s) => s.copyWith(reconnectDelaySeconds: v),
+                                ),
+                                entries: [
+                                  for (final v in {
+                                    ...AppSettings.reconnectDelayChoices,
+                                    s.reconnectDelaySeconds,
+                                  }.toList()..sort())
+                                    AppDropdownEntry(
+                                      value: v,
+                                      label: context.l10n.reconnectDelayValue(
+                                        v,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _SectionTitle(context.l10n.aiSection),
+          const AiSettingsCard(),
+          const SizedBox(height: 24),
           _SectionTitle(context.l10n.security),
           _SecurityCard(autoLockMinutes: s.autoLockMinutes, update: update),
           const SizedBox(height: 24),
@@ -306,12 +391,10 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-/// "uessh 0.1.1 (2)": the version the running app was built with.
+/// "uessh 0.1.4": the version the running app was built with.
 final appVersionProvider = FutureProvider<String>((ref) async {
-  final info = await PackageInfo.fromPlatform();
-  return info.buildNumber.isEmpty
-      ? info.version
-      : '${info.version} (${info.buildNumber})';
+  // Version only; the build number isn't shown.
+  return (await PackageInfo.fromPlatform()).version;
 });
 
 class AppVersionLabel extends ConsumerWidget {

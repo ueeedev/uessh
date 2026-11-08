@@ -939,4 +939,664 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get general => 'General';
+
+  @override
+  String get aiAssistant => 'AI assistant';
+
+  @override
+  String get aiShowPanel => 'AI assistant';
+
+  @override
+  String get aiHidePanel => 'Hide AI assistant';
+
+  @override
+  String get aiClosePanel => 'Close AI assistant';
+
+  @override
+  String get aiNewChat => 'New chat';
+
+  @override
+  String get aiSetupTitle => 'No AI provider set up yet';
+
+  @override
+  String get aiSetupBody =>
+      'Add an API key in Settings to start. Claude, ChatGPT, DeepSeek, Gemini, Grok and custom endpoints are supported.';
+
+  @override
+  String get aiOpenSettings => 'Open Settings';
+
+  @override
+  String get aiInputHint =>
+      'Ask something. Enter to send, Shift+Enter for a new line';
+
+  @override
+  String get aiPickModel => 'Choose a model';
+
+  @override
+  String get aiLoadingModels => 'Loading models…';
+
+  @override
+  String get aiModelsFailed => 'Couldn\'t load models';
+
+  @override
+  String get aiNoModels => 'No models available';
+
+  @override
+  String get aiRetry => 'Retry';
+
+  @override
+  String get aiManageProviders => 'Manage AI providers…';
+
+  @override
+  String get aiAttachOn => 'Attach terminal output: on (last 80 lines)';
+
+  @override
+  String get aiAttachOff => 'Attach terminal output: off';
+
+  @override
+  String get aiSend => 'Send';
+
+  @override
+  String get aiStop => 'Stop';
+
+  @override
+  String get aiCopied => 'Copied';
+
+  @override
+  String get aiPasteToTerminal => 'Paste into terminal (doesn\'t run it)';
+
+  @override
+  String get aiReasoning => 'Reasoning';
+
+  @override
+  String get aiRefused => 'The model declined to answer this.';
+
+  @override
+  String get aiTruncated => 'The answer was too long and got cut off.';
+
+  @override
+  String get aiNoKey => 'This provider has no API key';
+
+  @override
+  String get aiWithTerminal => 'Terminal output attached';
+
+  @override
+  String get aiStopped => 'Stopped';
+
+  @override
+  String get aiSection => 'AI assistant';
+
+  @override
+  String get aiProviderConfigured => 'Set up';
+
+  @override
+  String get aiProviderNotConfigured => 'Not set up';
+
+  @override
+  String get aiAddCustom => 'Add custom provider';
+
+  @override
+  String get aiCustomProvider => 'Custom provider';
+
+  @override
+  String get aiApiKey => 'API key';
+
+  @override
+  String get aiApiKeyKeep => 'Saved; leave empty to keep it';
+
+  @override
+  String get aiGetKey => 'Get an API key';
+
+  @override
+  String get aiBaseUrl => 'Base URL';
+
+  @override
+  String get aiBaseUrlRequired => 'Enter the base URL';
+
+  @override
+  String get aiBaseUrlInvalid =>
+      'Enter an address starting with http:// or https://';
+
+  @override
+  String get aiProviderName => 'Name';
+
+  @override
+  String get aiNameRequired => 'Enter a name';
+
+  @override
+  String get aiProtocol => 'API format';
+
+  @override
+  String get aiProtocolOpenai => 'OpenAI-compatible';
+
+  @override
+  String get aiProtocolAnthropic => 'Anthropic';
+
+  @override
+  String get aiExtraModels => 'Extra models';
+
+  @override
+  String get aiExtraModelsHelper =>
+      'If the endpoint doesn\'t list its models, enter model ids here, separated by commas';
+
+  @override
+  String get aiTest => 'Test connection';
+
+  @override
+  String get aiTesting => 'Testing…';
+
+  @override
+  String get aiKeyStored =>
+      'API keys are encrypted in this computer\'s vault, never written to config files.';
+
+  @override
+  String get aiRemoveProvider => 'Remove';
+
+  @override
+  String get aiRemoveTitle => 'Remove this provider?';
+
+  @override
+  String get aiRemoveBody => 'Its API key and settings will be deleted.';
+
+  @override
+  String get aiKeyRequired => 'Enter the API key';
+
+  @override
+  String aiBaseUrlDefault(String url) {
+    return 'Leave empty for the default: $url';
+  }
+
+  @override
+  String aiTestOk(int count) {
+    return 'Connected: $count models available';
+  }
+
+  @override
+  String aiTestFailed(String error) {
+    return 'Couldn\'t connect: $error';
+  }
+
+  @override
+  String get aiToolRun => 'Run command';
+
+  @override
+  String get aiToolReadTerminal => 'Read terminal';
+
+  @override
+  String get aiToolWaiting => 'Waiting for you';
+
+  @override
+  String get aiToolRunning => 'Running';
+
+  @override
+  String get aiToolDone => 'Done';
+
+  @override
+  String get aiToolDenied => 'Declined';
+
+  @override
+  String get aiToolFailed => 'Failed';
+
+  @override
+  String get aiToolMayChange =>
+      'This command may change the server. It runs only if you allow it.';
+
+  @override
+  String get aiToolAskAll =>
+      'With your current setting, every command needs your approval.';
+
+  @override
+  String get aiAllow => 'Allow';
+
+  @override
+  String get aiDeny => 'Decline';
+
+  @override
+  String get aiShowOutput => 'Show output';
+
+  @override
+  String get aiHideOutput => 'Hide output';
+
+  @override
+  String get aiNoOutput => '(no output)';
+
+  @override
+  String get aiStepLimit =>
+      'Reached the step limit for one message; reply \"continue\" to carry on.';
+
+  @override
+  String get aiToolMode => 'Command execution';
+
+  @override
+  String get aiToolModeSubtitle =>
+      'Let the AI run commands on the connected host to investigate and fix things';
+
+  @override
+  String get aiToolModeOff => 'Off';
+
+  @override
+  String get aiToolModeAsk => 'Ask for every command';
+
+  @override
+  String get aiToolModeAuto => 'Run read-only commands automatically';
+
+  @override
+  String aiToolExit(int code) {
+    return 'exit $code';
+  }
+
+  @override
+  String get aiToolModeAll => 'Allow all (never ask)';
+
+  @override
+  String get aiAllowAllTitle => 'Let the AI run every command?';
+
+  @override
+  String get aiAllowAllBody =>
+      'The AI will run any command without asking you, including deleting files, changing configuration and restarting services. It can do anything the SSH user can, and a mistake may lose data or take services down. Best used only on test machines.';
+
+  @override
+  String get aiAllowAllConfirm => 'Turn it on';
+
+  @override
+  String get splitRight => 'Split right';
+
+  @override
+  String get splitDown => 'Split down';
+
+  @override
+  String get zoomPane => 'Maximize pane';
+
+  @override
+  String get restorePane => 'Restore pane';
+
+  @override
+  String get moveToNewTab => 'Move to new tab';
+
+  @override
+  String get closePane => 'Close pane';
+
+  @override
+  String get broadcastOn => 'Broadcast input to all panes';
+
+  @override
+  String get broadcastOff => 'Stop broadcasting input';
+
+  @override
+  String get broadcasting => 'Broadcasting';
+
+  @override
+  String get workspaceFull => 'A workspace holds at most 9 panes';
+
+  @override
+  String get closeWorkspaceTitle => 'Close this workspace?';
+
+  @override
+  String get dropHere => 'Drop here';
+
+  @override
+  String closeWorkspaceBody(int count) {
+    return 'Its $count connections will be closed.';
+  }
+
+  @override
+  String workspaceName(int n) {
+    return 'Workspace $n';
+  }
+
+  @override
+  String get renameWorkspaceHint => 'Click to rename';
+
+  @override
+  String get aiHistory => 'History';
+
+  @override
+  String get aiHistoryEmpty => 'No conversations yet';
+
+  @override
+  String get aiHistoryThisHost => 'This host';
+
+  @override
+  String get aiHistoryOtherHosts => 'Other hosts';
+
+  @override
+  String get aiHistoryDelete => 'Delete this conversation';
+
+  @override
+  String get aiBackToChat => 'Back to chat';
+
+  @override
+  String get aiClearHistory => 'Clear AI conversations';
+
+  @override
+  String get aiClearHistorySubtitle =>
+      'Conversations are encrypted on this computer; up to 200 are kept';
+
+  @override
+  String get aiClearHistoryTitle => 'Clear all AI conversations?';
+
+  @override
+  String get aiClearHistoryBody =>
+      'Conversations for every host will be deleted. This can\'t be undone.';
+
+  @override
+  String get aiClear => 'Clear';
+
+  @override
+  String get filesShow => 'Files';
+
+  @override
+  String get filesHide => 'Close files';
+
+  @override
+  String get filesBack => 'Back';
+
+  @override
+  String get filesForward => 'Forward';
+
+  @override
+  String get filesUp => 'Enclosing folder';
+
+  @override
+  String get filesRefresh => 'Refresh';
+
+  @override
+  String get filesFollow => 'Follow the terminal\'s folder';
+
+  @override
+  String get filesShowHidden => 'Show hidden files';
+
+  @override
+  String get filesHideHidden => 'Hide hidden files';
+
+  @override
+  String get viewIcons => 'Icons';
+
+  @override
+  String get viewList => 'List';
+
+  @override
+  String get viewColumns => 'Columns';
+
+  @override
+  String get viewGallery => 'Gallery';
+
+  @override
+  String get colName => 'Name';
+
+  @override
+  String get colModified => 'Date Modified';
+
+  @override
+  String get colSize => 'Size';
+
+  @override
+  String get colKind => 'Kind';
+
+  @override
+  String get filesEmpty => 'Empty folder';
+
+  @override
+  String get filesNotConnected => 'Connect to browse files';
+
+  @override
+  String get filesLocating => 'Finding the terminal\'s folder…';
+
+  @override
+  String get filesOpen => 'Open';
+
+  @override
+  String get filesCdHere => 'Go here in terminal';
+
+  @override
+  String get filesCopyPath => 'Copy path';
+
+  @override
+  String get filesDownload => 'Download…';
+
+  @override
+  String get filesNoPreview => 'No preview';
+
+  @override
+  String get filesPermissions => 'Permissions';
+
+  @override
+  String get kindFolder => 'Folder';
+
+  @override
+  String get kindImage => 'Image';
+
+  @override
+  String get kindText => 'Text';
+
+  @override
+  String get kindCode => 'Code';
+
+  @override
+  String get kindArchive => 'Archive';
+
+  @override
+  String get kindVideo => 'Video';
+
+  @override
+  String get kindAudio => 'Audio';
+
+  @override
+  String get kindPdf => 'PDF document';
+
+  @override
+  String get kindDocument => 'Document';
+
+  @override
+  String get kindExecutable => 'Executable';
+
+  @override
+  String get kindFile => 'File';
+
+  @override
+  String get kindLink => 'Alias';
+
+  @override
+  String filesItems(int n) {
+    return '$n items';
+  }
+
+  @override
+  String filesError(String error) {
+    return 'Can\'t open: $error';
+  }
+
+  @override
+  String filesDownloaded(String path) {
+    return 'Downloaded to $path';
+  }
+
+  @override
+  String filesDownloading(String name) {
+    return 'Downloading $name…';
+  }
+
+  @override
+  String get aiAddProvider => 'Add AI provider';
+
+  @override
+  String get aiNoProviders => 'No AI provider added yet';
+
+  @override
+  String get aiNoProvidersHint =>
+      'Add a provider with its API key to use the AI assistant on the terminal page';
+
+  @override
+  String get aiAlreadyAdded => 'Added';
+
+  @override
+  String get filesUpload => 'Upload files…';
+
+  @override
+  String get filesUploadHere => 'Upload files here…';
+
+  @override
+  String get dropResolving => 'Finding the current folder…';
+
+  @override
+  String get uploadNotConnected => 'Not connected; can\'t upload';
+
+  @override
+  String get overwriteTitle => 'Replace existing items?';
+
+  @override
+  String get overwriteReplace => 'Replace';
+
+  @override
+  String get overwriteSkip => 'Skip';
+
+  @override
+  String dropToUpload(String path) {
+    return 'Release to upload to $path';
+  }
+
+  @override
+  String uploadProgress(String path) {
+    return 'Uploading to $path';
+  }
+
+  @override
+  String uploadDone(int count, String path) {
+    return 'Uploaded $count files to $path';
+  }
+
+  @override
+  String uploadFailed(String error) {
+    return 'Upload failed: $error';
+  }
+
+  @override
+  String overwriteBody(String path, String names) {
+    return '$path already has: $names';
+  }
+
+  @override
+  String uploadCount(int done, int total) {
+    return '$done/$total files';
+  }
+
+  @override
+  String get aiToolHiddenChars =>
+      'The command contains hidden or reversed characters (shown as <U+…>); it may not be what it looks like.';
+
+  @override
+  String aiToolOnHost(String host) {
+    return 'Runs on $host';
+  }
+
+  @override
+  String get aiPasteRunsTitle => 'Pasting will run it';
+
+  @override
+  String get aiPasteAnyway => 'Paste anyway';
+
+  @override
+  String aiPasteRunsBody(int n) {
+    return 'This server\'s shell doesn\'t use safe (bracketed) paste: the first $n lines will run right away, as if Enter were pressed.';
+  }
+
+  @override
+  String get aiBaseUrlHttps =>
+      'Use https://, or the API key travels unencrypted (http is only allowed for localhost)';
+
+  @override
+  String get aiAllowAllActive =>
+      'Allow all is on: the AI runs any command without asking. Tap to change in Settings';
+
+  @override
+  String get workbench => 'Workbench';
+
+  @override
+  String reconnectingIn(int seconds, int attempt, int total) {
+    return 'Reconnecting in ${seconds}s (attempt $attempt/$total)';
+  }
+
+  @override
+  String reconnectGaveUp(int count) {
+    return 'Still not connected after $count attempts; stopped reconnecting';
+  }
+
+  @override
+  String reconnectBanner(int seconds, int attempt, int total) {
+    return 'Disconnected. Reconnecting in ${seconds}s ($attempt/$total)';
+  }
+
+  @override
+  String reconnectingNow(int attempt, int total) {
+    return 'Reconnecting ($attempt/$total)…';
+  }
+
+  @override
+  String get reconnectNow => 'Reconnect now';
+
+  @override
+  String get settingsReconnect => 'Auto-reconnect';
+
+  @override
+  String get settingsReconnectSubtitle =>
+      'Reconnect when an SSH connection drops unexpectedly; typing exit doesn\'t reconnect';
+
+  @override
+  String get settingsReconnectAttempts => 'Reconnect attempts';
+
+  @override
+  String get settingsReconnectDelay => 'Time between attempts';
+
+  @override
+  String reconnectAttemptsValue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times',
+      one: '1 time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reconnectDelayValue(int seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get sshSection => 'SSH connections';
+
+  @override
+  String get settingsHighlight => 'Command syntax highlighting';
+
+  @override
+  String get settingsHighlightSubtitle =>
+      'Colors the command you\'re typing in the terminal; local only, nothing changes on the server';
+
+  @override
+  String get highlightCommand => 'Command';
+
+  @override
+  String get highlightDangerous => 'Dangerous command';
+
+  @override
+  String get highlightOption => 'Option';
+
+  @override
+  String get highlightString => 'String';
+
+  @override
+  String get highlightVariable => 'Variable';
+
+  @override
+  String get highlightOperator => 'Pipe / redirect';
+
+  @override
+  String get highlightComment => 'Comment';
+
+  @override
+  String get highlightResetAll => 'Reset all';
+
+  @override
+  String get highlightDefault => 'Default color';
 }
