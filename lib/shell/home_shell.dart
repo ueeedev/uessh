@@ -128,7 +128,7 @@ class _SideNav extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top of the sidebar doubles as the title bar on macOS.
+            // Top of the sidebar doubles as the title bar.
             WindowDragArea(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(

@@ -12,7 +12,7 @@ import 'package:uessh/features/terminal/info_panel.dart';
 import 'package:uessh/features/terminal/sessions_providers.dart';
 import 'package:uessh/features/terminal/terminal_page.dart';
 import 'package:uessh/theme/terminal_theme.dart';
-import 'package:xterm/xterm.dart';
+import 'package:xterm2/xterm.dart';
 
 import 'test_helpers.dart';
 

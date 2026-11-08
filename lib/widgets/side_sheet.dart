@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'window_drag_area.dart';
+
 import '../l10n/l10n.dart';
 
 /// Opens a Material 3 modal side sheet that slides in from the right.
@@ -114,7 +116,13 @@ class SideSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 12, 8),
+            // On Windows, keep the close button clear of the caption buttons.
+            padding: EdgeInsets.fromLTRB(
+              24,
+              captionBarHeight > 0 ? captionBarHeight + 4 : 20,
+              12,
+              8,
+            ),
             child: Row(
               children: [
                 Expanded(child: Text(title, style: theme.textTheme.titleLarge)),

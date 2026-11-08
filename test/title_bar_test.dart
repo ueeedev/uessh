@@ -75,14 +75,30 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
-  testWidgets('Windows keeps the system title bar: no drag areas', (
+  testWidgets('Windows: own caption buttons; headers act as title bar', (
     tester,
   ) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.windows;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
     final logo = await pumpAndGetLogo(tester);
+    // No traffic lights to clear on Windows.
     expect(logo.top, lessThan(28));
-    expect(find.byKey(const ValueKey('window-drag-surface')), findsNothing);
+
+    // Minimize / maximize / close sit in the top right corner.
+    final caption = tester.getRect(
+      find.byKey(const ValueKey('window-caption-buttons')),
+    );
+    expect(caption.topRight, const Offset(1200, 0));
+    expect(caption.size, Size(captionButtonSize.width * 3, 32));
+    expect(find.byKey(const ValueKey('caption-minimize')), findsOneWidget);
+    expect(find.byKey(const ValueKey('caption-maximize')), findsOneWidget);
+    expect(find.byKey(const ValueKey('caption-close')), findsOneWidget);
+
+    // Page headers drag the window, and their buttons start below the
+    // caption buttons.
+    expect(find.byKey(const ValueKey('window-drag-surface')), findsWidgets);
+    final newHost = tester.getRect(find.text('新建主机'));
+    expect(newHost.top, greaterThanOrEqualTo(caption.bottom));
     debugDefaultTargetPlatformOverride = null;
   });
 }

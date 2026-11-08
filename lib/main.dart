@@ -20,14 +20,15 @@ Future<void> main() async {
   log.captureErrors();
   await windowManager.ensureInitialized();
 
-  final options = WindowOptions(
+  const options = WindowOptions(
     title: 'uessh',
-    size: const Size(1200, 760),
-    minimumSize: const Size(800, 520),
+    size: Size(1200, 760),
+    minimumSize: Size(800, 520),
     center: true,
-    // macOS: no title bar; content goes to the top edge and the traffic
-    // lights float over the sidebar. Windows keeps its system title bar.
-    titleBarStyle: Platform.isMacOS ? TitleBarStyle.hidden : null,
+    // No system title bar: content goes to the top edge. macOS traffic
+    // lights float over the sidebar; on Windows the app draws its own
+    // caption buttons (WindowCaptionOverlay).
+    titleBarStyle: TitleBarStyle.hidden,
     windowButtonVisibility: true,
   );
   windowManager.waitUntilReadyToShow(options, () async {

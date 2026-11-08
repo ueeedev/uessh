@@ -3,7 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:xterm/xterm.dart';
+import 'package:xterm2/xterm.dart';
 
 import '../../theme/terminal_theme.dart';
 import '../../widgets/fade_through_stack.dart';
@@ -320,7 +320,7 @@ class _TabStrip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Empty space in the tab strip doubles as the title bar on macOS.
+    // Empty space in the tab strip doubles as the title bar.
     return WindowDragArea(
       child: ColoredBox(
         key: const ValueKey('tab-strip'),
@@ -332,7 +332,8 @@ class _TabStrip extends ConsumerWidget {
             children: [
               Expanded(child: _tabs(ref)),
               Padding(
-                padding: const EdgeInsets.fromLTRB(4, 0, 8, 4),
+                // Windows: room for the caption buttons at the top right.
+                padding: EdgeInsets.fromLTRB(4, 0, 8 + captionButtonsInset, 4),
                 child: IconButton(
                   tooltip: infoOpen
                       ? context.l10n.hideInfoPanel

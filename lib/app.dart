@@ -8,6 +8,7 @@ import 'features/settings/app_settings.dart';
 import 'features/settings/settings_providers.dart';
 import 'l10n/l10n.dart';
 import 'shell/home_shell.dart';
+import 'widgets/window_drag_area.dart';
 import 'theme/app_theme.dart';
 
 class UesshApp extends ConsumerWidget {
@@ -44,7 +45,7 @@ class UesshApp extends ConsumerWidget {
           builder: (context, child) {
             // Code without a BuildContext (SSH messages) reads this.
             currentL10n = AppLocalizations.of(context);
-            return VaultGate(child: child!);
+            return WindowCaptionOverlay(child: VaultGate(child: child!));
           },
         );
       },

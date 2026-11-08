@@ -20,10 +20,16 @@ class PageScaffold extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // The header row doubles as the title bar on macOS.
+        // The header row doubles as the title bar.
         WindowDragArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
+            // On Windows, start below the caption buttons.
+            padding: EdgeInsets.fromLTRB(
+              32,
+              captionBarHeight > 0 ? captionBarHeight + 8 : 24,
+              32,
+              24,
+            ),
             child: Row(
               children: [
                 Expanded(
