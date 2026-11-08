@@ -152,6 +152,27 @@ void main() {
     expect(find.byIcon(Icons.terminal), findsNothing, reason: 'old icon gone');
   });
 
+  testWidgets('Settings ends with the app version, as part of the page', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('设置'));
+    await tester.pumpAndSettle();
+    final label = find.byKey(const ValueKey('app-version'));
+    expect(find.text('uessh 0.1.1 (2)'), findsOneWidget);
+
+    // Inside the scrolling list (not pinned), below the last section.
+    final list = find.ancestor(of: label, matching: find.byType(ListView));
+    expect(list, findsOneWidget);
+    await tester.ensureVisible(label);
+    await tester.pumpAndSettle();
+    final rect = tester.getRect(label);
+    expect(rect.top, greaterThan(tester.getRect(find.text('查看日志')).bottom));
+    // Centred in the settings content.
+    final listRect = tester.getRect(list);
+    expect(rect.center.dx, closeTo(listRect.center.dx, 1));
+  });
+
   testWidgets('Settings is pinned to the bottom of the sidebar', (
     tester,
   ) async {

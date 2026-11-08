@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../widgets/app_dropdown.dart';
 import '../security/master_password_dialog.dart';
@@ -187,6 +188,11 @@ class SettingsPage extends ConsumerWidget {
               ),
             ),
           ),
+          // Part of the page: after the last section, scrolls with it.
+          const Padding(
+            padding: EdgeInsets.only(top: 32, bottom: 8),
+            child: Center(child: AppVersionLabel()),
+          ),
         ],
       ),
     );
@@ -283,6 +289,32 @@ class _SectionTitle extends StatelessWidget {
         style: theme.textTheme.titleSmall?.copyWith(
           color: theme.colorScheme.primary,
         ),
+      ),
+    );
+  }
+}
+
+/// "uessh 0.1.1 (2)": the version the running app was built with.
+final appVersionProvider = FutureProvider<String>((ref) async {
+  final info = await PackageInfo.fromPlatform();
+  return info.buildNumber.isEmpty
+      ? info.version
+      : '${info.version} (${info.buildNumber})';
+});
+
+class AppVersionLabel extends ConsumerWidget {
+  const AppVersionLabel({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final version = ref.watch(appVersionProvider).value;
+    if (version == null) return const SizedBox(height: 16);
+    final theme = Theme.of(context);
+    return SelectableText(
+      'uessh $version',
+      key: const ValueKey('app-version'),
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
       ),
     );
   }

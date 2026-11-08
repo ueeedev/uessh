@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uessh/core/app_providers.dart';
 import 'package:uessh/core/secret_store.dart';
 import 'package:uessh/core/vault.dart';
@@ -17,7 +18,15 @@ class TestEnv {
   TestEnv()
     : dataDir = Directory.systemTemp.createTempSync('uessh_test_'),
       secrets = MemorySecretStore(),
-      reachability = FakeReachabilityChecker();
+      reachability = FakeReachabilityChecker() {
+    PackageInfo.setMockInitialValues(
+      appName: 'uessh',
+      packageName: 'dev.ueee.uessh',
+      version: '0.1.1',
+      buildNumber: '2',
+      buildSignature: '',
+    );
+  }
 
   final Directory dataDir;
   final MemorySecretStore secrets;
