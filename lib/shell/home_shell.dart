@@ -6,6 +6,7 @@ import '../features/hosts/hosts_page.dart';
 import '../features/keys/keys_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/snippets/snippets_page.dart';
+import '../features/terminal/sessions_providers.dart';
 import '../features/terminal/terminal_page.dart';
 import '../widgets/fade_through_stack.dart';
 import 'navigation.dart';
@@ -94,14 +95,23 @@ const sideNavWidth = 188.0;
 /// Left navigation. Each destination is one pill-shaped button holding both
 /// icon and label (like M3 navigation drawer items), so hover, press and the
 /// selected highlight cover the whole row.
-class _SideNav extends StatelessWidget {
+/// Opens a local terminal (the button above Settings).
+const _localTerminal = _Destination(
+  _localTerminalLabel,
+  Icons.terminal,
+  Icons.terminal,
+);
+
+String _localTerminalLabel(AppLocalizations l) => l.localTerminal;
+
+class _SideNav extends ConsumerWidget {
   const _SideNav({required this.current, required this.onSelect});
 
   final AppDestination current;
   final ValueChanged<AppDestination> onSelect;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     Widget item(AppDestination d) => Padding(
@@ -157,6 +167,16 @@ class _SideNav extends StatelessWidget {
               if (d != AppDestination.settings) item(d),
             // Settings sits at the bottom, apart from the main pages.
             const Spacer(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              child: _NavItem(
+                key: const ValueKey('open-local-terminal'),
+                destination: _localTerminal,
+                selected: false,
+                count: 0,
+                onTap: () => ref.read(sessionsProvider.notifier).openLocal(),
+              ),
+            ),
             item(AppDestination.settings),
             const SizedBox(height: 12),
           ],
@@ -168,6 +188,7 @@ class _SideNav extends StatelessWidget {
 
 class _NavItem extends StatelessWidget {
   const _NavItem({
+    super.key,
     required this.destination,
     required this.selected,
     required this.count,

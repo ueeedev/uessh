@@ -8,6 +8,7 @@ import 'package:window_manager/window_manager.dart';
 import 'app.dart';
 import 'core/app_providers.dart';
 import 'core/app_log.dart';
+import 'core/sandbox_migration.dart';
 import 'core/secret_store.dart';
 import 'core/vault.dart';
 import 'features/hosts/host_repository.dart';
@@ -37,7 +38,19 @@ Future<void> main() async {
   });
 
   final dataDir = await getApplicationSupportDirectory();
+  // The macOS app used to be sandboxed: bring over its data once.
+  var migrated = false;
+  final home = Platform.environment['HOME'];
+  if (Platform.isMacOS && home != null) {
+    try {
+      migrated = await migrateSandboxData(dataDir, home: home);
+    } catch (e) {
+      // Logged below; the app still starts (with empty data).
+      log.warn('app', 'Could not copy data from the sandbox container: $e');
+    }
+  }
   await log.attachFile(dataDir);
+  if (migrated) log.info('app', 'Copied data from the old sandbox container');
   log.info(
     'app',
     'uessh started on ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',

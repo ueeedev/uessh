@@ -456,5 +456,11 @@
   "highlightOperator": "Pipe / redirect",
   "highlightComment": "Comment",
   "highlightResetAll": "Reset all",
-  "highlightDefault": "Default color"
+  "highlightDefault": "Default color",
+  "aiOpenLinkTitle": "Open this link?",
+  "aiOpenLink": "Open in browser",
+  "localTerminal": "Local terminal",
+  "localTerminalFailed": "Couldn't start the local terminal: {reason}",
+  "localTerminalEnded": "[local terminal exited]",
+  "diskSystem": "System drive"
 }

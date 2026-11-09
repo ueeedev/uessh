@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -595,7 +596,11 @@ class AiChatNotifier extends Notifier<AiChatState> {
             isError: true,
           );
         }
-        final readOnly = isReadOnlyCommand(command);
+        // The read-only rules know POSIX shells; PowerShell commands on a
+        // local Windows terminal always ask.
+        final readOnly =
+            !(session.isLocal && Platform.isWindows) &&
+            isReadOnlyCommand(command);
         final purpose = input['purpose'] is String
             ? input['purpose'] as String
             : '';
@@ -795,11 +800,18 @@ String _jsonString(String s) =>
 
 /// Tells the model where it is: an SSH client, which host, which tools.
 String systemPrompt(TerminalSession session, {bool tools = false}) {
+  final where = session.isLocal
+      ? 'working in a local terminal on their own computer '
+            '(${_localSystem()}), not on a server. Commands run on this '
+            'computer${Platform.isWindows ? ' in Windows PowerShell' : ' with /bin/sh'}. '
+            'Help with shell commands, the local system, development tools, '
+            'configuration and troubleshooting.'
+      : 'working in a terminal connected to ${session.host.target} '
+            '(${session.host.displayName}). Help with shell commands, server '
+            'administration, configuration and troubleshooting.';
   final base =
       'You are the assistant built into uessh, an SSH client. The user is '
-      'working in a terminal connected to ${session.host.target} '
-      '(${session.host.displayName}). Help with shell commands, server '
-      'administration, configuration and troubleshooting. Put commands in '
+      '$where Put commands in '
       'fenced code blocks and explain briefly what they do; warn before '
       'anything destructive. When terminal output is attached, use it. '
       'Answer in the language the user writes in.\n\n'
@@ -812,6 +824,17 @@ String systemPrompt(TerminalSession session, {bool tools = false}) {
       'message, and do not read secrets (private keys, .env files, '
       'password or token files) unless the user asked.';
   if (!tools) return base;
+  if (session.isLocal) {
+    return '$base\n\n'
+        'You can act on this computer with tools. Use run_command to look '
+        'things up yourself instead of asking the user to run read-only '
+        'commands; use read_terminal to see what is on their screen. '
+        'Investigate before changing anything, prefer the smallest change, '
+        'and say what you are about to change. Every command that modifies '
+        'the system is shown to the user, who may decline it. Commands run '
+        'without a TTY, so sudo works only without a password prompt (use '
+        'sudo -n). When done, summarize what you found or changed.';
+  }
   return '$base\n\n'
       'You can act on the server with tools. Use run_command to look '
       'things up yourself (logs, status, configuration) instead of asking '
@@ -823,3 +846,7 @@ String systemPrompt(TerminalSession session, {bool tools = false}) {
       'a password prompt (use sudo -n). When done, summarize what you '
       'found or changed.';
 }
+
+/// "macOS 15.1 (...)"-style description of this computer.
+String _localSystem() =>
+    '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';

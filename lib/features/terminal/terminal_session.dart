@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_pty/flutter_pty.dart';
 import 'package:xterm2/xterm.dart';
 
 import '../../core/app_log.dart';
@@ -12,10 +13,14 @@ import '../hosts/host.dart';
 import '../hosts/host_repository.dart';
 import '../keys/ssh_key.dart';
 import '../ai/command_safety.dart' show visibleCommand;
+import '../files/local_fs.dart';
 import '../files/remote_fs.dart';
+import 'server_stats.dart' show serverStatsCommand;
 import 'command_highlight.dart';
 import 'known_hosts.dart';
 import '../../l10n/l10n.dart';
+
+part 'local_session.dart';
 
 enum SessionStatus { connecting, connected, failed, closed }
 
@@ -63,6 +68,15 @@ class TerminalSession extends ChangeNotifier {
 
   final Terminal terminal;
   final TerminalController controller = TerminalController();
+
+  /// A shell on this computer rather than an SSH connection.
+  bool get isLocal => false;
+
+  /// The script the info panel runs (see [serverStatsCommand]).
+  String get statsCommand => serverStatsCommand;
+
+  /// What to type to make the shell go to [folder].
+  String cdCommand(String folder) => ' cd -- ${shellQuote(folder)}\r';
 
   SessionStatus status = SessionStatus.connecting;
   String? error;

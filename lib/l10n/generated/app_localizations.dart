@@ -2839,6 +2839,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'默认颜色'**
   String get highlightDefault;
+
+  /// No description provided for @aiOpenLinkTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开这个链接？'**
+  String get aiOpenLinkTitle;
+
+  /// No description provided for @aiOpenLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'在浏览器中打开'**
+  String get aiOpenLink;
+
+  /// No description provided for @localTerminal.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地终端'**
+  String get localTerminal;
+
+  /// No description provided for @localTerminalFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法启动本地终端：{reason}'**
+  String localTerminalFailed(String reason);
+
+  /// No description provided for @localTerminalEnded.
+  ///
+  /// In zh, this message translates to:
+  /// **'[本地终端已退出]'**
+  String get localTerminalEnded;
+
+  /// No description provided for @diskSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统盘'**
+  String get diskSystem;
 }
 
 class _AppLocalizationsDelegate

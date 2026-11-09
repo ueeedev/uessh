@@ -1599,4 +1599,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get highlightDefault => 'Default color';
+
+  @override
+  String get aiOpenLinkTitle => 'Open this link?';
+
+  @override
+  String get aiOpenLink => 'Open in browser';
+
+  @override
+  String get localTerminal => 'Local terminal';
+
+  @override
+  String localTerminalFailed(String reason) {
+    return 'Couldn\'t start the local terminal: $reason';
+  }
+
+  @override
+  String get localTerminalEnded => '[local terminal exited]';
+
+  @override
+  String get diskSystem => 'System drive';
 }

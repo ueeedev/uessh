@@ -124,11 +124,12 @@ class TerminalPage extends ConsumerWidget {
     SessionsState state,
     int activeIndex,
     TerminalSession? active,
-    bool showInfo,
+    bool infoSetting,
     void Function(bool) setInfo,
     bool isVisible,
   ) {
     final panel = ref.watch(settingsProvider.select((s) => s.terminalPanel));
+    final showInfo = infoSetting;
     final showFiles = ref.watch(
       settingsProvider.select((s) => s.showFilePanel),
     );

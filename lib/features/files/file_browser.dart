@@ -275,7 +275,7 @@ class FileBrowserNotifier extends Notifier<FileBrowserState> {
 
   /// Types `cd <folder>` into the terminal (the user's shell goes there).
   void cdInTerminal(String folder) =>
-      _session?.sendInput(' cd -- ${shellQuote(folder)}\r');
+      _session?.sendInput(_session!.cdCommand(folder));
 }
 
 final fileBrowserProvider =

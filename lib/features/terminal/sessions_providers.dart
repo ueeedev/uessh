@@ -22,13 +22,20 @@ final sessionPromptsProvider = Provider<SessionPrompts>(
 /// Makes the session for a host being opened (replaceable in tests).
 final sessionFactoryProvider = Provider<TerminalSession Function(Host)>(
   (ref) =>
-      (host) => TerminalSession(
-        host: host,
-        repository: ref.read(hostRepositoryProvider),
-        knownHosts: ref.read(knownHostsProvider),
-        prompts: ref.read(sessionPromptsProvider),
-        keys: ref.read(keyRepositoryProvider),
-      ),
+      (host) => host.id == localHostId
+      ? LocalTerminalSession(
+          host: host,
+          repository: ref.read(hostRepositoryProvider),
+          knownHosts: ref.read(knownHostsProvider),
+          prompts: ref.read(sessionPromptsProvider),
+        )
+      : TerminalSession(
+          host: host,
+          repository: ref.read(hostRepositoryProvider),
+          knownHosts: ref.read(knownHostsProvider),
+          prompts: ref.read(sessionPromptsProvider),
+          keys: ref.read(keyRepositoryProvider),
+        ),
 );
 
 /// One terminal tab: a workspace of one or more panes laid out in a
@@ -163,6 +170,9 @@ class SessionsNotifier extends Notifier<SessionsState> {
     return const SessionsState();
   }
 
+  /// Opens a shell on this computer in a new tab.
+  TerminalSession openLocal() => open(localHost());
+
   /// Opens [host] in a new tab, or - with [splitFrom] - as a new pane
   /// beside that pane on [side]. Falls back to a new tab when the
   /// workspace is full.
@@ -173,7 +183,7 @@ class SessionsNotifier extends Notifier<SessionsState> {
   }) {
     final session = ref.read(sessionFactoryProvider)(host);
     _open.add(session);
-    _recordLastConnected(session);
+    if (!session.isLocal) _recordLastConnected(session);
     // Read the settings at each drop, so changes apply to open tabs too.
     session.reconnectPolicy ??= () => ref.mounted
         ? ref.read(settingsProvider).reconnect

@@ -44,6 +44,7 @@ class ServerStats {
     this.load,
     this.cpuCount,
     this.cpuTimes,
+    this.cpuPercent,
     this.memTotal,
     this.memAvailable,
     this.diskTotal,
@@ -60,6 +61,10 @@ class ServerStats {
   final int? cpuCount;
   final CpuTimes? cpuTimes;
 
+  /// CPU use right now (0-100), when the system reports it directly
+  /// (macOS, Windows) instead of as /proc/stat counters.
+  final double? cpuPercent;
+
   /// Bytes.
   final int? memTotal;
   final int? memAvailable;
@@ -71,7 +76,8 @@ class ServerStats {
       : null;
 
   /// True when the resource numbers (Linux /proc) were available.
-  bool get hasResources => memTotal != null || cpuTimes != null;
+  bool get hasResources =>
+      memTotal != null || cpuTimes != null || cpuPercent != null;
 
   static ServerStats parse(String output) {
     final sections = <String, List<String>>{};
@@ -143,6 +149,7 @@ class ServerStats {
       load: load,
       cpuCount: int.tryParse(first('nproc') ?? ''),
       cpuTimes: cpuTimes,
+      cpuPercent: double.tryParse(first('cpupct') ?? ''),
       memTotal: memTotal,
       memAvailable: memAvailable,
       diskTotal: diskTotal,

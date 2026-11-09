@@ -1506,4 +1506,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get highlightDefault => '默认颜色';
+
+  @override
+  String get aiOpenLinkTitle => '打开这个链接？';
+
+  @override
+  String get aiOpenLink => '在浏览器中打开';
+
+  @override
+  String get localTerminal => '本地终端';
+
+  @override
+  String localTerminalFailed(String reason) {
+    return '无法启动本地终端：$reason';
+  }
+
+  @override
+  String get localTerminalEnded => '[本地终端已退出]';
+
+  @override
+  String get diskSystem => '系统盘';
 }

@@ -386,7 +386,8 @@ class _WorkspacePaneState extends ConsumerState<WorkspacePane> {
 
     final connected = _session.status == SessionStatus.connected;
     return DropTarget(
-      // Files dragged in from the computer upload to the shell's folder.
+      // Files dragged in from the computer upload to the shell's folder
+      // (copied there, in a local terminal).
       onDragEntered: (_) => _fileEnter(),
       onDragUpdated: (_) => _fileEnter(),
       onDragExited: (_) => _fileExit(),

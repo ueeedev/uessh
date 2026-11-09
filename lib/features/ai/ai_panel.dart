@@ -10,6 +10,7 @@ import '../../widgets/shape_morph_indicator.dart';
 import '../terminal/terminal_session.dart';
 import 'ai_chat.dart';
 import 'command_safety.dart';
+import 'markdown_view.dart';
 import 'ai_config.dart';
 import 'ai_history.dart';
 import '../hosts/host_overview.dart' show formatTimeAgo;
@@ -1097,8 +1098,8 @@ class _ReasoningState extends State<_Reasoning> {
   }
 }
 
-/// A reply in light Markdown: fenced code blocks (with copy / paste into
-/// terminal), headings, and inline `code` / **bold**.
+/// A reply rendered as Markdown; code blocks get copy / paste into
+/// terminal buttons. The whole reply can be selected.
 class _RichReply extends StatelessWidget {
   const _RichReply({required this.text, required this.session});
 
@@ -1106,32 +1107,13 @@ class _RichReply extends StatelessWidget {
   final TerminalSession session;
 
   @override
-  Widget build(BuildContext context) {
-    final parts = <Widget>[];
-    final fence = RegExp(r'```([^\n`]*)\n([\s\S]*?)(?:```|$)');
-    var last = 0;
-    for (final m in fence.allMatches(text)) {
-      final before = text.substring(last, m.start);
-      if (before.trim().isNotEmpty) parts.add(_Prose(before.trim()));
-      parts.add(
-        _CodeBlock(
-          language: m.group(1)!.trim(),
-          code: m.group(2)!.replaceAll(RegExp(r'\n+$'), ''),
-          session: session,
-        ),
-      );
-      last = m.end;
-    }
-    final rest = text.substring(last);
-    if (rest.trim().isNotEmpty) parts.add(_Prose(rest.trim()));
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final p in parts)
-          Padding(padding: const EdgeInsets.only(bottom: 8), child: p),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => SelectionArea(
+    child: MarkdownView(
+      text: text,
+      codeBlock: (language, code) =>
+          _CodeBlock(language: language, code: code, session: session),
+    ),
+  );
 }
 
 /// Pastes [code] into [session]'s terminal without running it. Shells
@@ -1171,67 +1153,6 @@ Future<void> pasteIntoTerminal(
     if (ok != true) return;
   }
   session.terminal.paste(code);
-}
-
-class _Prose extends StatelessWidget {
-  const _Prose(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final base = theme.textTheme.bodyMedium!;
-    final spans = <InlineSpan>[];
-    final lines = text.split('\n');
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
-      var style = base;
-      final heading = RegExp(r'^(#{1,6})\s+').firstMatch(line);
-      if (heading != null) {
-        line = line.substring(heading.end);
-        style = base.copyWith(fontWeight: FontWeight.w600, fontSize: 15);
-      }
-      spans.addAll(_inline(line, style, theme));
-      if (i < lines.length - 1) spans.add(const TextSpan(text: '\n'));
-    }
-    return SelectableText.rich(TextSpan(style: base, children: spans));
-  }
-
-  static List<InlineSpan> _inline(String line, TextStyle style, ThemeData t) {
-    final out = <InlineSpan>[];
-    final token = RegExp(r'`([^`]+)`|\*\*([^*]+)\*\*');
-    var last = 0;
-    for (final m in token.allMatches(line)) {
-      if (m.start > last) {
-        out.add(TextSpan(text: line.substring(last, m.start), style: style));
-      }
-      if (m.group(1) != null) {
-        out.add(
-          TextSpan(
-            text: m.group(1),
-            style: style.copyWith(
-              fontFamily: monoFontFamily,
-              fontFamilyFallback: monoFontFallback,
-              backgroundColor: t.colorScheme.surfaceContainerHighest,
-            ),
-          ),
-        );
-      } else {
-        out.add(
-          TextSpan(
-            text: m.group(2),
-            style: style.copyWith(fontWeight: FontWeight.w600),
-          ),
-        );
-      }
-      last = m.end;
-    }
-    if (last < line.length) {
-      out.add(TextSpan(text: line.substring(last), style: style));
-    }
-    return out;
-  }
 }
 
 class _CodeBlock extends StatelessWidget {

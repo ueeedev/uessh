@@ -149,7 +149,18 @@ void main() {
     expect(logo.size, const Size(40, 40));
     expect(logo.right, lessThan(name.left));
     expect((logo.center.dy - name.center.dy).abs(), lessThan(2));
-    expect(find.byIcon(Icons.terminal), findsNothing, reason: 'old icon gone');
+    // The old logo was a terminal icon next to the name; the only one left
+    // is the Local terminal button lower down.
+    final terminalIcons = find.byIcon(Icons.terminal);
+    expect(terminalIcons, findsOneWidget);
+    expect(
+      find.ancestor(
+        of: terminalIcons,
+        matching: find.byKey(const ValueKey('open-local-terminal')),
+      ),
+      findsOneWidget,
+      reason: 'old icon gone',
+    );
   });
 
   testWidgets('Settings ends with the app version, as part of the page', (

@@ -909,5 +909,18 @@
   "highlightOperator": "管道/重定向",
   "highlightComment": "注释",
   "highlightResetAll": "全部恢复默认",
-  "highlightDefault": "默认颜色"
+  "highlightDefault": "默认颜色",
+  "aiOpenLinkTitle": "打开这个链接？",
+  "aiOpenLink": "在浏览器中打开",
+  "localTerminal": "本地终端",
+  "localTerminalFailed": "无法启动本地终端：{reason}",
+  "localTerminalEnded": "[本地终端已退出]",
+  "@localTerminalFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "diskSystem": "系统盘"
 }

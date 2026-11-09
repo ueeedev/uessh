@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -88,7 +89,7 @@ class _TerminalInfoPanelState extends State<TerminalInfoPanel> {
       return;
     }
     _loading = true;
-    final out = await _session.runCommand(serverStatsCommand);
+    final out = await _session.runCommand(_session.statsCommand);
     _loading = false;
     if (!mounted) return;
     setState(() {
@@ -98,7 +99,9 @@ class _TerminalInfoPanelState extends State<TerminalInfoPanel> {
       }
       final next = ServerStats.parse(out);
       final prev = _stats?.cpuTimes;
-      if (prev != null && next.cpuTimes != null) {
+      if (next.cpuPercent != null) {
+        _cpuUsage = (next.cpuPercent! / 100).clamp(0.0, 1.0);
+      } else if (prev != null && next.cpuTimes != null) {
         _cpuUsage = next.cpuTimes!.usageSince(prev);
       }
       _stats = next;
@@ -174,7 +177,7 @@ class _TerminalInfoPanelState extends State<TerminalInfoPanel> {
                   if (stats.hasResources) ...[
                     const SizedBox(height: 20),
                     _SectionTitle(context.l10n.resources),
-                    if (stats.cpuTimes != null)
+                    if (stats.cpuTimes != null || stats.cpuPercent != null)
                       _UsageBar(
                         label: 'CPU',
                         fraction: _cpuUsage,
@@ -191,7 +194,9 @@ class _TerminalInfoPanelState extends State<TerminalInfoPanel> {
                       ),
                     if (stats.diskTotal != null && stats.diskUsed != null)
                       _UsageBar(
-                        label: context.l10n.diskRoot,
+                        label: _session.isLocal && Platform.isWindows
+                            ? context.l10n.diskSystem
+                            : context.l10n.diskRoot,
                         fraction: stats.diskUsed! / stats.diskTotal!,
                         detail:
                             '${formatBytes(stats.diskUsed!)} / ${formatBytes(stats.diskTotal!)}',
@@ -229,13 +234,17 @@ class _ConnectionSection extends ConsumerWidget {
       title: context.l10n.sectionConnection,
       rows: [
         (context.l10n.fieldName, host.displayName),
-        (context.l10n.fieldAddress, host.target),
-        (
-          context.l10n.auth,
-          host.authMethod == AuthMethod.key
-              ? context.l10n.authKey
-              : context.l10n.authPassword,
-        ),
+        if (session.isLocal)
+          ('Shell', LocalTerminalSession.shellCommand().$1)
+        else ...[
+          (context.l10n.fieldAddress, host.target),
+          (
+            context.l10n.auth,
+            host.authMethod == AuthMethod.key
+                ? context.l10n.authKey
+                : context.l10n.authPassword,
+          ),
+        ],
         (context.l10n.status, status),
         if (connectedAt != null)
           (
