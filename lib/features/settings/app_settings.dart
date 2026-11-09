@@ -49,6 +49,8 @@ class AppSettings {
     this.reconnectDelaySeconds = defaultReconnectDelay,
     this.syntaxHighlight = true,
     this.highlightColors = const {},
+    this.autoCheckUpdates = true,
+    this.ignoredUpdateVersion,
     this.lastConnectedHostId,
     this.lastConnectedAt,
   });
@@ -104,6 +106,12 @@ class AppSettings {
   static const reconnectAttemptChoices = [1, 2, 3, 5, 10];
   static const defaultReconnectDelay = 3;
   static const reconnectDelayChoices = [1, 3, 5, 10, 30, 60];
+
+  /// Look for a new version on GitHub at startup.
+  final bool autoCheckUpdates;
+
+  /// A version the user chose to skip ("忽略此版本"); newer ones still show.
+  final String? ignoredUpdateVersion;
 
   /// Colors the command being typed in the terminal.
   final bool syntaxHighlight;
@@ -162,6 +170,8 @@ class AppSettings {
     int? reconnectDelaySeconds,
     bool? syntaxHighlight,
     Map<HighlightToken, int>? highlightColors,
+    bool? autoCheckUpdates,
+    String? ignoredUpdateVersion,
   }) => _copy(
     themeMode: themeMode,
     followSystemAccent: followSystemAccent,
@@ -183,6 +193,8 @@ class AppSettings {
     reconnectDelaySeconds: reconnectDelaySeconds,
     syntaxHighlight: syntaxHighlight,
     highlightColors: highlightColors,
+    autoCheckUpdates: autoCheckUpdates,
+    ignoredUpdateVersion: ignoredUpdateVersion,
   );
 
   AppSettings _copy({
@@ -206,6 +218,8 @@ class AppSettings {
     int? reconnectDelaySeconds,
     bool? syntaxHighlight,
     Map<HighlightToken, int>? highlightColors,
+    bool? autoCheckUpdates,
+    String? ignoredUpdateVersion,
     String? lastConnectedHostId,
     DateTime? lastConnectedAt,
   }) => AppSettings(
@@ -229,6 +243,8 @@ class AppSettings {
     reconnectDelaySeconds: reconnectDelaySeconds ?? this.reconnectDelaySeconds,
     syntaxHighlight: syntaxHighlight ?? this.syntaxHighlight,
     highlightColors: highlightColors ?? this.highlightColors,
+    autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
+    ignoredUpdateVersion: ignoredUpdateVersion ?? this.ignoredUpdateVersion,
     lastConnectedHostId: lastConnectedHostId ?? this.lastConnectedHostId,
     lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
   );
@@ -253,6 +269,9 @@ class AppSettings {
     'reconnectAttempts': reconnectAttempts,
     'reconnectDelaySeconds': reconnectDelaySeconds,
     'syntaxHighlight': syntaxHighlight,
+    'autoCheckUpdates': autoCheckUpdates,
+    if (ignoredUpdateVersion != null)
+      'ignoredUpdateVersion': ignoredUpdateVersion,
     if (highlightColors.isNotEmpty)
       'highlightColors': {
         for (final e in highlightColors.entries) e.key.name: e.value,
@@ -308,6 +327,8 @@ class AppSettings {
                   d.reconnectDelaySeconds)
               .clamp(1, 3600),
       syntaxHighlight: json['syntaxHighlight'] as bool? ?? d.syntaxHighlight,
+      autoCheckUpdates: json['autoCheckUpdates'] as bool? ?? d.autoCheckUpdates,
+      ignoredUpdateVersion: json['ignoredUpdateVersion'] as String?,
       highlightColors: {
         if (json['highlightColors'] case final Map<Object?, Object?> m)
           for (final e in m.entries)

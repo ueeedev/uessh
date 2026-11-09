@@ -16,6 +16,7 @@ import 'package:uessh/features/hosts/host_geo.dart';
 import 'package:uessh/features/hosts/reachability.dart';
 import 'package:uessh/features/settings/app_settings.dart';
 import 'package:uessh/features/settings/settings_providers.dart';
+import 'package:uessh/features/settings/updates.dart';
 import 'package:uessh/features/terminal/known_hosts.dart';
 import 'package:uessh/features/terminal/terminal_session.dart';
 
@@ -52,6 +53,9 @@ class TestEnv {
 
   AppSettings settings = const AppSettings(language: AppLanguage.zh);
 
+  /// What the update check finds (nothing new, unless a test says so).
+  FakeUpdateApi updates = FakeUpdateApi();
+
   List<Override> get overrides => [
     dataDirProvider.overrideWithValue(dataDir),
     secretStoreProvider.overrideWithValue(secrets),
@@ -62,6 +66,7 @@ class TestEnv {
     reachabilityCheckerProvider.overrideWithValue(reachability),
     geoApiProvider.overrideWithValue(geo),
     aiClientProvider.overrideWithValue(ai),
+    updateApiProvider.overrideWithValue(updates),
   ];
 
   void dispose() {
@@ -276,4 +281,23 @@ Future<void> scrollTo(WidgetTester tester, Finder finder) async {
   await settleIo(tester);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
+}
+
+/// [UpdateApi] answering from memory; counts the checks.
+class FakeUpdateApi implements UpdateApi {
+  FakeUpdateApi({this.version = '0.0.1', this.fail = false});
+
+  String version;
+  bool fail;
+  int checks = 0;
+
+  @override
+  Future<ReleaseInfo> latest() async {
+    checks++;
+    if (fail) throw const SocketException('offline');
+    return ReleaseInfo(
+      version: version,
+      url: 'https://github.com/ueeedev/uessh/releases/tag/v$version',
+    );
+  }
 }

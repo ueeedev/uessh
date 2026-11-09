@@ -1526,4 +1526,44 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diskSystem => '系统盘';
+
+  @override
+  String get autoCheckUpdates => '自动检查更新';
+
+  @override
+  String get autoCheckUpdatesSubtitle =>
+      '启动时检查 GitHub 上是否有新版本，有就提示；关闭后只能在设置页底部手动检查';
+
+  @override
+  String get updateCheck => '检查更新';
+
+  @override
+  String get updateChecking => '正在检查…';
+
+  @override
+  String get updateCheckFailed => '检查更新失败，请稍后再试';
+
+  @override
+  String updateUpToDate(String version) {
+    return '已是最新版本（$version）';
+  }
+
+  @override
+  String updateAvailableTitle(String version) {
+    return '发现新版本 v$version';
+  }
+
+  @override
+  String updateAvailableBody(String current) {
+    return '当前版本 v$current。点击「立刻前往」到 GitHub 下载最新版。';
+  }
+
+  @override
+  String get updateLater => '下次再说～';
+
+  @override
+  String get updateGo => '立刻前往';
+
+  @override
+  String get updateIgnore => '忽略此版本';
 }

@@ -12,6 +12,7 @@ import '../../l10n/l10n.dart';
 import '../terminal/terminal_session.dart';
 import 'file_browser.dart';
 import 'remote_fs.dart';
+import '../../widgets/toasts.dart';
 
 /// A local file or folder to upload. [bookmark]: macOS sandbox access for
 /// files dropped from outside the app.
@@ -224,9 +225,8 @@ Future<void> uploadTo(
 ) async {
   if (sources.isEmpty) return;
   final l = context.l10n;
-  final messenger = ScaffoldMessenger.maybeOf(context);
   if (session.status != SessionStatus.connected) {
-    messenger?.showSnackBar(SnackBar(content: Text(l.uploadNotConnected)));
+    showToast(l.uploadNotConnected, kind: ToastKind.error);
     return;
   }
   var skip = <String>{};
@@ -278,9 +278,7 @@ Future<void> uploadTo(
         skip: skip,
       );
   if (job.state == UploadState.done && job.totalFiles > 0) {
-    messenger?.showSnackBar(
-      SnackBar(content: Text(l.uploadDone(job.totalFiles, targetDir))),
-    );
+    showToast(l.uploadDone(job.totalFiles, targetDir), kind: ToastKind.success);
   }
 }
 

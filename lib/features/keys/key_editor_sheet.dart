@@ -9,6 +9,7 @@ import '../hosts/hosts_providers.dart';
 import 'keys_providers.dart';
 import 'ssh_key.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/toasts.dart';
 
 /// Add a key (null) or edit [key], in a side sheet from the right.
 Future<void> showKeyEditor(BuildContext context, {SshKey? key}) =>
@@ -178,8 +179,7 @@ class _KeyEditorSheetState extends ConsumerState<KeyEditorSheet> {
   Future<void> _copyPublicKey(String publicKey) async {
     await Clipboard.setData(ClipboardData(text: publicKey));
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.l10n.publicKeyCopied)));
+    showToast(context.l10n.publicKeyCopied, kind: ToastKind.success);
   }
 
   @override

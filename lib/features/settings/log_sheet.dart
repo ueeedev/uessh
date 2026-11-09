@@ -5,6 +5,7 @@ import '../../core/app_log.dart';
 import '../../theme/terminal_theme.dart';
 import '../../widgets/side_sheet.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/toasts.dart';
 
 Future<void> showLogSheet(BuildContext context) =>
     showSideSheet<void>(context, width: 640, builder: (_) => const LogSheet());
@@ -53,8 +54,7 @@ class _LogSheetState extends State<LogSheet> {
   Future<void> _copy() async {
     await Clipboard.setData(ClipboardData(text: log.export()));
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.l10n.logCopied)));
+    showToast(context.l10n.logCopied, kind: ToastKind.success);
   }
 
   @override

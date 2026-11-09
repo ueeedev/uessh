@@ -922,5 +922,37 @@
       }
     }
   },
-  "diskSystem": "系统盘"
+  "diskSystem": "系统盘",
+  "autoCheckUpdates": "自动检查更新",
+  "autoCheckUpdatesSubtitle": "启动时检查 GitHub 上是否有新版本，有就提示；关闭后只能在设置页底部手动检查",
+  "updateCheck": "检查更新",
+  "updateChecking": "正在检查…",
+  "updateCheckFailed": "检查更新失败，请稍后再试",
+  "updateUpToDate": "已是最新版本（{version}）",
+  "updateAvailableTitle": "发现新版本 v{version}",
+  "updateAvailableBody": "当前版本 v{current}。点击「立刻前往」到 GitHub 下载最新版。",
+  "updateLater": "下次再说～",
+  "updateGo": "立刻前往",
+  "updateIgnore": "忽略此版本",
+  "@updateUpToDate": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateAvailableTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "@updateAvailableBody": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      }
+    }
+  }
 }

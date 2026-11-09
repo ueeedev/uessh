@@ -12,6 +12,7 @@ import 'host_icon_picker.dart';
 import '../keys/keys_providers.dart';
 import 'hosts_providers.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/toasts.dart';
 
 /// Opens the editor as a side sheet from the right. Pass [host] to edit,
 /// or null to create.
@@ -207,8 +208,7 @@ class _HostEditorSheetState extends ConsumerState<HostEditorSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.l10n.saveFailed('$e'))));
+      showToast(context.l10n.saveFailed('$e'), kind: ToastKind.error);
     }
   }
 

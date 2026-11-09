@@ -1619,4 +1619,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diskSystem => 'System drive';
+
+  @override
+  String get autoCheckUpdates => 'Check for updates automatically';
+
+  @override
+  String get autoCheckUpdatesSubtitle =>
+      'Look for a new version on GitHub at startup; when off, check from the bottom of this page';
+
+  @override
+  String get updateCheck => 'Check for updates';
+
+  @override
+  String get updateChecking => 'Checking…';
+
+  @override
+  String get updateCheckFailed =>
+      'Couldn\'t check for updates. Try again later.';
+
+  @override
+  String updateUpToDate(String version) {
+    return 'You\'re up to date ($version)';
+  }
+
+  @override
+  String updateAvailableTitle(String version) {
+    return 'Version v$version is available';
+  }
+
+  @override
+  String updateAvailableBody(String current) {
+    return 'You have v$current. Choose \"Go now\" to download the latest version from GitHub.';
+  }
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String get updateGo => 'Go now';
+
+  @override
+  String get updateIgnore => 'Skip this version';
 }

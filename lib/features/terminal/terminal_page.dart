@@ -15,7 +15,6 @@ import '../../widgets/shape_morph_indicator.dart';
 import '../settings/app_settings.dart';
 import '../settings/settings_providers.dart';
 import '../files/files_panel.dart';
-import '../files/uploads.dart';
 import '../../shell/home_shell.dart';
 import 'host_picker.dart';
 import '../ai/ai_panel.dart';
@@ -212,12 +211,6 @@ class TerminalPage extends ConsumerWidget {
                                     ),
                                   ],
                                 ),
-                              ),
-                              // Uploads, wherever they were started.
-                              const Positioned(
-                                right: 20,
-                                bottom: 24,
-                                child: UploadProgressCard(),
                               ),
                             ],
                           ),

@@ -14,6 +14,7 @@ import 'markdown_view.dart';
 import 'ai_config.dart';
 import 'ai_history.dart';
 import '../hosts/host_overview.dart' show formatTimeAgo;
+import '../../widgets/toasts.dart';
 
 /// Chat with an AI model about the terminal tab [session], beside the
 /// terminal. Each tab keeps its own conversation.
@@ -27,13 +28,41 @@ class AiPanel extends ConsumerStatefulWidget {
   ConsumerState<AiPanel> createState() => _AiPanelState();
 }
 
+/// Where each session's chat was scrolled to, so switching terminals
+/// (which builds a new panel) comes back to the same place.
+final _scrollMemory = <String, ({double offset, bool atEnd})>{};
+
 class _AiPanelState extends ConsumerState<AiPanel> {
   final _input = TextEditingController();
   final _inputFocus = FocusNode();
-  final _scroll = ScrollController();
+  late final ScrollController _scroll;
 
   /// Showing the list of saved conversations instead of the chat.
   bool _showHistory = false;
+
+  /// Within this of the bottom counts as "at the latest message".
+  static const _endSlack = 80.0;
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = _scrollMemory[widget.session.id];
+    _scroll = ScrollController(
+      initialScrollOffset: saved == null || saved.atEnd ? 0 : saved.offset,
+    )..addListener(_remember);
+    // First time, or it was at the latest message: show the latest (also
+    // replies that came in meanwhile).
+    if (saved == null || saved.atEnd) _scrollToEnd();
+  }
+
+  void _remember() {
+    if (!_scroll.hasClients) return;
+    final pos = _scroll.position;
+    _scrollMemory[widget.session.id] = (
+      offset: pos.pixels,
+      atEnd: pos.maxScrollExtent - pos.pixels < _endSlack,
+    );
+  }
 
   @override
   void dispose() {
@@ -45,9 +74,17 @@ class _AiPanelState extends ConsumerState<AiPanel> {
 
   void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scroll.hasClients) {
-        _scroll.jumpTo(_scroll.position.maxScrollExtent);
-      }
+      if (!mounted || !_scroll.hasClients) return;
+      _scroll.jumpTo(_scroll.position.maxScrollExtent);
+      // Items further down are measured only once built: the end may move
+      // after the first jump.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scroll.hasClients) return;
+        final pos = _scroll.position;
+        if (pos.pixels < pos.maxScrollExtent) {
+          _scroll.jumpTo(pos.maxScrollExtent);
+        }
+      });
     });
   }
 
@@ -85,7 +122,7 @@ class _AiPanelState extends ConsumerState<AiPanel> {
       // Follow the reply while it streams, unless the user scrolled up.
       if (!_scroll.hasClients) return;
       final pos = _scroll.position;
-      if (pos.maxScrollExtent - pos.pixels < 80) _scrollToEnd();
+      if (pos.maxScrollExtent - pos.pixels < _endSlack) _scrollToEnd();
     });
 
     final value = config.value;
@@ -1200,11 +1237,10 @@ class _CodeBlock extends StatelessWidget {
                     icon: const Icon(Icons.copy),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: code));
-                      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                        SnackBar(
-                          content: Text(l.aiCopied),
-                          duration: const Duration(seconds: 1),
-                        ),
+                      showToast(
+                        l.aiCopied,
+                        kind: ToastKind.success,
+                        duration: const Duration(seconds: 2),
                       );
                     },
                   ),

@@ -5,6 +5,7 @@ import '../features/forwarding/forwarding_page.dart';
 import '../features/hosts/hosts_page.dart';
 import '../features/keys/keys_page.dart';
 import '../features/settings/settings_page.dart';
+import '../features/settings/updates.dart';
 import '../features/snippets/snippets_page.dart';
 import '../features/terminal/sessions_providers.dart';
 import '../features/terminal/terminal_page.dart';
@@ -55,7 +56,8 @@ class HomeShell extends StatelessWidget {
   const HomeShell({super.key});
 
   @override
-  Widget build(BuildContext context) => const Scaffold(body: TerminalPage());
+  Widget build(BuildContext context) =>
+      const Scaffold(body: StartupUpdateCheck(child: TerminalPage()));
 }
 
 /// The workbench: navigation on the left and its pages (hosts, keys,

@@ -2875,6 +2875,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'系统盘'**
   String get diskSystem;
+
+  /// No description provided for @autoCheckUpdates.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动检查更新'**
+  String get autoCheckUpdates;
+
+  /// No description provided for @autoCheckUpdatesSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动时检查 GitHub 上是否有新版本，有就提示；关闭后只能在设置页底部手动检查'**
+  String get autoCheckUpdatesSubtitle;
+
+  /// No description provided for @updateCheck.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查更新'**
+  String get updateCheck;
+
+  /// No description provided for @updateChecking.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在检查…'**
+  String get updateChecking;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查更新失败，请稍后再试'**
+  String get updateCheckFailed;
+
+  /// No description provided for @updateUpToDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'已是最新版本（{version}）'**
+  String updateUpToDate(String version);
+
+  /// No description provided for @updateAvailableTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'发现新版本 v{version}'**
+  String updateAvailableTitle(String version);
+
+  /// No description provided for @updateAvailableBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前版本 v{current}。点击「立刻前往」到 GitHub 下载最新版。'**
+  String updateAvailableBody(String current);
+
+  /// No description provided for @updateLater.
+  ///
+  /// In zh, this message translates to:
+  /// **'下次再说～'**
+  String get updateLater;
+
+  /// No description provided for @updateGo.
+  ///
+  /// In zh, this message translates to:
+  /// **'立刻前往'**
+  String get updateGo;
+
+  /// No description provided for @updateIgnore.
+  ///
+  /// In zh, this message translates to:
+  /// **'忽略此版本'**
+  String get updateIgnore;
 }
 
 class _AppLocalizationsDelegate

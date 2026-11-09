@@ -10,6 +10,7 @@ import 'package:uessh/features/ai/ai_history.dart';
 import 'package:uessh/features/hosts/host.dart';
 import 'package:uessh/features/terminal/sessions_providers.dart';
 
+import 'package:uessh/features/ai/ai_chat.dart';
 import 'test_helpers.dart';
 
 void main() {
@@ -315,5 +316,60 @@ void main() {
       matching: find.text('全量允许（不再询问）'),
     );
     expect(tester.widget<Text>(shown).style?.color, red);
+  });
+
+  testWidgets('switching terminals keeps where each chat was scrolled to', (
+    tester,
+  ) async {
+    final c = await pumpApp(tester);
+    await configureAnthropic(tester, c);
+    await openTab(tester, c);
+    await openTab(tester, c);
+    final sessions = c.read(sessionsProvider).sessions;
+    final first = sessions[0].id, second = sessions[1].id;
+    await tester.tap(find.byKey(const ValueKey('toggle-ai-panel')));
+    await settleIo(tester);
+    await tester.pumpAndSettle();
+
+    await pumpUntil(tester, () => tester.any(find.text('anthropic-model-a')));
+
+    // A long chat in the second terminal (the active one).
+    env.ai.reply = [for (var i = 0; i < 80; i++) '第 $i 行'].join('\n\n');
+    await tester.enterText(find.byKey(const ValueKey('ai-input')), '长一点');
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('ai-send')));
+    await pumpUntil(tester, () => env.ai.requests.isNotEmpty);
+    await pumpUntil(tester, () => !c.read(aiChatProvider(second)).busy);
+    await tester.pumpAndSettle();
+
+    ScrollPosition position() => tester
+        .state<ScrollableState>(
+          find.descendant(
+            of: find.byKey(const ValueKey('ai-messages')),
+            matching: find.byType(Scrollable),
+          ),
+        )
+        .position;
+    bool atEnd() => position().maxScrollExtent - position().pixels < 1;
+    expect(position().maxScrollExtent, greaterThan(500));
+    expect(atEnd(), isTrue);
+
+    Future<void> show(String id) async {
+      c.read(sessionsProvider.notifier).activate(id);
+      await tester.pumpAndSettle();
+    }
+
+    // At the latest message: back there after switching away and back.
+    await show(first);
+    await show(second);
+    expect(atEnd(), isTrue);
+
+    // Scrolled up: back to the same place, not the top.
+    position().jumpTo(300);
+    await tester.pump();
+    await show(first);
+    expect(find.byKey(const ValueKey('ai-empty')), findsOneWidget);
+    await show(second);
+    expect(position().pixels, 300);
   });
 }

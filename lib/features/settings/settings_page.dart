@@ -13,6 +13,7 @@ import 'app_settings.dart';
 import 'highlight_settings.dart';
 import 'log_sheet.dart';
 import 'settings_providers.dart';
+import 'updates.dart';
 import '../../l10n/l10n.dart';
 
 String formatInterval(int seconds) => seconds == 0
@@ -43,13 +44,27 @@ class SettingsPage extends ConsumerWidget {
         children: [
           _SectionTitle(context.l10n.general),
           Card(
-            child: SwitchListTile(
-              key: const ValueKey('run-in-background'),
-              secondary: const Icon(Icons.push_pin_outlined),
-              title: Text(context.l10n.runInBackground),
-              subtitle: Text(context.l10n.runInBackgroundSubtitle),
-              value: s.runInBackground,
-              onChanged: (v) => update((s) => s.copyWith(runInBackground: v)),
+            child: Column(
+              children: [
+                SwitchListTile(
+                  key: const ValueKey('run-in-background'),
+                  secondary: const Icon(Icons.push_pin_outlined),
+                  title: Text(context.l10n.runInBackground),
+                  subtitle: Text(context.l10n.runInBackgroundSubtitle),
+                  value: s.runInBackground,
+                  onChanged: (v) =>
+                      update((s) => s.copyWith(runInBackground: v)),
+                ),
+                SwitchListTile(
+                  key: const ValueKey('auto-check-updates'),
+                  secondary: const Icon(Icons.system_update_alt),
+                  title: Text(context.l10n.autoCheckUpdates),
+                  subtitle: Text(context.l10n.autoCheckUpdatesSubtitle),
+                  value: s.autoCheckUpdates,
+                  onChanged: (v) =>
+                      update((s) => s.copyWith(autoCheckUpdates: v)),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
@@ -288,7 +303,13 @@ class SettingsPage extends ConsumerWidget {
           // Part of the page: after the last section, scrolls with it.
           const Padding(
             padding: EdgeInsets.only(top: 32, bottom: 8),
-            child: Center(child: AppVersionLabel()),
+            child: Column(
+              children: [
+                AppVersionLabel(),
+                SizedBox(height: 4),
+                CheckUpdatesLink(),
+              ],
+            ),
           ),
         ],
       ),

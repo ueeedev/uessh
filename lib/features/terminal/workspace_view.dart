@@ -11,6 +11,7 @@ import 'sessions_providers.dart';
 import 'terminal_page.dart';
 import 'terminal_session.dart';
 import 'workspace_layout.dart';
+import '../../widgets/toasts.dart';
 
 /// Dragging a pane (by its header) somewhere.
 class PaneDrag {
@@ -315,9 +316,7 @@ class _WorkspacePaneState extends ConsumerState<WorkspacePane> {
     _fileExit();
     if (!mounted) return;
     if (dir == null) {
-      ScaffoldMessenger.maybeOf(
-        context,
-      )?.showSnackBar(SnackBar(content: Text(context.l10n.uploadNotConnected)));
+      showToast(context.l10n.uploadNotConnected, kind: ToastKind.error);
       return;
     }
     await uploadTo(context, ref, _session, dir, dropSources(items));
@@ -349,10 +348,7 @@ class _WorkspacePaneState extends ConsumerState<WorkspacePane> {
       TabDrag(:final tabId) => n.mergeTabInto(tabId, _session.id, side),
       _ => true,
     };
-    if (!ok) {
-      ScaffoldMessenger.maybeOf(context)
-          ?.showSnackBar(SnackBar(content: Text(context.l10n.workspaceFull)));
-    }
+    if (!ok) showToast(context.l10n.workspaceFull);
   }
 
   @override
@@ -666,8 +662,7 @@ Future<void> splitPane(
   final state = ref.read(sessionsProvider);
   final tab = state.tabOf(session.id);
   if (tab != null && tab.paneIds.length >= maxPanes) {
-    ScaffoldMessenger.maybeOf(context)
-        ?.showSnackBar(SnackBar(content: Text(context.l10n.workspaceFull)));
+    showToast(context.l10n.workspaceFull);
     return;
   }
   final paneContext = paneKey(session).currentContext ?? context;

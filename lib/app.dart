@@ -10,6 +10,8 @@ import 'l10n/l10n.dart';
 import 'shell/home_shell.dart';
 import 'widgets/window_drag_area.dart';
 import 'theme/app_theme.dart';
+import 'features/files/uploads.dart';
+import 'widgets/toasts.dart';
 
 class UesshApp extends ConsumerWidget {
   const UesshApp({super.key});
@@ -45,7 +47,15 @@ class UesshApp extends ConsumerWidget {
           builder: (context, child) {
             // Code without a BuildContext (SSH messages) reads this.
             currentL10n = AppLocalizations.of(context);
-            return WindowCaptionOverlay(child: VaultGate(child: child!));
+            return WindowCaptionOverlay(
+              child: VaultGate(
+                // Notices and upload progress: top right, over everything.
+                child: ToastLayer(
+                  header: const UploadProgressCard(),
+                  child: child!,
+                ),
+              ),
+            );
           },
         );
       },

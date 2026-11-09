@@ -462,5 +462,16 @@
   "localTerminal": "Local terminal",
   "localTerminalFailed": "Couldn't start the local terminal: {reason}",
   "localTerminalEnded": "[local terminal exited]",
-  "diskSystem": "System drive"
+  "diskSystem": "System drive",
+  "autoCheckUpdates": "Check for updates automatically",
+  "autoCheckUpdatesSubtitle": "Look for a new version on GitHub at startup; when off, check from the bottom of this page",
+  "updateCheck": "Check for updates",
+  "updateChecking": "Checking…",
+  "updateCheckFailed": "Couldn't check for updates. Try again later.",
+  "updateUpToDate": "You're up to date ({version})",
+  "updateAvailableTitle": "Version v{version} is available",
+  "updateAvailableBody": "You have v{current}. Choose \"Go now\" to download the latest version from GitHub.",
+  "updateLater": "Later",
+  "updateGo": "Go now",
+  "updateIgnore": "Skip this version"
 }

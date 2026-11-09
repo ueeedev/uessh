@@ -17,6 +17,7 @@ import '../terminal/terminal_session.dart';
 import 'file_browser.dart';
 import 'remote_fs.dart';
 import 'uploads.dart';
+import '../../widgets/toasts.dart';
 
 // ---------------------------------------------------------------------------
 // Kinds and icons
@@ -241,22 +242,20 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
 
   Future<void> _download(RemoteEntry e) async {
     final l = context.l10n;
-    final messenger = ScaffoldMessenger.maybeOf(context);
     final location = await getSaveLocation(suggestedName: e.name);
     if (location == null) return;
-    messenger?.showSnackBar(
-      SnackBar(content: Text(l.filesDownloading(e.name))),
-    );
+    // One card: "downloading…" turns into the result.
+    final id = showToast(l.filesDownloading(e.name), duration: null);
     try {
       final fs = await widget.session.remoteFs();
       await fs.download(e.path, File(location.path));
-      messenger?.hideCurrentSnackBar();
-      messenger?.showSnackBar(
-        SnackBar(content: Text(l.filesDownloaded(location.path))),
+      showToast(
+        l.filesDownloaded(location.path),
+        kind: ToastKind.success,
+        id: id,
       );
     } catch (err) {
-      messenger?.hideCurrentSnackBar();
-      messenger?.showSnackBar(SnackBar(content: Text(l.filesError('$err'))));
+      showToast(l.filesError('$err'), kind: ToastKind.error, id: id);
     }
   }
 

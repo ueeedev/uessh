@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:markdown/markdown.dart' as md;
 
+import '../../core/open_url.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/terminal_theme.dart';
 
@@ -454,12 +453,5 @@ Future<void> openLink(BuildContext context, String href) async {
     ),
   );
   if (ok != true) return;
-  final url = uri.toString();
-  if (Platform.isMacOS) {
-    await Process.run('open', [url]);
-  } else if (Platform.isWindows) {
-    await Process.run('rundll32', ['url.dll,FileProtocolHandler', url]);
-  } else {
-    await Process.run('xdg-open', [url]);
-  }
+  await openInBrowser(uri.toString());
 }
