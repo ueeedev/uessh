@@ -17,7 +17,8 @@ import 'package:uessh/features/terminal/terminal_session.dart';
 
 import 'test_helpers.dart';
 
-/// Never connects: this test is about the button and the tab. (A plain
+/// Never connects (it just ends up closed): this test is about the button
+/// and the tab. (A plain
 /// session would dial localhost:22, where CI machines run an SSH server.)
 class _IdleSession extends TerminalSession {
   _IdleSession({
@@ -28,7 +29,7 @@ class _IdleSession extends TerminalSession {
   });
 
   @override
-  Future<void> connect({bool auto = false}) async {}
+  Future<void> connect({bool auto = false}) async => close();
 }
 
 void main() {
