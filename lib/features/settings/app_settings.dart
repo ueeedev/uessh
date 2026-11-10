@@ -22,6 +22,18 @@ enum FileViewMode { icons, list, columns, gallery }
 /// Side panels of the terminal page.
 enum TerminalPanel { info, ai }
 
+/// The two halves of the side panel column: a panel opens in its own half;
+/// with both halves in use they share the height.
+enum PanelSlot { top, bottom }
+
+extension TerminalPanelSlot on TerminalPanel {
+  /// Where this panel opens (matches its button's group on the side rail).
+  PanelSlot get slot => switch (this) {
+    TerminalPanel.info => PanelSlot.top,
+    TerminalPanel.ai => PanelSlot.bottom,
+  };
+}
+
 enum AppLanguage { system, zh, en }
 
 /// Same shape as the terminal's ReconnectPolicy.
@@ -34,12 +46,12 @@ class AppSettings {
     this.checkIntervalSeconds = defaultCheckInterval,
     this.checkMethod = ReachabilityMethod.ping,
     this.autoLockMinutes = defaultAutoLock,
-    this.showTerminalInfo = false,
+    this.openPanels = const {},
+    this.panelSplit = defaultPanelSplit,
     this.infoPanelWidth = defaultInfoPanelWidth,
     this.language = AppLanguage.system,
     this.showHostOverview = true,
     this.runInBackground = true,
-    this.terminalPanel = TerminalPanel.info,
     this.showFilePanel = false,
     this.filePanelHeight = defaultFilePanelHeight,
     this.fileViewMode = FileViewMode.list,
@@ -71,10 +83,42 @@ class AppSettings {
   final ReachabilityMethod checkMethod;
   final int autoLockMinutes;
 
-  /// Whether the info panel beside the terminal is open.
-  final bool showTerminalInfo;
+  /// Side panels open beside the terminal (at most one per [PanelSlot]).
+  final Set<TerminalPanel> openPanels;
 
-  /// Width of the info panel, set by dragging its edge.
+  /// With both halves open: the top half's share of the height, set by
+  /// dragging the line between them.
+  final double panelSplit;
+  static const defaultPanelSplit = 0.5;
+  static const minPanelSplit = 0.15;
+  static const maxPanelSplit = 0.85;
+
+  bool get panelsOpen => openPanels.isNotEmpty;
+
+  /// The panel open in [slot], if any.
+  TerminalPanel? panelIn(PanelSlot slot) {
+    for (final p in openPanels) {
+      if (p.slot == slot) return p;
+    }
+    return null;
+  }
+
+  /// Opens [panel] (in place of another one in its half) or, if open,
+  /// closes it.
+  AppSettings togglePanel(TerminalPanel panel) => _copy(
+    openPanels: openPanels.contains(panel)
+        ? ({...openPanels}..remove(panel))
+        : {
+            for (final p in openPanels)
+              if (p.slot != panel.slot) p,
+            panel,
+          },
+  );
+
+  AppSettings closePanel(TerminalPanel panel) =>
+      _copy(openPanels: {...openPanels}..remove(panel));
+
+  /// Width of the side panels, set by dragging their edge.
   final double infoPanelWidth;
   static const defaultInfoPanelWidth = 300.0;
   static const minInfoPanelWidth = 240.0;
@@ -87,9 +131,6 @@ class AppSettings {
 
   /// Menu bar / tray icon; closing the window hides it instead of quitting.
   final bool runInBackground;
-
-  /// What the terminal page's side panel shows when open.
-  final TerminalPanel terminalPanel;
 
   /// The file browser below the terminal.
   final bool showFilePanel;
@@ -155,12 +196,12 @@ class AppSettings {
     int? checkIntervalSeconds,
     ReachabilityMethod? checkMethod,
     int? autoLockMinutes,
-    bool? showTerminalInfo,
+    Set<TerminalPanel>? openPanels,
+    double? panelSplit,
     double? infoPanelWidth,
     AppLanguage? language,
     bool? showHostOverview,
     bool? runInBackground,
-    TerminalPanel? terminalPanel,
     bool? showFilePanel,
     double? filePanelHeight,
     FileViewMode? fileViewMode,
@@ -178,12 +219,12 @@ class AppSettings {
     checkIntervalSeconds: checkIntervalSeconds,
     checkMethod: checkMethod,
     autoLockMinutes: autoLockMinutes,
-    showTerminalInfo: showTerminalInfo,
+    openPanels: openPanels,
+    panelSplit: panelSplit,
     infoPanelWidth: infoPanelWidth,
     language: language,
     showHostOverview: showHostOverview,
     runInBackground: runInBackground,
-    terminalPanel: terminalPanel,
     showFilePanel: showFilePanel,
     filePanelHeight: filePanelHeight,
     fileViewMode: fileViewMode,
@@ -203,12 +244,12 @@ class AppSettings {
     int? checkIntervalSeconds,
     ReachabilityMethod? checkMethod,
     int? autoLockMinutes,
-    bool? showTerminalInfo,
+    Set<TerminalPanel>? openPanels,
+    double? panelSplit,
     double? infoPanelWidth,
     AppLanguage? language,
     bool? showHostOverview,
     bool? runInBackground,
-    TerminalPanel? terminalPanel,
     bool? showFilePanel,
     double? filePanelHeight,
     FileViewMode? fileViewMode,
@@ -228,12 +269,12 @@ class AppSettings {
     checkIntervalSeconds: checkIntervalSeconds ?? this.checkIntervalSeconds,
     checkMethod: checkMethod ?? this.checkMethod,
     autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
-    showTerminalInfo: showTerminalInfo ?? this.showTerminalInfo,
+    openPanels: openPanels ?? this.openPanels,
+    panelSplit: panelSplit ?? this.panelSplit,
     infoPanelWidth: infoPanelWidth ?? this.infoPanelWidth,
     language: language ?? this.language,
     showHostOverview: showHostOverview ?? this.showHostOverview,
     runInBackground: runInBackground ?? this.runInBackground,
-    terminalPanel: terminalPanel ?? this.terminalPanel,
     showFilePanel: showFilePanel ?? this.showFilePanel,
     filePanelHeight: filePanelHeight ?? this.filePanelHeight,
     fileViewMode: fileViewMode ?? this.fileViewMode,
@@ -255,12 +296,12 @@ class AppSettings {
     'checkIntervalSeconds': checkIntervalSeconds,
     'checkMethod': checkMethod.name,
     'autoLockMinutes': autoLockMinutes,
-    'showTerminalInfo': showTerminalInfo,
+    'openPanels': [for (final p in openPanels) p.name],
+    'panelSplit': panelSplit,
     'infoPanelWidth': infoPanelWidth,
     'language': language.name,
     'showHostOverview': showHostOverview,
     'runInBackground': runInBackground,
-    'terminalPanel': terminalPanel.name,
     'showFilePanel': showFilePanel,
     'filePanelHeight': filePanelHeight,
     'fileViewMode': fileViewMode.name,
@@ -300,16 +341,15 @@ class AppSettings {
       autoLockMinutes: (autoLock != null && autoLock >= 0)
           ? autoLock
           : d.autoLockMinutes,
-      showTerminalInfo: json['showTerminalInfo'] as bool? ?? d.showTerminalInfo,
+      openPanels: _openPanelsFrom(json),
+      panelSplit: ((json['panelSplit'] as num?)?.toDouble() ?? d.panelSplit)
+          .clamp(minPanelSplit, maxPanelSplit),
       infoPanelWidth:
           ((json['infoPanelWidth'] as num?)?.toDouble() ?? d.infoPanelWidth)
               .clamp(minInfoPanelWidth, maxInfoPanelWidth),
       language: AppLanguage.values.asNameMap()[json['language']] ?? d.language,
       showHostOverview: json['showHostOverview'] as bool? ?? d.showHostOverview,
       runInBackground: json['runInBackground'] as bool? ?? d.runInBackground,
-      terminalPanel:
-          TerminalPanel.values.asNameMap()[json['terminalPanel']] ??
-          d.terminalPanel,
       showFilePanel: json['showFilePanel'] as bool? ?? d.showFilePanel,
       filePanelHeight:
           ((json['filePanelHeight'] as num?)?.toDouble() ?? d.filePanelHeight)
@@ -341,6 +381,26 @@ class AppSettings {
       ),
     );
   }
+}
+
+/// Open side panels; settings from 0.1.4 and older had one panel and an
+/// open flag ("showTerminalInfo" + "terminalPanel").
+Set<TerminalPanel> _openPanelsFrom(Map<String, Object?> json) {
+  final names = TerminalPanel.values.asNameMap();
+  final list = json['openPanels'];
+  if (list is List) {
+    final out = <TerminalPanel>{};
+    for (final n in list) {
+      final p = names[n];
+      // One per half.
+      if (p != null && out.every((o) => o.slot != p.slot)) out.add(p);
+    }
+    return out;
+  }
+  if (json['showTerminalInfo'] == true) {
+    return {names[json['terminalPanel']] ?? TerminalPanel.info};
+  }
+  return const {};
 }
 
 /// `settings.json` in the app data directory.

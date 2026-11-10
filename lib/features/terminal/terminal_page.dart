@@ -37,12 +37,13 @@ class TerminalPage extends ConsumerWidget {
     final isVisible = !state.homeActive;
     final activeIndex = state.tabs.indexWhere((t) => t.id == state.activeTabId);
     final active = state.active;
-    final showInfo = ref.watch(
-      settingsProvider.select((s) => s.showTerminalInfo),
-    );
-    void setInfo(bool v) => ref
-        .read(settingsProvider.notifier)
-        .update((s) => s.copyWith(showTerminalInfo: v));
+    final showInfo = ref.watch(settingsProvider.select((s) => s.panelsOpen));
+    // Closing from the page (Esc etc.) closes all side panels.
+    void setInfo(bool v) => v
+        ? null
+        : ref
+              .read(settingsProvider.notifier)
+              .update((s) => s.copyWith(openPanels: const {}));
 
     void closeActive() {
       final current = ref.read(sessionsProvider).active;
@@ -127,7 +128,32 @@ class TerminalPage extends ConsumerWidget {
     void Function(bool) setInfo,
     bool isVisible,
   ) {
-    final panel = ref.watch(settingsProvider.select((s) => s.terminalPanel));
+    final openPanels = ref.watch(settingsProvider.select((s) => s.openPanels));
+    TerminalPanel? panelIn(PanelSlot slot) {
+      for (final p in openPanels) {
+        if (p.slot == slot) return p;
+      }
+      return null;
+    }
+
+    void closePanel(TerminalPanel p) =>
+        ref.read(settingsProvider.notifier).update((s) => s.closePanel(p));
+    // One builder per kind of panel; a new panel kind goes here (and its
+    // button on the side rail).
+    Widget? panelFor(TerminalPanel? p, TerminalSession session) => switch (p) {
+      null => null,
+      // Keyed by session: follows the focused pane.
+      TerminalPanel.ai => AiPanel(
+        key: ValueKey('ai-${session.id}'),
+        session: session,
+        onClose: () => closePanel(TerminalPanel.ai),
+      ),
+      TerminalPanel.info => TerminalInfoPanel(
+        key: ValueKey('info-${session.id}'),
+        session: session,
+        onClose: () => closePanel(TerminalPanel.info),
+      ),
+    };
     final showInfo = infoSetting;
     final showFiles = ref.watch(
       settingsProvider.select((s) => s.showFilePanel),
@@ -225,42 +251,26 @@ class TerminalPage extends ConsumerWidget {
                           onWidthChanged: (w) => ref
                               .read(settingsProvider.notifier)
                               .update((s) => s.copyWith(infoPanelWidth: w)),
-                          // Follows the focused pane.
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            child: panel == TerminalPanel.ai
-                                ? AiPanel(
-                                    key: ValueKey('ai-${active.id}'),
-                                    session: active,
-                                    onClose: () => setInfo(false),
-                                  )
-                                : TerminalInfoPanel(
-                                    key: ValueKey('info-${active.id}'),
-                                    session: active,
-                                    onClose: () => setInfo(false),
-                                  ),
+                          child: _PanelColumn(
+                            top: panelFor(panelIn(PanelSlot.top), active),
+                            bottom: panelFor(panelIn(PanelSlot.bottom), active),
+                            split: ref.watch(
+                              settingsProvider.select((s) => s.panelSplit),
+                            ),
+                            onSplitChanged: (v) => ref
+                                .read(settingsProvider.notifier)
+                                .update((s) => s.copyWith(panelSplit: v)),
                           ),
                         ),
                         _SideRail(
-                          panelOpen: showInfo,
-                          panel: panel,
+                          openPanels: openPanels,
                           filesOpen: showFiles,
                           onToggleFiles: () => setFiles(!showFiles),
-                          onTogglePanel: (p) {
-                            // Same button again closes; the other switches over.
-                            if (showInfo && panel == p) {
-                              setInfo(false);
-                            } else {
-                              ref
-                                  .read(settingsProvider.notifier)
-                                  .update(
-                                    (s) => s.copyWith(
-                                      showTerminalInfo: true,
-                                      terminalPanel: p,
-                                    ),
-                                  );
-                            }
-                          },
+                          // Opens in its half (beside the other half's
+                          // panel); the same button again closes it.
+                          onTogglePanel: (p) => ref
+                              .read(settingsProvider.notifier)
+                              .update((s) => s.togglePanel(p)),
                         ),
                       ],
                     ),
@@ -323,6 +333,10 @@ class _SlidingPanel extends StatefulWidget {
   /// The gap left of the panel (holds the handle) and right of it.
   static const gap = 12.0;
 
+  /// Between the panel (or the terminal, when closed) and the side rail;
+  /// none: the rail keeps the same space on both sides of its buttons.
+  static const railGap = 0.0;
+
   @override
   State<_SlidingPanel> createState() => _SlidingPanelState();
 }
@@ -351,21 +365,24 @@ class _SlidingPanelState extends State<_SlidingPanel> {
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       builder: (context, t, child) {
-        final panelWidth = (width + gap) * t;
+        // Closed: a small gap before the side rail; open: the drag handle
+        // (a full gap) between terminal and panel. Grows with the slide.
+        final lead = _SlidingPanel.railGap + (gap - _SlidingPanel.railGap) * t;
+        final panelWidth = (width + _SlidingPanel.railGap) * t;
         return SizedBox(
-          width: gap + panelWidth,
+          width: lead + panelWidth,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _handle(context, t == 1, available),
+              _handle(context, t == 1, available, lead),
               if (t > 0)
                 SizedBox(
                   width: panelWidth,
                   child: ClipRect(
                     child: OverflowBox(
                       alignment: Alignment.centerLeft,
-                      minWidth: width + gap,
-                      maxWidth: width + gap,
+                      minWidth: width + _SlidingPanel.railGap,
+                      maxWidth: width + _SlidingPanel.railGap,
                       child: Opacity(opacity: t, child: child),
                     ),
                   ),
@@ -374,8 +391,13 @@ class _SlidingPanelState extends State<_SlidingPanel> {
           ),
         );
       },
+      // The side rail follows with the same small gap as after the
+      // terminal when the panel is closed.
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, gap, gap),
+        padding: const EdgeInsets.only(
+          right: _SlidingPanel.railGap,
+          bottom: gap,
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(terminalCardRadius),
           child: widget.child,
@@ -384,9 +406,14 @@ class _SlidingPanelState extends State<_SlidingPanel> {
     );
   }
 
-  Widget _handle(BuildContext context, bool active, double available) {
+  Widget _handle(
+    BuildContext context,
+    bool active,
+    double available,
+    double width,
+  ) {
     const gap = _SlidingPanel.gap;
-    if (!active) return const SizedBox(width: gap);
+    if (!active) return SizedBox(width: width);
     final scheme = Theme.of(context).colorScheme;
     final dragging = _dragWidth != null;
     return MouseRegion(
@@ -435,30 +462,31 @@ class _SlidingPanelState extends State<_SlidingPanel> {
   }
 }
 
-/// The buttons down the right edge of the terminal page: AI assistant,
-/// files, info. Each opens its panel; again closes it.
+/// The buttons down the right edge of the terminal page: at the top those
+/// for the upper half of the side panel column (info), at the bottom those
+/// for the lower half (AI) and the file browser. Each opens its panel;
+/// again closes it.
 class _SideRail extends StatelessWidget {
   const _SideRail({
-    required this.panelOpen,
-    required this.panel,
+    required this.openPanels,
     required this.filesOpen,
     required this.onTogglePanel,
     required this.onToggleFiles,
   });
 
-  final bool panelOpen;
-  final TerminalPanel panel;
+  final Set<TerminalPanel> openPanels;
   final bool filesOpen;
   final ValueChanged<TerminalPanel> onTogglePanel;
   final VoidCallback onToggleFiles;
 
-  static const width = 48.0;
+  /// 40 pt buttons with 8 pt on each side (panel / window edge).
+  static const width = 56.0;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final aiOpen = panelOpen && panel == TerminalPanel.ai;
-    final infoOpen = panelOpen && panel == TerminalPanel.info;
+    final aiOpen = openPanels.contains(TerminalPanel.ai);
+    final infoOpen = openPanels.contains(TerminalPanel.info);
     final scheme = Theme.of(context).colorScheme;
     Widget button({
       required Key key,
@@ -490,6 +518,16 @@ class _SideRail extends StatelessWidget {
       child: Column(
         children: [
           button(
+            key: const ValueKey('toggle-info-panel'),
+            tip: infoOpen ? l.hideInfoPanel : l.showInfoPanel,
+            selected: infoOpen,
+            icon: const Icon(Icons.view_sidebar_outlined),
+            selectedIcon: const Icon(Icons.view_sidebar),
+            onPressed: () => onTogglePanel(TerminalPanel.info),
+          ),
+          // AI and files at the bottom, info at the top.
+          const Spacer(),
+          button(
             key: const ValueKey('toggle-ai-panel'),
             tip: aiOpen ? l.aiHidePanel : l.aiShowPanel,
             selected: aiOpen,
@@ -505,14 +543,7 @@ class _SideRail extends StatelessWidget {
             selectedIcon: const Icon(Icons.folder),
             onPressed: onToggleFiles,
           ),
-          button(
-            key: const ValueKey('toggle-info-panel'),
-            tip: infoOpen ? l.hideInfoPanel : l.showInfoPanel,
-            selected: infoOpen,
-            icon: const Icon(Icons.view_sidebar_outlined),
-            selectedIcon: const Icon(Icons.view_sidebar),
-            onPressed: () => onTogglePanel(TerminalPanel.info),
-          ),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -1928,6 +1959,205 @@ class _ReconnectBannerState extends State<_ReconnectBanner> {
           child: Text(l.cancel),
         ),
       ],
+    );
+  }
+}
+
+/// The side panel column: a [top] and a [bottom] half. With one of them
+/// open it takes the whole height; with both, they share it and the line
+/// between them can be dragged ([split]: the top's share). Opening or
+/// closing a half animates the heights.
+class _PanelColumn extends StatefulWidget {
+  const _PanelColumn({
+    required this.top,
+    required this.bottom,
+    required this.split,
+    required this.onSplitChanged,
+  });
+
+  final Widget? top;
+  final Widget? bottom;
+  final double split;
+
+  /// Called once a drag of the line ends (or on double-click: half/half).
+  final ValueChanged<double> onSplitChanged;
+
+  /// Between the two halves (also where the line is dragged).
+  static const gap = 12.0;
+
+  @override
+  State<_PanelColumn> createState() => _PanelColumnState();
+}
+
+class _PanelColumnState extends State<_PanelColumn> {
+  /// Live share while dragging.
+  double? _dragSplit;
+  bool _hover = false;
+
+  /// The last panel of each half, kept while it animates closed.
+  Widget? _lastTop, _lastBottom;
+
+  /// The layout while something was open: kept while the whole column
+  /// slides away (nothing open), so it leaves as it was.
+  Offset? _lastTarget;
+  bool _wasEmpty = true;
+
+  double get _split => _dragSplit ?? widget.split;
+
+  /// Smallest height a half is given while both are open.
+  static const minHalf = 200.0;
+
+  /// Smallest height a half is laid out at (then clipped), so its content
+  /// doesn't squeeze while it opens or closes.
+  static const minLayout = 320.0;
+
+  /// [v] kept within the settings' range and so each half gets [minHalf]
+  /// of [room] (when there's room for that).
+  static double _clamp(double v, [double? room]) {
+    var lo = AppSettings.minPanelSplit, hi = AppSettings.maxPanelSplit;
+    if (room != null && room > 0) {
+      final share = (minHalf / room).clamp(0.0, 0.5);
+      if (share > lo) lo = share;
+      if (1 - share < hi) hi = 1 - share;
+    }
+    return v.clamp(lo, hi);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final empty = widget.top == null && widget.bottom == null;
+    // Opening from nothing: straight to the layout, no animation inside.
+    final jump = _wasEmpty && !empty;
+    _wasEmpty = empty;
+    if (jump) {
+      _lastTop = null;
+      _lastBottom = null;
+    }
+    if (widget.top != null) _lastTop = widget.top;
+    if (widget.bottom != null) _lastBottom = widget.bottom;
+    final both = widget.top != null && widget.bottom != null;
+    // x: the top's share of the height, y: how much of the gap shows.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final room = constraints.maxHeight - _PanelColumn.gap;
+        final target = empty && _lastTarget != null
+            ? _lastTarget!
+            : Offset(
+                both ? _clamp(_split, room) : (widget.top != null ? 1 : 0),
+                both ? 1 : 0,
+              );
+        if (!empty) _lastTarget = target;
+        return TweenAnimationBuilder<Offset>(
+          tween: Tween(end: target),
+          // Follow the pointer exactly while dragging.
+          duration: _dragSplit != null || jump
+              ? Duration.zero
+              : const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+          onEnd: () {
+            // A half closed (others still open): let it go.
+            if (empty || !mounted) return;
+            setState(() {
+              if (widget.top == null) _lastTop = null;
+              if (widget.bottom == null) _lastBottom = null;
+            });
+          },
+          builder: (context, v, _) {
+            final gap = _PanelColumn.gap * v.dy;
+            final room = (constraints.maxHeight - gap).clamp(
+              0.0,
+              double.infinity,
+            );
+            final topHeight = room * v.dx;
+            final moving = v != target;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  key: const ValueKey('panel-half-top'),
+                  height: topHeight,
+                  child: _half(widget.top ?? _lastTop, topHeight, moving),
+                ),
+                SizedBox(
+                  height: gap,
+                  child: both ? _handle(constraints.maxHeight) : null,
+                ),
+                SizedBox(
+                  key: const ValueKey('panel-half-bottom'),
+                  height: room - topHeight,
+                  child: _half(
+                    widget.bottom ?? _lastBottom,
+                    room - topHeight,
+                    moving,
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// One half, as its own rounded card. While it opens or closes
+  /// ([moving]) it's laid out at least [minLayout] tall and clipped, so its
+  /// content doesn't squeeze every frame; at rest, at its real height.
+  Widget _half(Widget? panel, double height, bool moving) {
+    if (panel == null || height < 1) return const SizedBox.shrink();
+    final layout = moving && height < minLayout ? minLayout : height;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(terminalCardRadius),
+      child: OverflowBox(
+        alignment: Alignment.topCenter,
+        minHeight: layout,
+        maxHeight: layout,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: panel,
+        ),
+      ),
+    );
+  }
+
+  Widget _handle(double total) {
+    final scheme = Theme.of(context).colorScheme;
+    final dragging = _dragSplit != null;
+    final room = total - _PanelColumn.gap;
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeRow,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        key: const ValueKey('panel-split-handle'),
+        behavior: HitTestBehavior.opaque,
+        dragStartBehavior: DragStartBehavior.down,
+        onVerticalDragStart: (_) => setState(() => _dragSplit = widget.split),
+        onVerticalDragUpdate: (d) => setState(
+          () => _dragSplit = room <= 0
+              ? _split
+              : _clamp(_split + d.delta.dy / room, room),
+        ),
+        onVerticalDragEnd: (_) {
+          final v = _clamp(_split, room);
+          setState(() => _dragSplit = null);
+          widget.onSplitChanged(v);
+        },
+        onDoubleTap: () => widget.onSplitChanged(AppSettings.defaultPanelSplit),
+        child: Center(
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 150),
+            opacity: _hover || dragging ? 1 : 0,
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: dragging ? scheme.primary : scheme.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -525,27 +525,32 @@ class TerminalSession extends ChangeNotifier {
       atLineStart = text.endsWith('\n');
     }
 
-    // Control and bidi characters are shown, not sent to the terminal:
-    // the command can't redraw or disguise what's on screen.
-    final shownCommand = visibleCommand(command.trim())
-        .replaceAll('\t', '  ')
-        .replaceAll('\n', '\r\n  ');
-    // A rule across the terminal above and below what the assistant ran,
-    // so it reads apart from the user's own commands:
-    //   ── AI ───────────────────────────
-    //   $ df -h
+    // What the assistant runs is set apart from the user's own commands:
+    //   ┌──────────────────────────┐
+    //   │         UESSH AI         │
+    //   ├──────────────────────────┤
+    //   │ $ df -h                  │
+    //   └──────────────────────────┘
     //   (output)
-    //   ── ✓ exit 0 · 0.3s ──────────────
+    //   ── ✓ exit 0 · 0.3s ──────────
     final width = (terminal.viewWidth - 1).clamp(20, 120);
     String rule(String label) {
       final head = '── $label ';
       return head + '─' * (width - head.length).clamp(3, width);
     }
 
-    terminal.write(
-      '\r\n\x1b[35m${rule(label)}\x1b[0m\r\n'
-      '\x1b[1m\$ $shownCommand\x1b[0m\r\n',
-    );
+    const border = '\x1b[35m', bold = '\x1b[1m', reset = '\x1b[0m';
+    final box = StringBuffer('\r\n');
+    for (final line in aiCommandBox(command, width, title: 'UESSH $label')) {
+      // Border in color, the title and command in bold.
+      if (line.startsWith('│')) {
+        final inside = line.substring(1, line.length - 1);
+        box.write('$border│$reset$bold$inside$reset$border│$reset\r\n');
+      } else {
+        box.write('$border$line$reset\r\n');
+      }
+    }
+    terminal.write(box.toString());
     final watch = Stopwatch()..start();
     try {
       final r = await exec(
@@ -836,4 +841,77 @@ String describeConnectError(Object e, Host host) {
   if (e is SSHKeyDecodeError) return currentL10n.keyFormatShort;
   if (e is SSHError) return currentL10n.sshError('$e');
   return currentL10n.connectFailed('$e');
+}
+
+/// Columns [rune] takes in a terminal: 2 for wide (CJK, full-width,
+/// emoji), 0 for combining marks, else 1.
+int terminalCellWidth(int rune) {
+  if ((rune >= 0x0300 && rune <= 0x036F) ||
+      (rune >= 0x200B && rune <= 0x200F) ||
+      (rune >= 0xFE00 && rune <= 0xFE0F)) {
+    return 0;
+  }
+  if ((rune >= 0x1100 && rune <= 0x115F) ||
+      (rune >= 0x2E80 && rune <= 0xA4CF) ||
+      (rune >= 0xAC00 && rune <= 0xD7A3) ||
+      (rune >= 0xF900 && rune <= 0xFAFF) ||
+      (rune >= 0xFE30 && rune <= 0xFE4F) ||
+      (rune >= 0xFF00 && rune <= 0xFF60) ||
+      (rune >= 0xFFE0 && rune <= 0xFFE6) ||
+      (rune >= 0x1F300 && rune <= 0x1FAFF) ||
+      (rune >= 0x20000 && rune <= 0x3FFFD)) {
+    return 2;
+  }
+  return 1;
+}
+
+int _textWidth(String s) => s.runes.fold(0, (w, r) => w + terminalCellWidth(r));
+
+/// The box drawn above a command the assistant runs, [width] columns wide:
+/// [title] centered, a line, then `$ command` (wrapped to fit; at most
+/// [maxLines] lines, then "…"). Control and bidi characters in the command
+/// are shown as escapes ([visibleCommand]), so it can't redraw or disguise
+/// what's on screen.
+List<String> aiCommandBox(
+  String command,
+  int width, {
+  String title = 'UESSH AI',
+  int maxLines = 12,
+}) {
+  final inner = width - 2; // between the borders
+  final room = inner - 4; // "␣$␣" / "␣␣␣" before, "␣" after
+  String row(String text) =>
+      '│$text${' ' * (inner - _textWidth(text)).clamp(0, inner)}│';
+
+  final titleWidth = _textWidth(title);
+  final left = ((inner - titleWidth) / 2).floor().clamp(0, inner);
+
+  final shown = visibleCommand(command.trim()).replaceAll('\t', '  ');
+  final rows = <String>[];
+  for (final line in shown.split('\n')) {
+    var chunk = StringBuffer();
+    var used = 0;
+    for (final rune in line.runes) {
+      final w = terminalCellWidth(rune);
+      if (used + w > room && used > 0) {
+        rows.add(chunk.toString());
+        chunk = StringBuffer();
+        used = 0;
+      }
+      chunk.writeCharCode(rune);
+      used += w;
+    }
+    rows.add(chunk.toString());
+  }
+  final cut = rows.length > maxLines;
+  final visible = cut ? rows.take(maxLines - 1).toList() : rows;
+  return [
+    '┌${'─' * inner}┐',
+    row('${' ' * left}$title'),
+    '├${'─' * inner}┤',
+    for (var i = 0; i < visible.length; i++)
+      row(' ${i == 0 ? r'$' : ' '} ${visible[i]}'),
+    if (cut) row('   …'),
+    '└${'─' * inner}┘',
+  ];
 }

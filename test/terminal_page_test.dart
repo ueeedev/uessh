@@ -14,6 +14,8 @@ import 'package:uessh/features/terminal/terminal_page.dart';
 import 'package:uessh/theme/terminal_theme.dart';
 import 'package:xterm2/xterm.dart';
 
+import 'package:uessh/features/ai/ai_config.dart';
+
 import 'test_helpers.dart';
 
 void main() {
@@ -87,6 +89,12 @@ void main() {
         .getRect(find.byKey(const ValueKey('terminal-card')))
         .width;
 
+    final closedButton = tester.getRect(find.byTooltip('显示信息栏'));
+    final closedCard = tester.getRect(
+      find.byKey(const ValueKey('terminal-card')),
+    );
+    expect(closedButton.left - closedCard.right, closeTo(8, 0.5));
+
     await tester.tap(find.byTooltip('显示信息栏'));
     await tester.pump(); // animation starts on this frame
     await tester.pump(const Duration(milliseconds: 100));
@@ -100,6 +108,10 @@ void main() {
     expect(panel.width, infoPanelWidth);
     expect(panel.left, greaterThan(card.right), reason: 'right of terminal');
     expect(card.width, closeTo(fullWidth - infoPanelWidth - 12, 0.5));
+    // The rail's buttons sit as close to the panel as to the terminal
+    // when it's closed (8 pt), not further.
+    final button = tester.getRect(find.byTooltip('隐藏信息栏'));
+    expect(button.left - panel.right, closeTo(8, 0.5));
 
     // Connection details for this session.
     expect(find.text('test-box'), findsWidgets);
@@ -110,7 +122,7 @@ void main() {
     final saved = (await tester.runAsync(
       () => SettingsStore(dataDir: env.dataDir).load(),
     ))!;
-    expect(saved.showTerminalInfo, isTrue);
+    expect(saved.openPanels, {TerminalPanel.info});
 
     await tester.tap(find.byTooltip('关闭信息栏'));
     await tester.pumpAndSettle();
@@ -528,6 +540,131 @@ void main() {
       await tester.pumpAndSettle();
       expect(picker, findsNothing);
       expect(find.text('新建主机'), findsOneWidget, reason: 'on hosts page');
+    });
+  });
+
+  group('side panels in two halves', () {
+    final info = find.byType(TerminalInfoPanel);
+    final ai = find.byKey(const ValueKey('ai-panel'));
+    final split = find.byKey(const ValueKey('panel-split-handle'));
+
+    Future<void> openBoth(WidgetTester tester) async {
+      await pumpWithSession(tester);
+      // The AI panel's settings, loaded outside the fake clock.
+      final c = ProviderScope.containerOf(
+        tester.element(find.byType(UesshApp)),
+      );
+      await tester.runAsync(() => c.read(aiConfigProvider.future));
+      await tester.tap(find.byTooltip('显示信息栏'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('toggle-ai-panel')));
+      await settleIo(tester);
+      await tester.pumpAndSettle();
+    }
+
+    Future<AppSettings> saved(WidgetTester tester) async {
+      await settleIo(tester);
+      return (await tester.runAsync(
+        () => SettingsStore(dataDir: env.dataDir).load(),
+      ))!;
+    }
+
+    testWidgets('drag the line between them; double-click: half and half', (
+      tester,
+    ) async {
+      await openBoth(tester);
+      final top0 = tester.getRect(info), bottom0 = tester.getRect(ai);
+      expect(top0.height, closeTo(bottom0.height, 1));
+      expect(bottom0.top - top0.bottom, 12);
+      final total = top0.height + bottom0.height;
+
+      await tester.drag(split, const Offset(0, 100));
+      await tester.pumpAndSettle();
+      final top1 = tester.getRect(info), bottom1 = tester.getRect(ai);
+      expect(top1.height, closeTo(top0.height + 100, 1));
+      expect(bottom1.height, closeTo(bottom0.height - 100, 1));
+      expect(top1.height + bottom1.height, closeTo(total, 0.5));
+      expect(
+        (await saved(tester)).panelSplit,
+        closeTo((top0.height + 100) / total, 0.01),
+      );
+
+      // Each half keeps at least 200, with the AI panel fully inside it
+      // (laid out at that height, not clipped; no overflow).
+      await tester.drag(split, const Offset(0, 2000));
+      await tester.pumpAndSettle();
+      final half = tester.getRect(
+        find.byKey(const ValueKey('panel-half-bottom')),
+      );
+      expect(half.height, closeTo(200, 1));
+      expect(tester.getRect(ai).height, closeTo(200, 1));
+      expect(tester.getRect(ai).bottom, lessThanOrEqualTo(half.bottom));
+
+      await tester.tap(split);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(split);
+      await tester.pumpAndSettle();
+      expect(tester.getRect(info).height, closeTo(total / 2, 1));
+    });
+
+    testWidgets('one width for both; dragging the edge widens both', (
+      tester,
+    ) async {
+      await openBoth(tester);
+      expect(tester.getRect(info).width, 300);
+      expect(tester.getRect(ai).width, 300);
+      await tester.drag(
+        find.byKey(const ValueKey('info-panel-handle')),
+        const Offset(-80, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.getRect(info).width, closeTo(380, 1));
+      expect(tester.getRect(ai).width, closeTo(380, 1));
+      expect(tester.getRect(info).left, tester.getRect(ai).left);
+    });
+
+    testWidgets('both open is remembered', (tester) async {
+      await openBoth(tester);
+      expect((await saved(tester)).openPanels, {
+        TerminalPanel.info,
+        TerminalPanel.ai,
+      });
+    });
+  });
+
+  group('panel settings', () {
+    test('one panel per half; toggling opens beside or closes', () {
+      var s = const AppSettings();
+      s = s.togglePanel(TerminalPanel.info);
+      expect(s.openPanels, {TerminalPanel.info});
+      s = s.togglePanel(TerminalPanel.ai);
+      expect(s.panelIn(PanelSlot.top), TerminalPanel.info);
+      expect(s.panelIn(PanelSlot.bottom), TerminalPanel.ai);
+      s = s.togglePanel(TerminalPanel.info);
+      expect(s.openPanels, {TerminalPanel.ai});
+      s = s.closePanel(TerminalPanel.ai);
+      expect(s.panelsOpen, isFalse);
+    });
+
+    test('settings from 0.1.4 (one panel + open flag) carry over', () {
+      expect(
+        AppSettings.fromJson({'showTerminalInfo': true, 'terminalPanel': 'ai'})
+            .openPanels,
+        {TerminalPanel.ai},
+      );
+      expect(
+        AppSettings.fromJson({'showTerminalInfo': false, 'terminalPanel': 'ai'})
+            .openPanels,
+        isEmpty,
+      );
+      final s = AppSettings.fromJson({
+        'openPanels': ['info', 'ai', 'nope'],
+        'panelSplit': 5,
+      });
+      expect(s.openPanels, {TerminalPanel.info, TerminalPanel.ai});
+      expect(s.panelSplit, AppSettings.maxPanelSplit);
+      final back = AppSettings.fromJson(s.toJson());
+      expect(back.openPanels, s.openPanels);
     });
   });
 }

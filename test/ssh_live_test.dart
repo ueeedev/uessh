@@ -213,8 +213,9 @@ void main() {
       final shown = await s.execShown('echo shown-\$((20+1)); echo e>&2');
       expect(shown.exitCode, 0);
       final screen = s.terminal.buffer.getText();
-      expect(screen, contains('── AI ──'));
-      expect(screen, contains(r'$ echo shown-'));
+      expect(screen, contains('UESSH AI'));
+      expect(screen, contains('┌'));
+      expect(screen, contains(r'│ $ echo shown-'));
       expect(screen, contains('shown-21'));
       expect(screen, contains('✓ exit 0'));
 

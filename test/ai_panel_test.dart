@@ -11,6 +11,9 @@ import 'package:uessh/features/hosts/host.dart';
 import 'package:uessh/features/terminal/sessions_providers.dart';
 
 import 'package:uessh/features/ai/ai_chat.dart';
+
+import 'package:uessh/features/terminal/info_panel.dart';
+
 import 'test_helpers.dart';
 
 void main() {
@@ -83,15 +86,26 @@ void main() {
     await settleIo(tester);
     await tester.pumpAndSettle();
     expect(aiPanel, findsOneWidget);
-    // The buttons are a rail on the right edge, AI on top, below the tabs.
-    final ai = tester.getCenter(find.byKey(const ValueKey('toggle-ai-panel')));
-    final info = tester.getCenter(
-      find.byKey(const ValueKey('toggle-info-panel')),
-    );
+    // The buttons are a rail on the right edge, below the tabs.
+    Rect button(String key) => tester.getRect(find.byKey(ValueKey(key)));
+    final ai = button('toggle-ai-panel').center;
+    final info = button('toggle-info-panel').center;
+    final files = button('toggle-files').center;
     final rail = tester.getRect(find.byKey(const ValueKey('side-rail')));
     final strip = tester.getRect(find.byKey(const ValueKey('tab-strip')));
-    expect(ai.dy, lessThan(info.dy));
+    expect(info.dy, lessThan(ai.dy));
+    expect(ai.dy, lessThan(files.dy));
+    // Info at the top; AI and files at the very bottom, level with the
+    // bottom of the terminal card.
+    expect(button('toggle-info-panel').top, rail.top);
+    expect(button('toggle-files').bottom, closeTo(rail.bottom - 12, 0.5));
+    expect(ai.dy, greaterThan(rail.center.dy));
     expect(ai.dx, info.dx);
+    // Same space left (to the panel) and right (to the window edge): the
+    // buttons are centered between them.
+    final panelRight = tester.getRect(aiPanel).right;
+    expect(ai.dx - panelRight, closeTo(1400 - ai.dx, 0.5));
+    expect(1400 - panelRight, 56);
     expect(rail.right, 1400);
     expect(rail.top, greaterThanOrEqualTo(strip.bottom));
     // The panel opens left of the rail.
@@ -99,17 +113,30 @@ void main() {
     // No provider yet: points to Settings.
     expect(find.text('还没有配置 AI 供应商'), findsOneWidget);
 
+    // Info opens in the top half; AI stays, in the bottom half.
+    final aiAlone = tester.getRect(aiPanel);
     await tester.tap(find.byKey(const ValueKey('toggle-info-panel')));
     await tester.pumpAndSettle();
-    expect(aiPanel, findsNothing);
-    expect(find.text('信息'), findsWidgets);
-
-    await tester.tap(find.byKey(const ValueKey('toggle-ai-panel')));
-    await tester.pumpAndSettle();
+    final infoPanel = find.byType(TerminalInfoPanel);
+    expect(infoPanel, findsOneWidget);
     expect(aiPanel, findsOneWidget);
+    final infoRect = tester.getRect(infoPanel),
+        aiRect = tester.getRect(aiPanel);
+    expect(infoRect.bottom, lessThan(aiRect.top));
+    expect(infoRect.width, aiRect.width);
+    expect(aiRect.bottom, aiAlone.bottom);
+    expect(infoRect.top, aiAlone.top);
+    expect(find.byKey(const ValueKey('panel-split-handle')), findsOneWidget);
+
+    // AI closed: info takes the whole height.
     await tester.tap(find.byKey(const ValueKey('toggle-ai-panel')));
     await tester.pumpAndSettle();
     expect(aiPanel, findsNothing);
+    expect(tester.getRect(infoPanel).height, aiAlone.height);
+    expect(find.byKey(const ValueKey('panel-split-handle')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('toggle-info-panel')));
+    await tester.pumpAndSettle();
+    expect(infoPanel, findsNothing);
   });
 
   testWidgets('Settings: an API key goes to the vault, not to ai.json', (

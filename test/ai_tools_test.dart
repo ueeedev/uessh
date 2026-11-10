@@ -459,21 +459,27 @@ data: [DONE]
             .map((l) => l.trimRight())
             .where((l) => l.isNotEmpty)
             .toList();
-        // Rules as wide as the terminal (80 columns, less one).
+        // Box and rule as wide as the terminal (80 columns, less one).
         String rule(String label) {
           final head = '── $label ';
           return head + '─' * (79 - head.length);
         }
 
+        List<String> box(String command) => [
+          '┌${'─' * 77}┐',
+          '│${' ' * 34}UESSH AI${' ' * 35}│',
+          '├${'─' * 77}┤',
+          '│ \$ $command${' ' * (74 - command.length)}│',
+          '└${'─' * 77}┘',
+        ];
+
         expect(lines, [
           'root@web-01:~# ls -l',
-          rule('AI'),
-          '\$ df -h',
+          ...box('df -h'),
           'out of df -h',
           rule('✓ exit 0 · 0.0s'),
           'root@web-01:~# ls -l', // prompt and typed text drawn again
-          rule('AI'),
-          '\$ cat /nope',
+          ...box('cat /nope'),
           'out of cat /nope',
           'boom',
           rule('✗ exit 2 · 0.0s'),
@@ -489,9 +495,9 @@ data: [DONE]
       session.terminal.write('VIM SCREEN');
       final r = await session.execShown('uptime');
       expect(r.stdout, 'out of uptime');
-      expect(session.terminal.buffer.getText(), isNot(contains('── AI')));
+      expect(session.terminal.buffer.getText(), isNot(contains('UESSH AI')));
       session.terminal.write('\x1b[?1049l');
-      expect(session.terminal.buffer.getText(), isNot(contains('── AI')));
+      expect(session.terminal.buffer.getText(), isNot(contains('UESSH AI')));
     });
 
     test('conversations are saved encrypted and can be reopened', () async {
@@ -925,5 +931,52 @@ data: [DONE]
           .toList(),
       throwsA(isA<AiException>()),
     );
+  });
+
+  group('aiCommandBox', () {
+    int width(String line) =>
+        line.runes.fold(0, (w, r) => w + terminalCellWidth(r));
+
+    test('every row the same width; title centered', () {
+      final rows = aiCommandBox('df -h', 30);
+      expect(rows, [
+        '┌────────────────────────────┐',
+        '│          UESSH AI          │',
+        '├────────────────────────────┤',
+        '│ \$ df -h                    │',
+        '└────────────────────────────┘',
+      ]);
+    });
+
+    test('Chinese (two columns each) keeps the right border straight', () {
+      final rows = aiCommandBox('echo 你好世界', 30);
+      for (final r in rows) {
+        expect(width(r), 30, reason: r);
+      }
+      expect(rows[3], startsWith('│ \$ echo 你好世界'));
+    });
+
+    test('long commands wrap inside; very long ones end with …', () {
+      final rows = aiCommandBox('x' * 60, 30);
+      // 24 per row: "│ \$ " + 24 + " │" is 30.
+      expect(rows.sublist(3, rows.length - 1), [
+        '│ \$ ${'x' * 24} │',
+        '│   ${'x' * 24} │',
+        '│   ${'x' * 12}${' ' * 12} │',
+      ]);
+      final many = aiCommandBox(List.filled(30, 'ls').join('\n'), 30);
+      expect(many.length, 3 + 12 + 1);
+      expect(many[many.length - 2], startsWith('│   …'));
+      for (final r in [...rows, ...many]) {
+        expect(width(r), 30, reason: r);
+      }
+    });
+
+    test('control characters are shown, never sent', () {
+      final rows = aiCommandBox('echo hi\x1b[2J\x07', 40);
+      expect(rows.join(), isNot(contains('\x1b')));
+      expect(rows.join(), isNot(contains('\x07')));
+      expect(rows[3], contains('<U+001B>[2J<U+0007>'));
+    });
   });
 }

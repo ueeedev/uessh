@@ -282,53 +282,49 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets(
-      'folder button sits between AI and info on the rail; opens at the '
-      'terminal\'s folder, in a list',
-      (tester) async {
-        final c = await pumpApp(tester);
-        final ai = tester.getCenter(
-          find.byKey(const ValueKey('toggle-ai-panel')),
-        );
-        final files = tester.getCenter(
-          find.byKey(const ValueKey('toggle-files')),
-        );
-        final info = tester.getCenter(
-          find.byKey(const ValueKey('toggle-info-panel')),
-        );
-        // Down the right-hand rail: AI, files, info.
-        expect(ai.dy < files.dy && files.dy < info.dy, isTrue);
-        expect(ai.dx == files.dx && files.dx == info.dx, isTrue);
+    testWidgets('folder button sits below AI on the rail; opens at the '
+        'terminal\'s folder, in a list', (tester) async {
+      final c = await pumpApp(tester);
+      final ai = tester.getCenter(
+        find.byKey(const ValueKey('toggle-ai-panel')),
+      );
+      final files = tester.getCenter(
+        find.byKey(const ValueKey('toggle-files')),
+      );
+      final info = tester.getCenter(
+        find.byKey(const ValueKey('toggle-info-panel')),
+      );
+      // Down the right-hand rail: AI, files, info.
+      // Info on top, then AI, then files.
+      expect(info.dy < ai.dy && ai.dy < files.dy, isTrue);
+      expect(ai.dx == files.dx && files.dx == info.dx, isTrue);
 
-        expect(find.byKey(const ValueKey('files-panel')), findsNothing);
-        await openFiles(tester);
-        expect(find.byKey(const ValueKey('files-panel')), findsOneWidget);
-        // Below the terminal.
-        final panel = tester.getRect(find.byKey(const ValueKey('files-panel')));
-        final card = tester.getRect(
-          find.byKey(const ValueKey('terminal-card')),
-        );
-        expect(panel.top, greaterThan(card.bottom));
-        expect(c.read(settingsProvider).showFilePanel, isTrue);
+      expect(find.byKey(const ValueKey('files-panel')), findsNothing);
+      await openFiles(tester);
+      expect(find.byKey(const ValueKey('files-panel')), findsOneWidget);
+      // Below the terminal.
+      final panel = tester.getRect(find.byKey(const ValueKey('files-panel')));
+      final card = tester.getRect(find.byKey(const ValueKey('terminal-card')));
+      expect(panel.top, greaterThan(card.bottom));
+      expect(c.read(settingsProvider).showFilePanel, isTrue);
 
-        // /var/log, with the path above.
-        expect(find.byKey(const ValueKey('crumb-/var')), findsOneWidget);
-        expect(find.byKey(const ValueKey('crumb-/var/log')), findsOneWidget);
-        expect(find.text('syslog'), findsOneWidget);
-        expect(find.text('2.0 KB'), findsOneWidget);
-        expect(find.text('.secret'), findsNothing, reason: 'hidden');
-        expect(find.text('3 项'), findsOneWidget);
-        // Folders first.
-        expect(
-          tester.getTopLeft(find.text('nginx')).dy,
-          lessThan(tester.getTopLeft(find.text('app.log')).dy),
-        );
+      // /var/log, with the path above.
+      expect(find.byKey(const ValueKey('crumb-/var')), findsOneWidget);
+      expect(find.byKey(const ValueKey('crumb-/var/log')), findsOneWidget);
+      expect(find.text('syslog'), findsOneWidget);
+      expect(find.text('2.0 KB'), findsOneWidget);
+      expect(find.text('.secret'), findsNothing, reason: 'hidden');
+      expect(find.text('3 项'), findsOneWidget);
+      // Folders first.
+      expect(
+        tester.getTopLeft(find.text('nginx')).dy,
+        lessThan(tester.getTopLeft(find.text('app.log')).dy),
+      );
 
-        await tester.tap(find.byKey(const ValueKey('files-hidden')));
-        await tester.pumpAndSettle();
-        expect(find.text('.secret'), findsOneWidget);
-      },
-    );
+      await tester.tap(find.byKey(const ValueKey('files-hidden')));
+      await tester.pumpAndSettle();
+      expect(find.text('.secret'), findsOneWidget);
+    });
 
     testWidgets('open folders, back / forward / up, breadcrumb', (
       tester,
