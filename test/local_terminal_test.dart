@@ -17,6 +17,20 @@ import 'package:uessh/features/terminal/terminal_session.dart';
 
 import 'test_helpers.dart';
 
+/// Never connects: this test is about the button and the tab. (A plain
+/// session would dial localhost:22, where CI machines run an SSH server.)
+class _IdleSession extends TerminalSession {
+  _IdleSession({
+    required super.host,
+    required super.repository,
+    required super.knownHosts,
+    required super.prompts,
+  });
+
+  @override
+  Future<void> connect({bool auto = false}) async {}
+}
+
 void main() {
   group('sandbox data migration', () {
     late Directory root;
@@ -76,7 +90,7 @@ void main() {
           ...env.overrides,
           sessionFactoryProvider.overrideWithValue((host) {
             opened.add(host);
-            return TerminalSession(
+            return _IdleSession(
               host: host,
               repository: HostRepository(
                 dataDir: env.dataDir,
