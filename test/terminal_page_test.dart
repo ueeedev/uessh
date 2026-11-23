@@ -113,9 +113,15 @@ void main() {
     final button = tester.getRect(find.byTooltip('隐藏信息栏'));
     expect(button.left - panel.right, closeTo(8, 0.5));
 
-    // Connection details for this session.
+    // The selected tab stays visible while system information waits for SSH.
     expect(find.text('test-box'), findsWidgets);
-    expect(find.text('连接失败'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(TerminalInfoPanel),
+        matching: find.text('连接失败'),
+      ),
+      findsNothing,
+    );
     expect(find.text('连接后显示服务器的系统信息'), findsOneWidget);
 
     await settleIo(tester);
@@ -629,6 +635,22 @@ void main() {
         TerminalPanel.info,
         TerminalPanel.ai,
       });
+    });
+
+    testWidgets('resizing panels stays safe between pointer moves', (
+      tester,
+    ) async {
+      await openBoth(tester);
+      final gesture = await tester.startGesture(tester.getCenter(split));
+      await gesture.moveBy(const Offset(0, 30));
+      await tester.pump();
+      await gesture.moveBy(const Offset(0, 30));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(info, findsOneWidget);
+      expect(ai, findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 

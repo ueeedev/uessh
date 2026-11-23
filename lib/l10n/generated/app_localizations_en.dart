@@ -570,6 +570,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get info => 'Info';
 
   @override
+  String get infoTabBasic => 'Overview';
+
+  @override
+  String get infoTabPerformance => 'Performance';
+
+  @override
+  String get infoTabDisks => 'Disks';
+
+  @override
+  String get infoTabProcesses => 'Processes';
+
+  @override
+  String get infoRefresh => 'Refresh information';
+
+  @override
+  String get infoRefreshFailed =>
+      'Refresh failed. Showing the previous sample.';
+
+  @override
+  String get infoTotal => 'Total';
+
+  @override
+  String get infoUsed => 'Used';
+
+  @override
+  String get infoAvailable => 'Available';
+
+  @override
+  String get infoDevice => 'Device';
+
+  @override
+  String get infoUsage => 'Usage';
+
+  @override
+  String infoProcessCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count processes',
+      one: '1 process',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get infoProcessesHint =>
+      'Sorted by CPU usage. Showing up to 50 processes.';
+
+  @override
   String get closeInfoPanel => 'Close info panel';
 
   @override

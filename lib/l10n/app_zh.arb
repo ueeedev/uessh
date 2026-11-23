@@ -262,6 +262,24 @@
   "noSnippetsTitle": "还没有代码片段",
   "noSnippetsMessage": "保存常用命令，在终端里一键发送",
   "info": "信息",
+  "infoTabBasic": "基础信息",
+  "infoTabPerformance": "性能分析",
+  "infoTabDisks": "磁盘分析",
+  "infoTabProcesses": "任务进程",
+  "infoRefresh": "刷新信息",
+  "infoRefreshFailed": "刷新失败，正在显示上次采集的信息",
+  "infoTotal": "总计",
+  "infoUsed": "已用",
+  "infoAvailable": "可用",
+  "infoDevice": "设备",
+  "infoUsage": "使用率",
+  "infoProcessCount": "{count} 个进程",
+  "@infoProcessCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "infoProcessesHint": "按 CPU 使用率排序，最多显示 50 个进程",
   "closeInfoPanel": "关闭信息栏",
   "infoAfterConnect": "连接后显示服务器的系统信息",
   "infoUnavailable": "无法获取系统信息",

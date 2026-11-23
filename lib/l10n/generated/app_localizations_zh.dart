@@ -533,6 +533,47 @@ class AppLocalizationsZh extends AppLocalizations {
   String get info => '信息';
 
   @override
+  String get infoTabBasic => '基础信息';
+
+  @override
+  String get infoTabPerformance => '性能分析';
+
+  @override
+  String get infoTabDisks => '磁盘分析';
+
+  @override
+  String get infoTabProcesses => '任务进程';
+
+  @override
+  String get infoRefresh => '刷新信息';
+
+  @override
+  String get infoRefreshFailed => '刷新失败，正在显示上次采集的信息';
+
+  @override
+  String get infoTotal => '总计';
+
+  @override
+  String get infoUsed => '已用';
+
+  @override
+  String get infoAvailable => '可用';
+
+  @override
+  String get infoDevice => '设备';
+
+  @override
+  String get infoUsage => '使用率';
+
+  @override
+  String infoProcessCount(int count) {
+    return '$count 个进程';
+  }
+
+  @override
+  String get infoProcessesHint => '按 CPU 使用率排序，最多显示 50 个进程';
+
+  @override
   String get closeInfoPanel => '关闭信息栏';
 
   @override

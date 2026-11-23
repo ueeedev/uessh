@@ -2055,11 +2055,18 @@ class _PanelColumnState extends State<_PanelColumn> {
               : const Duration(milliseconds: 260),
           curve: Curves.easeOutCubic,
           onEnd: () {
-            // A half closed (others still open): let it go.
-            if (empty || !mounted) return;
-            setState(() {
-              if (widget.top == null) _lastTop = null;
-              if (widget.bottom == null) _lastBottom = null;
+            // A zero-duration drag animation can finish during layout.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || (widget.top == null && widget.bottom == null)) {
+                return;
+              }
+              final clearTop = widget.top == null && _lastTop != null;
+              final clearBottom = widget.bottom == null && _lastBottom != null;
+              if (!clearTop && !clearBottom) return;
+              setState(() {
+                if (clearTop) _lastTop = null;
+                if (clearBottom) _lastBottom = null;
+              });
             });
           },
           builder: (context, v, _) {

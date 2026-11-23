@@ -7,17 +7,101 @@ import '../../l10n/l10n.dart';
 /// Wrapped in `sh -c` so it works whatever the user's login shell is.
 const serverStatsCommand =
     "sh -c '"
+    'LC_ALL=C; export LC_ALL; '
     'echo @@hostname; hostname 2>/dev/null || uname -n; '
     'echo @@os; if [ -r /etc/os-release ]; then . /etc/os-release; '
     'echo "\$PRETTY_NAME"; else uname -s; fi; '
     'echo @@kernel; uname -r; '
+    'echo @@platform; uname -s; '
     'echo @@uptime; cat /proc/uptime 2>/dev/null; '
     'echo @@load; cat /proc/loadavg 2>/dev/null; '
     'echo @@nproc; nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null; '
     'echo @@stat; head -n 1 /proc/stat 2>/dev/null; '
     'echo @@mem; grep -E "^(MemTotal|MemAvailable):" /proc/meminfo 2>/dev/null; '
     'echo @@disk; df -kP / 2>/dev/null | tail -n 1; '
+    'echo @@disks; df -kP -l 2>/dev/null | head -n 65 | tail -n +2; '
+    'echo @@processes; '
+    'ps -A -o pid= -o user= -o pcpu= -o rss= -o comm= 2>/dev/null '
+    '| sort -k3,3nr | head -n 50; '
     "echo @@end'";
+
+/// Capacity of one mounted filesystem, in bytes.
+class DiskStats {
+  const DiskStats({
+    required this.device,
+    required this.mountPoint,
+    required this.total,
+    required this.used,
+    required this.available,
+  });
+
+  final String device;
+  final String mountPoint;
+  final int total;
+  final int used;
+  final int available;
+
+  /// Accepts POSIX df rows and the equivalent rows emitted by PowerShell.
+  static DiskStats? parse(String line) {
+    final match = RegExp(r'^(.+?)\s+(\d+)\s+(\d+)\s+(\d+)(?:\s+\d+%\s+(.+))?$')
+        .firstMatch(line.trim());
+    if (match == null) return null;
+    final total = int.tryParse(match[2]!);
+    final used = int.tryParse(match[3]!);
+    final available = int.tryParse(match[4]!);
+    if (total == null || total <= 0 || used == null || available == null) {
+      return null;
+    }
+    return DiskStats(
+      device: match[1]!,
+      mountPoint: match[5] ?? match[1]!,
+      total: total * 1024,
+      used: used * 1024,
+      available: available * 1024,
+    );
+  }
+}
+
+/// A process snapshot. Only the executable name is collected, since full
+/// command arguments can contain passwords or tokens.
+class ProcessStats {
+  const ProcessStats({
+    required this.pid,
+    required this.name,
+    required this.cpuPercent,
+    required this.memoryBytes,
+    this.user,
+  });
+
+  final int pid;
+  final String name;
+  final String? user;
+  final double cpuPercent;
+  final int memoryBytes;
+
+  static ProcessStats? parse(String line) {
+    final match = RegExp(r'^\s*(\d+)\s+(\S+)\s+([\d.]+)\s+(\d+)\s+(.+)$')
+        .firstMatch(line);
+    if (match == null) return null;
+    final pid = int.tryParse(match[1]!);
+    final cpu = double.tryParse(match[3]!);
+    final memory = int.tryParse(match[4]!);
+    if (pid == null ||
+        pid <= 0 ||
+        cpu == null ||
+        !cpu.isFinite ||
+        memory == null) {
+      return null;
+    }
+    return ProcessStats(
+      pid: pid,
+      name: match[5]!.trim(),
+      user: match[2] == '-' ? null : match[2],
+      cpuPercent: cpu,
+      memoryBytes: memory * 1024,
+    );
+  }
+}
 
 /// Cumulative CPU time from the first line of /proc/stat.
 class CpuTimes {
@@ -35,11 +119,32 @@ class CpuTimes {
   }
 }
 
+enum ServerPlatform {
+  windows,
+  macos,
+  linux;
+
+  /// The kernel name is authoritative. Display names also support older
+  /// collectors and snapshots that predate the platform section.
+  static ServerPlatform? fromName(String? name) {
+    final value = name?.toLowerCase() ?? '';
+    if (value.contains('windows')) return windows;
+    if (RegExp(r'\b(macos|mac os|os x|darwin)\b').hasMatch(value)) return macos;
+    if (RegExp(
+      r'\b(linux|ubuntu|debian|fedora|centos|alpine|arch|rhel|rocky|alma|opensuse|suse)\b',
+    ).hasMatch(value)) {
+      return linux;
+    }
+    return null;
+  }
+}
+
 class ServerStats {
   const ServerStats({
     this.hostname,
     this.os,
     this.kernel,
+    this.platform,
     this.uptime,
     this.load,
     this.cpuCount,
@@ -49,11 +154,14 @@ class ServerStats {
     this.memAvailable,
     this.diskTotal,
     this.diskUsed,
+    this.disks = const [],
+    this.processes = const [],
   });
 
   final String? hostname;
   final String? os;
   final String? kernel;
+  final ServerPlatform? platform;
   final Duration? uptime;
 
   /// 1, 5 and 15 minute load averages.
@@ -70,6 +178,8 @@ class ServerStats {
   final int? memAvailable;
   final int? diskTotal;
   final int? diskUsed;
+  final List<DiskStats> disks;
+  final List<ProcessStats> processes;
 
   int? get memUsed => (memTotal != null && memAvailable != null)
       ? memTotal! - memAvailable!
@@ -141,10 +251,30 @@ class ServerStats {
       }
     }
 
+    final disks = [
+      for (final line in sections['disks'] ?? <String>[])
+        ?DiskStats.parse(line),
+    ];
+    // Older collectors only reported the root/system volume.
+    if (disks.isEmpty) {
+      if (first('disk') case final line?) {
+        if (DiskStats.parse(line) case final disk?) disks.add(disk);
+      }
+    }
+    final processes = [
+      for (final line in sections['processes'] ?? <String>[])
+        ?ProcessStats.parse(line),
+    ]..sort((a, b) => b.cpuPercent.compareTo(a.cpuPercent));
+
     return ServerStats(
       hostname: first('hostname'),
       os: first('os'),
       kernel: first('kernel'),
+      platform:
+          ServerPlatform.fromName(first('platform') ?? first('os')) ??
+          (first('platform') == null && cpuTimes != null
+              ? ServerPlatform.linux
+              : null),
       uptime: uptime,
       load: load,
       cpuCount: int.tryParse(first('nproc') ?? ''),
@@ -154,6 +284,8 @@ class ServerStats {
       memAvailable: memAvailable,
       diskTotal: diskTotal,
       diskUsed: diskUsed,
+      disks: disks,
+      processes: processes,
     );
   }
 }

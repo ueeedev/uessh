@@ -17,8 +17,7 @@ Host localHost() => Host(
 /// A shell on this computer (zsh / bash on macOS, PowerShell on Windows)
 /// in a pseudo terminal, shown like an SSH tab.
 ///
-/// The extras that need a server connection (file browser, server info,
-/// AI commands) aren't available here.
+/// File browsing, system information and AI commands use local adapters.
 class LocalTerminalSession extends TerminalSession {
   LocalTerminalSession({
     required super.host,
@@ -311,9 +310,11 @@ class LocalTerminalSession extends TerminalSession {
 /// [serverStatsCommand] (memory as /proc/meminfo lines, disk as a df line).
 /// CPU is the processes' total share right now (`@@cpupct`).
 const macStatsScript = r'''
+export LC_ALL=C
 echo @@hostname; scutil --get ComputerName 2>/dev/null || hostname
 echo @@os; echo "$(sw_vers -productName) $(sw_vers -productVersion)"
 echo @@kernel; uname -r
+echo @@platform; uname -s
 echo @@uptime; boot=$(sysctl -n kern.boottime | sed 's/^{ sec = \([0-9]*\).*/\1/'); echo $(( $(date +%s) - boot ))
 echo @@load; sysctl -n vm.loadavg | tr -d '{}'
 echo @@nproc; sysctl -n hw.ncpu
@@ -321,6 +322,8 @@ echo @@cpupct; ps -A -o %cpu= | awk -v n="$(sysctl -n hw.ncpu)" '{s+=$1} END {pr
 echo @@mem; echo "MemTotal: $(( $(sysctl -n hw.memsize) / 1024 )) kB"
 vm_stat | awk -v ps="$(sysctl -n hw.pagesize)" '/Pages free|Pages inactive|Pages speculative|Pages purgeable/ {gsub(/\./,"",$NF); s+=$NF} END {printf "MemAvailable: %d kB\n", s*ps/1024}'
 echo @@disk; df -kP /System/Volumes/Data 2>/dev/null | tail -n 1 || df -kP / | tail -n 1
+echo @@disks; df -kP -l 2>/dev/null | head -n 65 | tail -n +2
+echo @@processes; ps -A -o pid= -o user= -o pcpu= -o rss= -o comm= 2>/dev/null | sort -k3,3nr | head -n 50
 echo @@end
 ''';
 
@@ -330,10 +333,18 @@ $os = Get-CimInstance Win32_OperatingSystem
 '@@hostname'; $env:COMPUTERNAME
 '@@os'; $os.Caption
 '@@kernel'; $os.Version
+'@@platform'; 'Windows'
 '@@uptime'; [int]((Get-Date) - $os.LastBootUpTime).TotalSeconds
 '@@nproc'; [Environment]::ProcessorCount
 '@@cpupct'; (Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average
 '@@mem'; "MemTotal: $($os.TotalVisibleMemorySize) kB"; "MemAvailable: $($os.FreePhysicalMemory) kB"
 '@@disk'; $d = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='$($env:SystemDrive)'"; "$($env:SystemDrive) $([long]($d.Size/1024)) $([long](($d.Size-$d.FreeSpace)/1024)) $([long]($d.FreeSpace/1024))"
+'@@disks'; Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' | ForEach-Object { "$($_.DeviceID) $([long]($_.Size/1024)) $([long](($_.Size-$_.FreeSpace)/1024)) $([long]($_.FreeSpace/1024))" }
+'@@processes'
+Get-CimInstance Win32_PerfFormattedData_PerfProc_Process -ErrorAction SilentlyContinue |
+  Where-Object { $_.IDProcess -gt 0 -and $_.Name -ne '_Total' } |
+  Sort-Object -Property PercentProcessorTime -Descending |
+  Select-Object -First 50 |
+  ForEach-Object { '{0} - {1} {2} {3}' -f $_.IDProcess, ([double]$_.PercentProcessorTime).ToString('F1', [Globalization.CultureInfo]::InvariantCulture), [long]($_.WorkingSetPrivate/1024), $_.Name }
 '@@end'
 ''';

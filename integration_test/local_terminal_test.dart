@@ -102,6 +102,11 @@ void main() {
       expect(stats.cpuPercent, isNotNull);
       expect(stats.diskTotal, greaterThan(0));
       expect(stats.uptime!.inDays, lessThan(3650));
+      expect(stats.disks, isNotEmpty);
+      expect(stats.disks.every((disk) => disk.total > 0), isTrue);
+      expect(stats.processes, isNotEmpty);
+      expect(stats.processes.length, lessThanOrEqualTo(50));
+      expect(stats.processes.every((process) => process.pid > 0), isTrue);
 
       s.terminal.textInput('exit\r');
       await waitFor(() => s.status != SessionStatus.connected, 'no exit');

@@ -1082,6 +1082,84 @@ abstract class AppLocalizations {
   /// **'信息'**
   String get info;
 
+  /// No description provided for @infoTabBasic.
+  ///
+  /// In zh, this message translates to:
+  /// **'基础信息'**
+  String get infoTabBasic;
+
+  /// No description provided for @infoTabPerformance.
+  ///
+  /// In zh, this message translates to:
+  /// **'性能分析'**
+  String get infoTabPerformance;
+
+  /// No description provided for @infoTabDisks.
+  ///
+  /// In zh, this message translates to:
+  /// **'磁盘分析'**
+  String get infoTabDisks;
+
+  /// No description provided for @infoTabProcesses.
+  ///
+  /// In zh, this message translates to:
+  /// **'任务进程'**
+  String get infoTabProcesses;
+
+  /// No description provided for @infoRefresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新信息'**
+  String get infoRefresh;
+
+  /// No description provided for @infoRefreshFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新失败，正在显示上次采集的信息'**
+  String get infoRefreshFailed;
+
+  /// No description provided for @infoTotal.
+  ///
+  /// In zh, this message translates to:
+  /// **'总计'**
+  String get infoTotal;
+
+  /// No description provided for @infoUsed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已用'**
+  String get infoUsed;
+
+  /// No description provided for @infoAvailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'可用'**
+  String get infoAvailable;
+
+  /// No description provided for @infoDevice.
+  ///
+  /// In zh, this message translates to:
+  /// **'设备'**
+  String get infoDevice;
+
+  /// No description provided for @infoUsage.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用率'**
+  String get infoUsage;
+
+  /// No description provided for @infoProcessCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个进程'**
+  String infoProcessCount(int count);
+
+  /// No description provided for @infoProcessesHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'按 CPU 使用率排序，最多显示 50 个进程'**
+  String get infoProcessesHint;
+
   /// No description provided for @closeInfoPanel.
   ///
   /// In zh, this message translates to:

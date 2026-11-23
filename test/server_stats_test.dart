@@ -30,6 +30,7 @@ void main() {
     expect(s.hostname, 'web-01');
     expect(s.os, 'Ubuntu 22.04.5 LTS');
     expect(s.kernel, '5.15.0-181-generic');
+    expect(s.platform, ServerPlatform.linux);
     expect(s.uptime, const Duration(seconds: 5299139));
     expect(s.load, [0.01, 0.05, 0.06]);
     expect(s.cpuCount, 2);
@@ -39,6 +40,8 @@ void main() {
     expect(s.memUsed, (1977940 - 992640) * 1024);
     expect(s.diskTotal, 51485392 * 1024);
     expect(s.diskUsed, 25122428 * 1024);
+    expect(s.disks.single.mountPoint, '/');
+    expect(s.disks.single.available, 24148640 * 1024);
     expect(s.hasResources, isTrue);
   });
 
@@ -81,6 +84,79 @@ Darwin
     final s = ServerStats.parse('sh: 1: not found\n@@load\nabc def\n');
     expect(s.hostname, isNull);
     expect(s.load, isNull);
+  });
+
+  test('parses mounted filesystems and sorts processes by CPU', () {
+    final stats = ServerStats.parse('''
+@@disks
+Filesystem 1024-blocks Used Available Capacity Mounted on
+/dev/vda2 100000 40000 55000 42% /
+/dev/vdb1 200000 50000 140000 26% /mnt/data files
+invalid line
+tmpfs 0 0 0 0% /empty
+@@processes
+  100 root 0.0 1024 /usr/sbin/sshd
+  200 alice 125.5 2048 Google Chrome Helper
+  0 root 0.0 0 idle
+invalid line
+@@end
+''');
+    expect(stats.disks.length, 2);
+    expect(stats.disks.last.mountPoint, '/mnt/data files');
+    expect(stats.disks.last.total, 200000 * 1024);
+    expect(stats.disks.last.available, 140000 * 1024);
+    expect(stats.processes.map((p) => p.pid), [200, 100]);
+    expect(stats.processes.first.name, 'Google Chrome Helper');
+    expect(stats.processes.first.user, 'alice');
+    expect(stats.processes.first.cpuPercent, 125.5);
+    expect(stats.processes.first.memoryBytes, 2048 * 1024);
+  });
+
+  test('parses Windows disk and process snapshots', () {
+    final stats = ServerStats.parse('''
+@@disk
+C: 100000 40000 60000
+@@disks
+C: 100000 40000 60000
+D: 200000 100000 100000
+@@processes
+444 - 12.5 8192 Windows Terminal
+@@end
+''');
+    expect(stats.diskTotal, 100000 * 1024);
+    expect(stats.disks.map((d) => d.mountPoint), ['C:', 'D:']);
+    expect(stats.processes.single.pid, 444);
+    expect(stats.processes.single.user, isNull);
+    expect(stats.processes.single.name, 'Windows Terminal');
+    expect(stats.processes.single.memoryBytes, 8192 * 1024);
+  });
+
+  test('rejects malformed disk and process counters', () {
+    expect(DiskStats.parse('/dev/vda 0 1 2 1% /'), isNull);
+    expect(DiskStats.parse('/dev/vda abc 1 2 1% /'), isNull);
+    expect(ProcessStats.parse('1 root ... 1024 test'), isNull);
+    expect(ProcessStats.parse('1 root 1.0 -1 test'), isNull);
+    expect(ProcessStats.parse('1 root 1.0 1024'), isNull);
+  });
+
+  test('kernel platform identifies Windows, macOS and Linux distributions', () {
+    for (final (name, os, expected) in [
+      ('Windows', 'Microsoft Windows Server 2025', ServerPlatform.windows),
+      ('Darwin', 'macOS 27.0', ServerPlatform.macos),
+      ('Linux', '银河麒麟 V10', ServerPlatform.linux),
+    ]) {
+      final stats = ServerStats.parse('@@platform\n$name\n@@os\n$os\n@@end');
+      expect(stats.platform, expected);
+      expect(stats.os, os);
+    }
+    expect(ServerPlatform.fromName('Windows_NT'), ServerPlatform.windows);
+    expect(ServerPlatform.fromName('Mac OS X 10.15'), ServerPlatform.macos);
+    expect(
+      ServerPlatform.fromName('Debian GNU/Linux 13'),
+      ServerPlatform.linux,
+    );
+    expect(ServerPlatform.fromName('FreeBSD'), isNull);
+    expect(ServerPlatform.fromName(null), isNull);
   });
 
   test('the command is wrapped in sh -c with balanced quotes', () {
