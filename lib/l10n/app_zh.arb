@@ -13,6 +13,7 @@
   "back": "返回",
   "copy": "复制",
   "paste": "粘贴",
+  "clearTerminal": "清屏",
   "loading": "加载中",
   "navHosts": "主机",
   "navTerminal": "终端",
@@ -710,6 +711,7 @@
   "filesLocating": "正在定位终端目录…",
   "filesOpen": "打开",
   "filesCdHere": "在终端中进入",
+  "filesOpenNewTabHere": "在此位置新建窗口",
   "filesCopyPath": "复制路径",
   "filesDownload": "下载…",
   "filesNoPreview": "没有预览",
@@ -972,5 +974,73 @@
         "type": "String"
       }
     }
-  }
+  },
+  "mcpSection": "MCP 服务器",
+  "mcpEnable": "启用本地 MCP 服务器",
+  "mcpEnableSubtitle": "允许本机外部 AI 客户端通过 MCP 向已连接服务器发送指令并读取终端输出（仅监听 127.0.0.1）",
+  "mcpRunning": "运行中：{url}",
+  "@mcpRunning": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpStopped": "未启动",
+  "mcpError": "启动失败：{error}",
+  "@mcpError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpPort": "监听端口",
+  "mcpPortSubtitle": "本机回环地址 127.0.0.1 的端口号（1024–65535）",
+  "mcpPortInvalid": "请输入 1024 到 65535 之间的端口号",
+  "mcpApprovalMode": "指令安全策略",
+  "mcpApprovalModeSubtitle": "控制外部 AI 通过 MCP 执行指令前的确认方式",
+  "mcpApprovalReadOnly": "智能分级（只读自动，修改确认）",
+  "mcpApprovalAskAll": "每次都弹窗确认",
+  "mcpApprovalAllowAll": "全部自动执行（高风险）",
+  "mcpAllowAllTitle": "允许外部 MCP 客户端不经确认执行任意命令？",
+  "mcpAllowAllBody": "开启后，任何持有访问令牌的本机 AI 客户端都可以直接在你的服务器上运行任意命令（包括删除文件、修改配置等），不再弹窗询问。",
+  "mcpEndpoint": "服务地址",
+  "mcpToken": "访问令牌（Bearer Token）",
+  "mcpTokenLocked": "解锁保险库后可用",
+  "mcpTokenCopied": "已复制访问令牌",
+  "mcpRegenerateToken": "重新生成令牌",
+  "mcpTokenRegenerated": "已重新生成访问令牌，旧客户端需更新配置",
+  "mcpCopyConfig": "复制 MCP 配置",
+  "mcpConfigCopied": "已复制 MCP 客户端 JSON 配置",
+  "mcpEndpointCopied": "已复制服务地址",
+  "mcpApproveTitle": "MCP 请求执行命令",
+  "mcpApproveReadTitle": "MCP 请求读取终端内容",
+  "mcpApproveReadBody": "外部 AI 客户端想要读取此终端最近 {lines} 行屏幕输出。",
+  "@mcpApproveReadBody": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      }
+    }
+  },
+  "mcpApproveOpenTitle": "MCP 请求连接主机",
+  "mcpApproveOpenBody": "外部 AI 客户端想要打开 {host} 的终端连接。",
+  "@mcpApproveOpenBody": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpApprovePurpose": "说明：{purpose}",
+  "@mcpApprovePurpose": {
+    "placeholders": {
+      "purpose": {
+        "type": "String"
+      }
+    }
+  },
+  "mcpApproveAllow": "允许",
+  "mcpApproveDeny": "拒绝"
 }

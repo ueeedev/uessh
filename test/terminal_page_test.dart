@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,6 +80,51 @@ void main() {
     expect(rect.right, lessThan(page.right));
     expect(rect.bottom, lessThan(page.bottom));
   });
+
+  testWidgets(
+    'terminal context menu shows copy, paste and clear icons on one row',
+    (tester) async {
+      await pumpWithSession(tester);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(UesshApp)),
+      );
+      final session = container.read(sessionsProvider).active!;
+      session.terminal.write('first line\r\nsecond line\r\nprompt\$ ');
+      await tester.pump();
+
+      await tester.tap(find.byType(TerminalView), buttons: kSecondaryButton);
+      await tester.pumpAndSettle();
+
+      final copy = find.byKey(const ValueKey('terminal-menu-copy'));
+      final paste = find.byKey(const ValueKey('terminal-menu-paste'));
+      final clear = find.byKey(const ValueKey('terminal-menu-clear'));
+      expect(copy, findsOneWidget);
+      expect(paste, findsOneWidget);
+      expect(clear, findsOneWidget);
+
+      final copyRect = tester.getRect(copy);
+      final pasteRect = tester.getRect(paste);
+      final clearRect = tester.getRect(clear);
+      expect(copyRect.top, pasteRect.top);
+      expect(pasteRect.top, clearRect.top);
+      expect(copyRect.right, lessThanOrEqualTo(pasteRect.left));
+      expect(pasteRect.right, lessThanOrEqualTo(clearRect.left));
+
+      // Copy is disabled with no selection.
+      expect(tester.widget<IconButton>(copy).onPressed, isNull);
+      expect(tester.widget<IconButton>(paste).onPressed, isNotNull);
+      expect(tester.widget<IconButton>(clear).onPressed, isNotNull);
+
+      // Clear removes previous output while keeping the active prompt line.
+      await tester.tap(clear);
+      await tester.pumpAndSettle();
+      final content = session.terminal.buffer.getText();
+      expect(content, isNot(contains('first line')));
+      expect(content, isNot(contains('second line')));
+      expect(content, contains('prompt\$'));
+      await settleIo(tester);
+    },
+  );
 
   testWidgets('info panel slides in beside the terminal and is remembered', (
     tester,
@@ -687,6 +733,114 @@ void main() {
       expect(s.panelSplit, AppSettings.maxPanelSplit);
       final back = AppSettings.fromJson(s.toJson());
       expect(back.openPanels, s.openPanels);
+    });
+  });
+
+  group('IME key handling', () {
+    KeyDownEvent down(LogicalKeyboardKey key, {String? character}) =>
+        KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.keyA,
+          logicalKey: key,
+          character: character,
+          timeStamp: Duration.zero,
+        );
+
+    test(
+      'defers plain printable keys and IME process keys to platform IME',
+      () {
+        for (final key in [
+          LogicalKeyboardKey.keyN,
+          LogicalKeyboardKey.digit1,
+          LogicalKeyboardKey.comma,
+          LogicalKeyboardKey.slash,
+          LogicalKeyboardKey.process,
+        ]) {
+          expect(
+            deferPrintableKeyToIme(
+              down(key),
+              hasInputConnection: true,
+              kittyKeyboardMode: 0,
+              ctrlPressed: false,
+              altPressed: false,
+              metaPressed: false,
+            ),
+            KeyEventResult.skipRemainingHandlers,
+            reason: '${key.debugName} should go to IME',
+          );
+        }
+      },
+    );
+
+    test('keeps control, navigation, space and shortcut keys in terminal', () {
+      for (final key in [
+        LogicalKeyboardKey.enter,
+        LogicalKeyboardKey.backspace,
+        LogicalKeyboardKey.tab,
+        LogicalKeyboardKey.escape,
+        LogicalKeyboardKey.space,
+        LogicalKeyboardKey.arrowUp,
+        LogicalKeyboardKey.f1,
+        LogicalKeyboardKey.shiftLeft,
+      ]) {
+        expect(
+          deferPrintableKeyToIme(
+            down(key),
+            hasInputConnection: true,
+            kittyKeyboardMode: 0,
+            ctrlPressed: false,
+            altPressed: false,
+            metaPressed: false,
+          ),
+          KeyEventResult.ignored,
+          reason: '${key.debugName} should stay in terminal',
+        );
+      }
+      // Modifiers stay in terminal / shortcuts.
+      expect(
+        deferPrintableKeyToIme(
+          down(LogicalKeyboardKey.keyC),
+          hasInputConnection: true,
+          kittyKeyboardMode: 0,
+          ctrlPressed: true,
+          altPressed: false,
+          metaPressed: false,
+        ),
+        KeyEventResult.ignored,
+      );
+      expect(
+        deferPrintableKeyToIme(
+          down(LogicalKeyboardKey.keyV),
+          hasInputConnection: true,
+          kittyKeyboardMode: 0,
+          ctrlPressed: false,
+          altPressed: false,
+          metaPressed: true,
+        ),
+        KeyEventResult.ignored,
+      );
+      // Without an input connection or with Kitty report-all-keys, fall back.
+      expect(
+        deferPrintableKeyToIme(
+          down(LogicalKeyboardKey.keyA),
+          hasInputConnection: false,
+          kittyKeyboardMode: 0,
+          ctrlPressed: false,
+          altPressed: false,
+          metaPressed: false,
+        ),
+        KeyEventResult.ignored,
+      );
+      expect(
+        deferPrintableKeyToIme(
+          down(LogicalKeyboardKey.keyA),
+          hasInputConnection: true,
+          kittyKeyboardMode: 8,
+          ctrlPressed: false,
+          altPressed: false,
+          metaPressed: false,
+        ),
+        KeyEventResult.ignored,
+      );
     });
   });
 }

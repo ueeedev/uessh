@@ -175,13 +175,16 @@ class SessionsNotifier extends Notifier<SessionsState> {
 
   /// Opens [host] in a new tab, or - with [splitFrom] - as a new pane
   /// beside that pane on [side]. Falls back to a new tab when the
-  /// workspace is full.
+  /// workspace is full. When [initialDirectory] is given, the new shell
+  /// starts in (or `cd`s to) that folder.
   TerminalSession open(
     Host host, {
     String? splitFrom,
     DropSide side = DropSide.right,
+    String? initialDirectory,
   }) {
     final session = ref.read(sessionFactoryProvider)(host);
+    session.initialDirectory = initialDirectory;
     _open.add(session);
     if (!session.isLocal) _recordLastConnected(session);
     // Read the settings at each drop, so changes apply to open tabs too.

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../ai/ai_settings.dart';
+import '../mcp/mcp_settings_card.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -283,6 +284,9 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 24),
           _SectionTitle(context.l10n.aiSection),
           const AiSettingsCard(),
+          const SizedBox(height: 24),
+          _SectionTitle(context.l10n.mcpSection),
+          const McpSettingsCard(),
           const SizedBox(height: 24),
           _SectionTitle(context.l10n.security),
           _SecurityCard(autoLockMinutes: s.autoLockMinutes, update: update),

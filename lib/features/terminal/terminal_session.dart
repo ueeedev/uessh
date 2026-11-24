@@ -78,6 +78,22 @@ class TerminalSession extends ChangeNotifier {
   /// What to type to make the shell go to [folder].
   String cdCommand(String folder) => ' cd -- ${shellQuote(folder)}\r';
 
+  /// Folder the shell should start in (e.g. from "Open new terminal here" in
+  /// the file browser). Applied once on the first successful connect.
+  String? initialDirectory;
+  bool _initialDirectoryApplied = false;
+
+  /// Sends `cd` to [initialDirectory] once after connecting.
+  @visibleForTesting
+  void applyInitialDirectory() {
+    if (_initialDirectoryApplied) return;
+    final dir = initialDirectory;
+    if (dir == null || dir.isEmpty) return;
+    _initialDirectoryApplied = true;
+    sendInput(cdCommand(dir));
+    onCommandEntered?.call();
+  }
+
   SessionStatus status = SessionStatus.connecting;
   String? error;
 
@@ -373,6 +389,7 @@ class TerminalSession extends ChangeNotifier {
       reconnectAttempt = 0;
       reconnectAt = null;
       _setStatus(SessionStatus.connected);
+      applyInitialDirectory();
       if (!_markerSet) unawaited(_recordShellStart(gen));
 
       unawaited(

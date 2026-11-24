@@ -60,10 +60,20 @@ class LocalTerminalSession extends TerminalSession {
       final (exe, args) = shellCommand();
       final env = Platform.environment;
       final home = env['HOME'] ?? env['USERPROFILE'];
+      String? startDir;
+      final initial = initialDirectory;
+      if (initial != null &&
+          initial.isNotEmpty &&
+          !(Platform.isWindows && initial == '/')) {
+        final native = _localFs.toNative(initial);
+        if (Directory(native).existsSync()) {
+          startDir = native;
+        }
+      }
       final pty = Pty.start(
         exe,
         arguments: args,
-        workingDirectory: home,
+        workingDirectory: startDir ?? home,
         environment: {
           ...env,
           'TERM': 'xterm-256color',

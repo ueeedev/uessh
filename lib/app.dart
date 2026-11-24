@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/app_providers.dart';
+import 'features/mcp/mcp_controller.dart';
 import 'features/security/lock_screen.dart';
 import 'features/settings/app_settings.dart';
 import 'features/settings/settings_providers.dart';
@@ -23,6 +24,8 @@ class UesshApp extends ConsumerWidget {
       settingsProvider.select((s) => s.followSystemAccent),
     );
     final language = ref.watch(settingsProvider.select((s) => s.language));
+    // Keep the local MCP server lifecycle active while the app runs.
+    ref.watch(mcpControllerProvider);
 
     // DynamicColorBuilder reads the macOS / Windows accent color when available.
     return DynamicColorBuilder(

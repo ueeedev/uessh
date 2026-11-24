@@ -13,6 +13,7 @@ import '../../l10n/l10n.dart';
 import '../../theme/terminal_theme.dart';
 import '../settings/app_settings.dart';
 import '../settings/settings_providers.dart';
+import '../terminal/sessions_providers.dart';
 import '../terminal/terminal_session.dart';
 import 'file_browser.dart';
 import 'remote_fs.dart';
@@ -259,6 +260,11 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
     }
   }
 
+  void _openNewTabHere(String folder) {
+    final host = widget.session.isLocal ? localHost() : widget.session.host;
+    ref.read(sessionsProvider.notifier).open(host, initialDirectory: folder);
+  }
+
   Future<void> _menu(RemoteEntry e, Offset at) async {
     final l = context.l10n;
     _n.select(e.path);
@@ -268,6 +274,11 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
       items: [
         PopupMenuItem(value: 'open', child: Text(l.filesOpen)),
         if (e.isDir) PopupMenuItem(value: 'cd', child: Text(l.filesCdHere)),
+        if (e.isDir)
+          PopupMenuItem(
+            value: 'new-window',
+            child: Text(l.filesOpenNewTabHere),
+          ),
         if (e.isDir)
           PopupMenuItem(value: 'upload', child: Text(l.filesUploadHere)),
         PopupMenuItem(value: 'copy', child: Text(l.filesCopyPath)),
@@ -280,6 +291,8 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
         await _open(e);
       case 'cd':
         _n.cdInTerminal(e.path);
+      case 'new-window':
+        _openNewTabHere(e.path);
       case 'copy':
         await Clipboard.setData(ClipboardData(text: e.path));
       case 'download':
@@ -294,12 +307,19 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
     final path = ref.read(fileBrowserProvider(widget.session.id)).path;
     if (path == null) return;
     final l = context.l10n;
+    final canOpenHere =
+        !(widget.session.isLocal && Platform.isWindows && path == '/');
     final action = await showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
       items: [
         PopupMenuItem(value: 'upload', child: Text(l.filesUpload)),
         PopupMenuItem(value: 'cd', child: Text(l.filesCdHere)),
+        if (canOpenHere)
+          PopupMenuItem(
+            value: 'new-window',
+            child: Text(l.filesOpenNewTabHere),
+          ),
         PopupMenuItem(value: 'copy', child: Text(l.filesCopyPath)),
         PopupMenuItem(value: 'refresh', child: Text(l.filesRefresh)),
       ],
@@ -310,6 +330,8 @@ class _FilesPanelState extends ConsumerState<FilesPanel> {
         await pickAndUpload(context, ref, widget.session, path);
       case 'cd':
         _n.cdInTerminal(path);
+      case 'new-window':
+        _openNewTabHere(path);
       case 'copy':
         await Clipboard.setData(ClipboardData(text: path));
       case 'refresh':

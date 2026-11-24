@@ -31,6 +31,7 @@ class MainFlutterWindow: NSWindow {
     for name in [
       NSWindow.didResizeNotification,
       NSWindow.didEndLiveResizeNotification,
+      NSWindow.didDeminiaturizeNotification,
       NSWindow.didExitFullScreenNotification,
       NSWindow.didBecomeKeyNotification,
       NSWindow.didBecomeMainNotification,

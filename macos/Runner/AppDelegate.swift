@@ -14,16 +14,27 @@ class AppDelegate: FlutterAppDelegate {
     return true
   }
 
-  // With "keep running in background", closing the window only hides it;
-  // clicking the Dock icon shows it again.
+  // With "keep running in background", closing the window only hides it, and
+  // Cmd+M minimizes it to the Dock. Clicking the Dock icon must both
+  // deminiaturize and show the main window even if auxiliary windows (such as
+  // the menu bar status item) make AppKit report hasVisibleWindows == true.
+  // Note: FlutterAppDelegate does not implement applicationShouldHandleReopen,
+  // so calling super would throw an unrecognized selector exception at runtime.
   override func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-    // Keep Flutter's own handling (it forwards to plugins), then show ours.
-    _ = super.applicationShouldHandleReopen(sender, hasVisibleWindows: flag)
-    if !flag {
-      for window in sender.windows where window is MainFlutterWindow {
+    let mainWindows = sender.windows.compactMap { $0 as? MainFlutterWindow }
+    let targets: [NSWindow] = mainWindows.isEmpty
+      ? [mainFlutterWindow].compactMap { $0 }
+      : mainWindows
+    let hasVisibleMain = targets.contains { $0.isVisible && !$0.isMiniaturized }
+    if !flag || !hasVisibleMain {
+      for window in targets {
+        if window.isMiniaturized {
+          window.deminiaturize(nil)
+        }
         window.makeKeyAndOrderFront(nil)
       }
       sender.activate(ignoringOtherApps: true)
+      return false
     }
     return true
   }

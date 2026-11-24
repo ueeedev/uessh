@@ -620,5 +620,50 @@ void main() {
       expect(find.text('上传文件…'), findsWidgets);
       expect(find.byKey(const ValueKey('files-upload')), findsOneWidget);
     });
+
+    testWidgets(
+      'right-click folder or empty space: open new terminal here sets initialDirectory',
+      (tester) async {
+        final c = await pumpApp(tester);
+        await openFiles(tester);
+
+        // Files do not offer "Open new terminal here".
+        await tester.tap(find.text('app.log'), buttons: kSecondaryButton);
+        await tester.pumpAndSettle();
+        expect(find.text('在此位置新建窗口'), findsNothing);
+        await tester.tapAt(Offset.zero);
+        await tester.pumpAndSettle();
+
+        // Right-clicking a folder opens a new tab starting in that folder.
+        await tester.tap(find.text('nginx'), buttons: kSecondaryButton);
+        await tester.pumpAndSettle();
+        expect(find.text('在此位置新建窗口'), findsOneWidget);
+        await tester.tap(find.text('在此位置新建窗口'));
+        await settleIo(tester);
+        await tester.pumpAndSettle();
+
+        final afterFolder = c.read(sessionsProvider);
+        expect(afterFolder.tabs.length, 2);
+        expect(afterFolder.active?.host.id, 'srv');
+        expect(afterFolder.active?.initialDirectory, '/var/log/nginx');
+
+        // Right-clicking empty space opens a new tab in the shown folder.
+        final panel = tester.getRect(find.byKey(const ValueKey('files-panel')));
+        await tester.tapAt(
+          Offset(panel.center.dx, panel.bottom - 20),
+          buttons: kSecondaryButton,
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('在此位置新建窗口'), findsOneWidget);
+        await tester.tap(find.text('在此位置新建窗口'));
+        await settleIo(tester);
+        await tester.pumpAndSettle();
+
+        final afterBlank = c.read(sessionsProvider);
+        expect(afterBlank.tabs.length, 3);
+        expect(afterBlank.active?.host.id, 'srv');
+        expect(afterBlank.active?.initialDirectory, '/var/log');
+      },
+    );
   });
 }

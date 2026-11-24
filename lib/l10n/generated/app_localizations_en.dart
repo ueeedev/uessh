@@ -49,6 +49,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paste => 'Paste';
 
   @override
+  String get clearTerminal => 'Clear screen';
+
+  @override
   String get loading => 'Loading';
 
   @override
@@ -1398,6 +1401,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filesCdHere => 'Go here in terminal';
 
   @override
+  String get filesOpenNewTabHere => 'Open new terminal here';
+
+  @override
   String get filesCopyPath => 'Copy path';
 
   @override
@@ -1709,4 +1715,118 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateIgnore => 'Skip this version';
+
+  @override
+  String get mcpSection => 'MCP server';
+
+  @override
+  String get mcpEnable => 'Enable local MCP server';
+
+  @override
+  String get mcpEnableSubtitle =>
+      'Let local AI clients send commands to connected servers and read terminal output over MCP (127.0.0.1 only)';
+
+  @override
+  String mcpRunning(String url) {
+    return 'Running at $url';
+  }
+
+  @override
+  String get mcpStopped => 'Stopped';
+
+  @override
+  String mcpError(String error) {
+    return 'Failed to start: $error';
+  }
+
+  @override
+  String get mcpPort => 'Port';
+
+  @override
+  String get mcpPortSubtitle => 'Loopback port on 127.0.0.1 (1024–65535)';
+
+  @override
+  String get mcpPortInvalid => 'Enter a port between 1024 and 65535';
+
+  @override
+  String get mcpApprovalMode => 'Command approval';
+
+  @override
+  String get mcpApprovalModeSubtitle =>
+      'How commands requested by external MCP clients are approved';
+
+  @override
+  String get mcpApprovalReadOnly => 'Auto read-only, ask for changes';
+
+  @override
+  String get mcpApprovalAskAll => 'Ask every time';
+
+  @override
+  String get mcpApprovalAllowAll => 'Allow all (high risk)';
+
+  @override
+  String get mcpAllowAllTitle =>
+      'Let external MCP clients run any command without asking?';
+
+  @override
+  String get mcpAllowAllBody =>
+      'Any local AI client with the bearer token will be able to run arbitrary commands on your servers (including deleting files or changing configuration) without confirmation.';
+
+  @override
+  String get mcpEndpoint => 'Endpoint';
+
+  @override
+  String get mcpToken => 'Bearer token';
+
+  @override
+  String get mcpTokenLocked => 'Available after unlocking the vault';
+
+  @override
+  String get mcpTokenCopied => 'Bearer token copied';
+
+  @override
+  String get mcpRegenerateToken => 'Regenerate token';
+
+  @override
+  String get mcpTokenRegenerated =>
+      'Token regenerated; update connected MCP clients';
+
+  @override
+  String get mcpCopyConfig => 'Copy MCP config';
+
+  @override
+  String get mcpConfigCopied => 'MCP client JSON config copied';
+
+  @override
+  String get mcpEndpointCopied => 'Endpoint copied';
+
+  @override
+  String get mcpApproveTitle => 'MCP wants to run a command';
+
+  @override
+  String get mcpApproveReadTitle => 'MCP wants to read the terminal';
+
+  @override
+  String mcpApproveReadBody(int lines) {
+    return 'An external AI client wants to read the last $lines lines from this terminal.';
+  }
+
+  @override
+  String get mcpApproveOpenTitle => 'MCP wants to open a host';
+
+  @override
+  String mcpApproveOpenBody(String host) {
+    return 'An external AI client wants to open a terminal session to $host.';
+  }
+
+  @override
+  String mcpApprovePurpose(String purpose) {
+    return 'Purpose: $purpose';
+  }
+
+  @override
+  String get mcpApproveAllow => 'Allow';
+
+  @override
+  String get mcpApproveDeny => 'Deny';
 }

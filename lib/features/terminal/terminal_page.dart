@@ -1680,8 +1680,55 @@ class TerminalPane extends ConsumerStatefulWidget {
   ConsumerState<TerminalPane> createState() => _TerminalPaneState();
 }
 
+/// Lets plain printable keys reach the platform IME (for CJK / dead-key
+/// composition) instead of being swallowed by xterm2's hardware-key text
+/// fallback before composition can start.
+///
+/// Returning [KeyEventResult.skipRemainingHandlers] bypasses xterm2's
+/// hardware-key fallback while telling the platform embedding to forward the
+/// key to its active [TextInputClient] (xterm2's `CustomTextEdit`).
+KeyEventResult deferPrintableKeyToIme(
+  KeyEvent event, {
+  required bool hasInputConnection,
+  required int kittyKeyboardMode,
+  bool? ctrlPressed,
+  bool? altPressed,
+  bool? metaPressed,
+}) {
+  if (!hasInputConnection) return KeyEventResult.ignored;
+  if (event is KeyUpEvent) return KeyEventResult.ignored;
+  // Kitty "report all keys as escape codes" (flag 8) needs raw key events.
+  if ((kittyKeyboardMode & 0x08) != 0) return KeyEventResult.ignored;
+
+  final keyboard = HardwareKeyboard.instance;
+  if ((ctrlPressed ?? keyboard.isControlPressed) ||
+      (altPressed ?? keyboard.isAltPressed) ||
+      (metaPressed ?? keyboard.isMetaPressed)) {
+    return KeyEventResult.ignored;
+  }
+
+  final key = event.logicalKey;
+  if (key == LogicalKeyboardKey.process) {
+    return KeyEventResult.skipRemainingHandlers;
+  }
+  final keyId = key.keyId;
+  final isUnicodePlane =
+      (keyId & LogicalKeyboardKey.planeMask) == LogicalKeyboardKey.unicodePlane;
+  final isPrintableNonSpace =
+      isUnicodePlane &&
+      keyId > 0x20 &&
+      keyId != 0x7F &&
+      !(keyId >= 0x80 && keyId <= 0x9F) &&
+      !(keyId >= 0xE000 && keyId <= 0xF8FF);
+  if (isPrintableNonSpace) {
+    return KeyEventResult.skipRemainingHandlers;
+  }
+  return KeyEventResult.ignored;
+}
+
 class _TerminalPaneState extends ConsumerState<TerminalPane> {
   final _focusNode = FocusNode();
+  final _terminalViewKey = GlobalKey<TerminalViewState>();
 
   @override
   void initState() {
@@ -1722,12 +1769,12 @@ class _TerminalPaneState extends ConsumerState<TerminalPane> {
         position.dy,
       ),
       items: [
-        PopupMenuItem(
-          value: 'copy',
-          enabled: selection != null,
-          child: Text(l.copy),
+        _TerminalQuickActionsEntry(
+          canCopy: selection != null,
+          copyTooltip: l.copy,
+          pasteTooltip: l.paste,
+          clearTooltip: l.clearTerminal,
         ),
-        PopupMenuItem(value: 'paste', child: Text(l.paste)),
         const PopupMenuDivider(),
         PopupMenuItem(value: 'split-right', child: Text(l.splitRight)),
         PopupMenuItem(value: 'split-down', child: Text(l.splitDown)),
@@ -1760,6 +1807,9 @@ class _TerminalPaneState extends ConsumerState<TerminalPane> {
         if (text != null && text.isNotEmpty) {
           widget.session.terminal.paste(text);
         }
+      case 'clear':
+        controller.clearSelection();
+        widget.session.terminal.clear();
       case 'split-right':
         await splitPane(context, ref, widget.session, DropSide.right);
         return;
@@ -1828,13 +1878,21 @@ class _TerminalPaneState extends ConsumerState<TerminalPane> {
             children: [
               TerminalView(
                 session.terminal,
+                key: _terminalViewKey,
                 controller: session.controller,
                 focusNode: _focusNode,
                 theme: terminalTheme,
                 textStyle: terminalTextStyle(),
                 padding: const EdgeInsets.all(8),
                 shortcuts: _terminalShortcuts,
+                keyboardType: TextInputType.text,
                 keyboardAppearance: scheme.brightness,
+                onKeyEvent: (_, event) => deferPrintableKeyToIme(
+                  event,
+                  hasInputConnection:
+                      _terminalViewKey.currentState?.hasInputConnection == true,
+                  kittyKeyboardMode: session.terminal.kittyKeyboardMode,
+                ),
                 onSecondaryTapDown: (details, _) => _showContextMenu(details),
               ),
               AnimatedSwitcher(
@@ -1850,6 +1908,88 @@ class _TerminalPaneState extends ConsumerState<TerminalPane> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Compact single-row icon bar for Copy / Paste / Clear at the top of the
+/// terminal's context menu.
+class _TerminalQuickActionsEntry extends PopupMenuEntry<String> {
+  const _TerminalQuickActionsEntry({
+    required this.canCopy,
+    required this.copyTooltip,
+    required this.pasteTooltip,
+    required this.clearTooltip,
+  });
+
+  final bool canCopy;
+  final String copyTooltip;
+  final String pasteTooltip;
+  final String clearTooltip;
+
+  @override
+  double get height => 44;
+
+  @override
+  bool represents(String? value) =>
+      value == 'copy' || value == 'paste' || value == 'clear';
+
+  @override
+  State<_TerminalQuickActionsEntry> createState() =>
+      _TerminalQuickActionsEntryState();
+}
+
+class _TerminalQuickActionsEntryState
+    extends State<_TerminalQuickActionsEntry> {
+  Widget _button({
+    required Key key,
+    required IconData icon,
+    required String tooltip,
+    required String value,
+    bool enabled = true,
+  }) {
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    );
+    return Expanded(
+      child: IconButton(
+        key: key,
+        tooltip: tooltip,
+        icon: Icon(icon, size: 18),
+        visualDensity: VisualDensity.compact,
+        style: IconButton.styleFrom(shape: shape),
+        onPressed: enabled ? () => Navigator.of(context).pop(value) : null,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Row(
+        children: [
+          _button(
+            key: const ValueKey('terminal-menu-copy'),
+            icon: Icons.content_copy_outlined,
+            tooltip: widget.copyTooltip,
+            value: 'copy',
+            enabled: widget.canCopy,
+          ),
+          _button(
+            key: const ValueKey('terminal-menu-paste'),
+            icon: Icons.content_paste_outlined,
+            tooltip: widget.pasteTooltip,
+            value: 'paste',
+          ),
+          _button(
+            key: const ValueKey('terminal-menu-clear'),
+            icon: Icons.cleaning_services_outlined,
+            tooltip: widget.clearTooltip,
+            value: 'clear',
+          ),
+        ],
+      ),
     );
   }
 }

@@ -49,6 +49,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get paste => '粘贴';
 
   @override
+  String get clearTerminal => '清屏';
+
+  @override
   String get loading => '加载中';
 
   @override
@@ -1308,6 +1311,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filesCdHere => '在终端中进入';
 
   @override
+  String get filesOpenNewTabHere => '在此位置新建窗口';
+
+  @override
   String get filesCopyPath => '复制路径';
 
   @override
@@ -1607,4 +1613,115 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get updateIgnore => '忽略此版本';
+
+  @override
+  String get mcpSection => 'MCP 服务器';
+
+  @override
+  String get mcpEnable => '启用本地 MCP 服务器';
+
+  @override
+  String get mcpEnableSubtitle =>
+      '允许本机外部 AI 客户端通过 MCP 向已连接服务器发送指令并读取终端输出（仅监听 127.0.0.1）';
+
+  @override
+  String mcpRunning(String url) {
+    return '运行中：$url';
+  }
+
+  @override
+  String get mcpStopped => '未启动';
+
+  @override
+  String mcpError(String error) {
+    return '启动失败：$error';
+  }
+
+  @override
+  String get mcpPort => '监听端口';
+
+  @override
+  String get mcpPortSubtitle => '本机回环地址 127.0.0.1 的端口号（1024–65535）';
+
+  @override
+  String get mcpPortInvalid => '请输入 1024 到 65535 之间的端口号';
+
+  @override
+  String get mcpApprovalMode => '指令安全策略';
+
+  @override
+  String get mcpApprovalModeSubtitle => '控制外部 AI 通过 MCP 执行指令前的确认方式';
+
+  @override
+  String get mcpApprovalReadOnly => '智能分级（只读自动，修改确认）';
+
+  @override
+  String get mcpApprovalAskAll => '每次都弹窗确认';
+
+  @override
+  String get mcpApprovalAllowAll => '全部自动执行（高风险）';
+
+  @override
+  String get mcpAllowAllTitle => '允许外部 MCP 客户端不经确认执行任意命令？';
+
+  @override
+  String get mcpAllowAllBody =>
+      '开启后，任何持有访问令牌的本机 AI 客户端都可以直接在你的服务器上运行任意命令（包括删除文件、修改配置等），不再弹窗询问。';
+
+  @override
+  String get mcpEndpoint => '服务地址';
+
+  @override
+  String get mcpToken => '访问令牌（Bearer Token）';
+
+  @override
+  String get mcpTokenLocked => '解锁保险库后可用';
+
+  @override
+  String get mcpTokenCopied => '已复制访问令牌';
+
+  @override
+  String get mcpRegenerateToken => '重新生成令牌';
+
+  @override
+  String get mcpTokenRegenerated => '已重新生成访问令牌，旧客户端需更新配置';
+
+  @override
+  String get mcpCopyConfig => '复制 MCP 配置';
+
+  @override
+  String get mcpConfigCopied => '已复制 MCP 客户端 JSON 配置';
+
+  @override
+  String get mcpEndpointCopied => '已复制服务地址';
+
+  @override
+  String get mcpApproveTitle => 'MCP 请求执行命令';
+
+  @override
+  String get mcpApproveReadTitle => 'MCP 请求读取终端内容';
+
+  @override
+  String mcpApproveReadBody(int lines) {
+    return '外部 AI 客户端想要读取此终端最近 $lines 行屏幕输出。';
+  }
+
+  @override
+  String get mcpApproveOpenTitle => 'MCP 请求连接主机';
+
+  @override
+  String mcpApproveOpenBody(String host) {
+    return '外部 AI 客户端想要打开 $host 的终端连接。';
+  }
+
+  @override
+  String mcpApprovePurpose(String purpose) {
+    return '说明：$purpose';
+  }
+
+  @override
+  String get mcpApproveAllow => '允许';
+
+  @override
+  String get mcpApproveDeny => '拒绝';
 }

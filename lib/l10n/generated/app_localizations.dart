@@ -176,6 +176,12 @@ abstract class AppLocalizations {
   /// **'粘贴'**
   String get paste;
 
+  /// No description provided for @clearTerminal.
+  ///
+  /// In zh, this message translates to:
+  /// **'清屏'**
+  String get clearTerminal;
+
   /// No description provided for @loading.
   ///
   /// In zh, this message translates to:
@@ -2510,6 +2516,12 @@ abstract class AppLocalizations {
   /// **'在终端中进入'**
   String get filesCdHere;
 
+  /// No description provided for @filesOpenNewTabHere.
+  ///
+  /// In zh, this message translates to:
+  /// **'在此位置新建窗口'**
+  String get filesOpenNewTabHere;
+
   /// No description provided for @filesCopyPath.
   ///
   /// In zh, this message translates to:
@@ -3019,6 +3031,204 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'忽略此版本'**
   String get updateIgnore;
+
+  /// No description provided for @mcpSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'MCP 服务器'**
+  String get mcpSection;
+
+  /// No description provided for @mcpEnable.
+  ///
+  /// In zh, this message translates to:
+  /// **'启用本地 MCP 服务器'**
+  String get mcpEnable;
+
+  /// No description provided for @mcpEnableSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许本机外部 AI 客户端通过 MCP 向已连接服务器发送指令并读取终端输出（仅监听 127.0.0.1）'**
+  String get mcpEnableSubtitle;
+
+  /// No description provided for @mcpRunning.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行中：{url}'**
+  String mcpRunning(String url);
+
+  /// No description provided for @mcpStopped.
+  ///
+  /// In zh, this message translates to:
+  /// **'未启动'**
+  String get mcpStopped;
+
+  /// No description provided for @mcpError.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动失败：{error}'**
+  String mcpError(String error);
+
+  /// No description provided for @mcpPort.
+  ///
+  /// In zh, this message translates to:
+  /// **'监听端口'**
+  String get mcpPort;
+
+  /// No description provided for @mcpPortSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'本机回环地址 127.0.0.1 的端口号（1024–65535）'**
+  String get mcpPortSubtitle;
+
+  /// No description provided for @mcpPortInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入 1024 到 65535 之间的端口号'**
+  String get mcpPortInvalid;
+
+  /// No description provided for @mcpApprovalMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'指令安全策略'**
+  String get mcpApprovalMode;
+
+  /// No description provided for @mcpApprovalModeSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'控制外部 AI 通过 MCP 执行指令前的确认方式'**
+  String get mcpApprovalModeSubtitle;
+
+  /// No description provided for @mcpApprovalReadOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'智能分级（只读自动，修改确认）'**
+  String get mcpApprovalReadOnly;
+
+  /// No description provided for @mcpApprovalAskAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'每次都弹窗确认'**
+  String get mcpApprovalAskAll;
+
+  /// No description provided for @mcpApprovalAllowAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部自动执行（高风险）'**
+  String get mcpApprovalAllowAll;
+
+  /// No description provided for @mcpAllowAllTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许外部 MCP 客户端不经确认执行任意命令？'**
+  String get mcpAllowAllTitle;
+
+  /// No description provided for @mcpAllowAllBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，任何持有访问令牌的本机 AI 客户端都可以直接在你的服务器上运行任意命令（包括删除文件、修改配置等），不再弹窗询问。'**
+  String get mcpAllowAllBody;
+
+  /// No description provided for @mcpEndpoint.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务地址'**
+  String get mcpEndpoint;
+
+  /// No description provided for @mcpToken.
+  ///
+  /// In zh, this message translates to:
+  /// **'访问令牌（Bearer Token）'**
+  String get mcpToken;
+
+  /// No description provided for @mcpTokenLocked.
+  ///
+  /// In zh, this message translates to:
+  /// **'解锁保险库后可用'**
+  String get mcpTokenLocked;
+
+  /// No description provided for @mcpTokenCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制访问令牌'**
+  String get mcpTokenCopied;
+
+  /// No description provided for @mcpRegenerateToken.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新生成令牌'**
+  String get mcpRegenerateToken;
+
+  /// No description provided for @mcpTokenRegenerated.
+  ///
+  /// In zh, this message translates to:
+  /// **'已重新生成访问令牌，旧客户端需更新配置'**
+  String get mcpTokenRegenerated;
+
+  /// No description provided for @mcpCopyConfig.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制 MCP 配置'**
+  String get mcpCopyConfig;
+
+  /// No description provided for @mcpConfigCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制 MCP 客户端 JSON 配置'**
+  String get mcpConfigCopied;
+
+  /// No description provided for @mcpEndpointCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制服务地址'**
+  String get mcpEndpointCopied;
+
+  /// No description provided for @mcpApproveTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'MCP 请求执行命令'**
+  String get mcpApproveTitle;
+
+  /// No description provided for @mcpApproveReadTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'MCP 请求读取终端内容'**
+  String get mcpApproveReadTitle;
+
+  /// No description provided for @mcpApproveReadBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'外部 AI 客户端想要读取此终端最近 {lines} 行屏幕输出。'**
+  String mcpApproveReadBody(int lines);
+
+  /// No description provided for @mcpApproveOpenTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'MCP 请求连接主机'**
+  String get mcpApproveOpenTitle;
+
+  /// No description provided for @mcpApproveOpenBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'外部 AI 客户端想要打开 {host} 的终端连接。'**
+  String mcpApproveOpenBody(String host);
+
+  /// No description provided for @mcpApprovePurpose.
+  ///
+  /// In zh, this message translates to:
+  /// **'说明：{purpose}'**
+  String mcpApprovePurpose(String purpose);
+
+  /// No description provided for @mcpApproveAllow.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许'**
+  String get mcpApproveAllow;
+
+  /// No description provided for @mcpApproveDeny.
+  ///
+  /// In zh, this message translates to:
+  /// **'拒绝'**
+  String get mcpApproveDeny;
 }
 
 class _AppLocalizationsDelegate

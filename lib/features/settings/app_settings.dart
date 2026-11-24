@@ -36,6 +36,18 @@ extension TerminalPanelSlot on TerminalPanel {
 
 enum AppLanguage { system, zh, en }
 
+/// How external MCP clients' command requests are approved.
+enum McpApprovalMode {
+  /// Read-only commands run automatically; modifying/risky ones ask.
+  readOnlyAuto,
+
+  /// Every command asks the user before running.
+  askAll,
+
+  /// Run every command without asking (warned in settings).
+  allowAll,
+}
+
 /// Same shape as the terminal's ReconnectPolicy.
 typedef ReconnectSettings = ({bool enabled, int attempts, Duration delay});
 
@@ -63,9 +75,16 @@ class AppSettings {
     this.highlightColors = const {},
     this.autoCheckUpdates = true,
     this.ignoredUpdateVersion,
+    this.mcpEnabled = false,
+    this.mcpPort = defaultMcpPort,
+    this.mcpApprovalMode = McpApprovalMode.readOnlyAuto,
     this.lastConnectedHostId,
     this.lastConnectedAt,
   });
+
+  static const defaultMcpPort = 37821;
+  static const minMcpPort = 1024;
+  static const maxMcpPort = 65535;
 
   /// Lock after this many idle minutes (master password only); 0 = never.
   static const defaultAutoLock = 15;
@@ -154,6 +173,12 @@ class AppSettings {
   /// A version the user chose to skip ("忽略此版本"); newer ones still show.
   final String? ignoredUpdateVersion;
 
+  /// Local MCP server (127.0.0.1) allowing external AI tools to inspect
+  /// sessions and run commands with terminal visibility.
+  final bool mcpEnabled;
+  final int mcpPort;
+  final McpApprovalMode mcpApprovalMode;
+
   /// Colors the command being typed in the terminal.
   final bool syntaxHighlight;
 
@@ -213,6 +238,9 @@ class AppSettings {
     Map<HighlightToken, int>? highlightColors,
     bool? autoCheckUpdates,
     String? ignoredUpdateVersion,
+    bool? mcpEnabled,
+    int? mcpPort,
+    McpApprovalMode? mcpApprovalMode,
   }) => _copy(
     themeMode: themeMode,
     followSystemAccent: followSystemAccent,
@@ -236,6 +264,9 @@ class AppSettings {
     highlightColors: highlightColors,
     autoCheckUpdates: autoCheckUpdates,
     ignoredUpdateVersion: ignoredUpdateVersion,
+    mcpEnabled: mcpEnabled,
+    mcpPort: mcpPort,
+    mcpApprovalMode: mcpApprovalMode,
   );
 
   AppSettings _copy({
@@ -261,6 +292,9 @@ class AppSettings {
     Map<HighlightToken, int>? highlightColors,
     bool? autoCheckUpdates,
     String? ignoredUpdateVersion,
+    bool? mcpEnabled,
+    int? mcpPort,
+    McpApprovalMode? mcpApprovalMode,
     String? lastConnectedHostId,
     DateTime? lastConnectedAt,
   }) => AppSettings(
@@ -286,6 +320,9 @@ class AppSettings {
     highlightColors: highlightColors ?? this.highlightColors,
     autoCheckUpdates: autoCheckUpdates ?? this.autoCheckUpdates,
     ignoredUpdateVersion: ignoredUpdateVersion ?? this.ignoredUpdateVersion,
+    mcpEnabled: mcpEnabled ?? this.mcpEnabled,
+    mcpPort: mcpPort ?? this.mcpPort,
+    mcpApprovalMode: mcpApprovalMode ?? this.mcpApprovalMode,
     lastConnectedHostId: lastConnectedHostId ?? this.lastConnectedHostId,
     lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
   );
@@ -313,6 +350,9 @@ class AppSettings {
     'autoCheckUpdates': autoCheckUpdates,
     if (ignoredUpdateVersion != null)
       'ignoredUpdateVersion': ignoredUpdateVersion,
+    'mcpEnabled': mcpEnabled,
+    'mcpPort': mcpPort,
+    'mcpApprovalMode': mcpApprovalMode.name,
     if (highlightColors.isNotEmpty)
       'highlightColors': {
         for (final e in highlightColors.entries) e.key.name: e.value,
@@ -369,6 +409,14 @@ class AppSettings {
       syntaxHighlight: json['syntaxHighlight'] as bool? ?? d.syntaxHighlight,
       autoCheckUpdates: json['autoCheckUpdates'] as bool? ?? d.autoCheckUpdates,
       ignoredUpdateVersion: json['ignoredUpdateVersion'] as String?,
+      mcpEnabled: json['mcpEnabled'] as bool? ?? d.mcpEnabled,
+      mcpPort: ((json['mcpPort'] as num?)?.toInt() ?? d.mcpPort).clamp(
+        minMcpPort,
+        maxMcpPort,
+      ),
+      mcpApprovalMode:
+          McpApprovalMode.values.asNameMap()[json['mcpApprovalMode']] ??
+          d.mcpApprovalMode,
       highlightColors: {
         if (json['highlightColors'] case final Map<Object?, Object?> m)
           for (final e in m.entries)

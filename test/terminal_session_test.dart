@@ -168,4 +168,30 @@ void main() {
       session.dispose();
     });
   });
+
+  test('applyInitialDirectory sends quoted cd command only once', () {
+    final session = sessionFor(
+      const Host(
+        id: 'h',
+        label: 'h',
+        address: '127.0.0.1',
+        port: 22,
+        username: 'u',
+        authMethod: AuthMethod.password,
+      ),
+      FakePrompts(),
+    );
+    final sent = <String>[];
+    var entered = 0;
+    session.debugOnSend = sent.add;
+    session.onCommandEntered = () => entered++;
+    session.initialDirectory = "/var/log/my 'dir'";
+
+    session.applyInitialDirectory();
+    session.applyInitialDirectory();
+
+    expect(sent, [" cd -- '/var/log/my '\\''dir'\\'''\r"]);
+    expect(entered, 1);
+    session.dispose();
+  });
 }
