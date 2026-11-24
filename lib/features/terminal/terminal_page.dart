@@ -18,6 +18,9 @@ import '../files/files_panel.dart';
 import '../../shell/home_shell.dart';
 import 'host_picker.dart';
 import '../ai/ai_panel.dart';
+import '../snippets/snippet_editor_sheet.dart';
+import '../snippets/snippet_editor_tabs.dart';
+import '../snippets/snippets_panel.dart';
 import 'info_panel.dart';
 import 'sessions_providers.dart';
 import 'terminal_session.dart';
@@ -33,8 +36,10 @@ class TerminalPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(sessionsProvider);
+    final editorState = ref.watch(snippetEditorsProvider);
+    final editorVisible = editorState.hasActive;
     // An SSH tab is shown (keyboard focus goes to its terminal).
-    final isVisible = !state.homeActive;
+    final isVisible = !editorVisible && !state.homeActive;
     final activeIndex = state.tabs.indexWhere((t) => t.id == state.activeTabId);
     final active = state.active;
     final showInfo = ref.watch(settingsProvider.select((s) => s.panelsOpen));
@@ -46,6 +51,11 @@ class TerminalPage extends ConsumerWidget {
               .update((s) => s.copyWith(openPanels: const {}));
 
     void closeActive() {
+      final editors = ref.read(snippetEditorsProvider);
+      if (editors.hasActive && editors.activeTab != null) {
+        requestCloseSnippetEditor(context, ref, editors.activeTab!);
+        return;
+      }
       final current = ref.read(sessionsProvider).active;
       if (isVisible && current != null) {
         requestCloseSession(context, ref, current);
@@ -108,11 +118,13 @@ class TerminalPage extends ConsumerWidget {
           context,
           ref,
           state,
+          editorState,
           activeIndex,
           active,
           showInfo,
           setInfo,
           isVisible,
+          editorVisible,
         ),
       ),
     );
@@ -122,11 +134,13 @@ class TerminalPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     SessionsState state,
+    SnippetEditorsState editorState,
     int activeIndex,
     TerminalSession? active,
     bool infoSetting,
     void Function(bool) setInfo,
     bool isVisible,
+    bool editorVisible,
   ) {
     final openPanels = ref.watch(settingsProvider.select((s) => s.openPanels));
     TerminalPanel? panelIn(PanelSlot slot) {
@@ -153,6 +167,11 @@ class TerminalPage extends ConsumerWidget {
         session: session,
         onClose: () => closePanel(TerminalPanel.info),
       ),
+      TerminalPanel.snippets => SnippetsPanel(
+        key: ValueKey('snippets-${session.id}'),
+        session: session,
+        onClose: () => closePanel(TerminalPanel.snippets),
+      ),
     };
     final showInfo = infoSetting;
     final showFiles = ref.watch(
@@ -168,12 +187,13 @@ class TerminalPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _TabStrip(state: state),
+          _TabStrip(state: state, editorState: editorState),
           Expanded(
-            // The workbench, or the SSH tab (kept alive behind it).
+            // The workbench, the SSH tab, or the snippet editor tab (all kept
+            // alive behind each other so unsaved code and shells persist).
             child: FadeThroughIndexedStack(
               duration: const Duration(milliseconds: 200),
-              index: isVisible ? 1 : 0,
+              index: editorVisible ? 2 : (isVisible ? 1 : 0),
               children: [
                 const _HomeCard(),
                 if (active == null)
@@ -275,6 +295,7 @@ class TerminalPage extends ConsumerWidget {
                       ],
                     ),
                   ),
+                _SnippetEditorDeck(editorState: editorState),
               ],
             ),
           ),
@@ -300,6 +321,40 @@ class _HomeCard extends StatelessWidget {
         child: ColoredBox(
           color: terminalThemeFor(scheme).background,
           child: const HomeView(),
+        ),
+      ),
+    );
+  }
+}
+
+/// Open snippet editor tabs in a rounded card that matches the terminal and
+/// workbench cards so the selected editor browser tab flows into it seamlessly.
+class _SnippetEditorDeck extends StatelessWidget {
+  const _SnippetEditorDeck({required this.editorState});
+
+  final SnippetEditorsState editorState;
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = editorState.tabs;
+    if (tabs.isEmpty) return const SizedBox.shrink();
+    final activeIndex = tabs.indexWhere((t) => t.id == editorState.activeTabId);
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      child: ClipRRect(
+        key: const ValueKey('snippet-editor-card'),
+        borderRadius: BorderRadius.circular(terminalCardRadius),
+        child: ColoredBox(
+          color: terminalThemeFor(scheme).background,
+          child: FadeThroughIndexedStack(
+            duration: const Duration(milliseconds: 200),
+            index: activeIndex < 0 ? 0 : activeIndex,
+            children: [
+              for (final t in tabs)
+                SnippetEditorView(key: ValueKey('editor-view-${t.id}'), tab: t),
+            ],
+          ),
         ),
       ),
     );
@@ -487,6 +542,7 @@ class _SideRail extends StatelessWidget {
     final l = context.l10n;
     final aiOpen = openPanels.contains(TerminalPanel.ai);
     final infoOpen = openPanels.contains(TerminalPanel.info);
+    final snippetsOpen = openPanels.contains(TerminalPanel.snippets);
     final scheme = Theme.of(context).colorScheme;
     Widget button({
       required Key key,
@@ -525,7 +581,15 @@ class _SideRail extends StatelessWidget {
             selectedIcon: const Icon(Icons.view_sidebar),
             onPressed: () => onTogglePanel(TerminalPanel.info),
           ),
-          // AI and files at the bottom, info at the top.
+          button(
+            key: const ValueKey('toggle-snippets-panel'),
+            tip: snippetsOpen ? l.hideSnippetsPanel : l.showSnippetsPanel,
+            selected: snippetsOpen,
+            icon: const Icon(Icons.code_outlined),
+            selectedIcon: const Icon(Icons.code),
+            onPressed: () => onTogglePanel(TerminalPanel.snippets),
+          ),
+          // AI and files at the bottom, info and snippets at the top.
           const Spacer(),
           button(
             key: const ValueKey('toggle-ai-panel'),
@@ -682,15 +746,20 @@ const _tabWidth = 210.0;
 const newTabButtonSize = 32.0;
 const _tabHeight = 32.0;
 
+/// Width of the "|" separator between SSH tabs (plus "+") and snippet editor
+/// tabs, leaving room on its right for the first editor tab's curved foot.
+const _editorDividerWidth = 24.0;
+
 /// Height of the tab strip at the top of the window. The macOS window
 /// buttons are moved to line up with the tabs (MainFlutterWindow.swift,
 /// trafficLightCenterY = 24 = this minus half a tab).
 const tabStripHeight = 40.0;
 
 class _TabStrip extends ConsumerStatefulWidget {
-  const _TabStrip({required this.state});
+  const _TabStrip({required this.state, required this.editorState});
 
   final SessionsState state;
+  final SnippetEditorsState editorState;
 
   @override
   ConsumerState<_TabStrip> createState() => _TabStripState();
@@ -724,6 +793,49 @@ class _TabStripState extends ConsumerState<_TabStrip> {
   static double get _sshStart => _leftPad + homeTabWidth;
 
   SessionsState get state => widget.state;
+  SnippetEditorsState get editorState => widget.editorState;
+
+  @override
+  void didUpdateWidget(_TabStrip old) {
+    super.didUpdateWidget(old);
+    final activeId = editorState.activeTabId;
+    if (activeId != null && activeId != old.editorState.activeTabId) {
+      final idx = editorState.tabs.indexWhere((t) => t.id == activeId);
+      if (idx >= 0) _scrollToEditorTab(idx);
+    }
+  }
+
+  void _scrollToEditorTab(int editorIndex) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final pos = _scroll.position;
+      if (pos.maxScrollExtent <= 0) return;
+      final tabLeft =
+          _leftPad +
+          homeTabWidth +
+          state.tabs.length * _tabWidth +
+          6 +
+          newTabButtonSize +
+          _editorDividerWidth +
+          editorIndex * _tabWidth;
+      final tabRight = tabLeft + _tabWidth + BrowserTabPainter.foot;
+      final viewLeft = pos.pixels;
+      final viewRight = pos.pixels + pos.viewportDimension;
+      if (tabRight > viewRight) {
+        _scroll.animateTo(
+          (tabRight - pos.viewportDimension).clamp(0.0, pos.maxScrollExtent),
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+        );
+      } else if (tabLeft < viewLeft) {
+        _scroll.animateTo(
+          (tabLeft - _leftPad).clamp(0.0, pos.maxScrollExtent),
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -763,15 +875,23 @@ class _TabStripState extends ConsumerState<_TabStrip> {
   double get _scrollOffset => _scroll.hasClients ? _scroll.offset : 0;
 
   /// Whether [local] (in the strip) is empty strip: not a tab, not the
-  /// "+" button, not the buttons on the right.
+  /// "+" button, not the editor tabs, not the buttons on the right.
   bool _isBlank(Offset local) {
     final listWidth = _listKey.currentContext?.size?.width ?? 0;
     if (local.dx >= listWidth) return false; // AI / info buttons
     if (local.dy < tabStripHeight - _tabHeight) return true; // above tabs
     final x = local.dx + _scrollOffset - _leftPad;
     if (x >= 0 && x < homeTabWidth) return false; // the workbench tab
+    final editorCount = editorState.tabs.length;
+    final editorSpan = editorCount == 0
+        ? 0.0
+        : _editorDividerWidth + editorCount * _tabWidth;
     final end =
-        homeTabWidth + state.tabs.length * _tabWidth + 6 + newTabButtonSize;
+        homeTabWidth +
+        state.tabs.length * _tabWidth +
+        6 +
+        newTabButtonSize +
+        editorSpan;
     return x < 0 || x > end;
   }
 
@@ -812,6 +932,7 @@ class _TabStripState extends ConsumerState<_TabStrip> {
             _hoverTimer?.cancel();
             _hoverTabId = under.id;
             _hoverTimer = Timer(const Duration(milliseconds: 500), () {
+              ref.read(snippetEditorsProvider.notifier).deactivate();
               ref.read(sessionsProvider.notifier).activateTab(under.id);
             });
           }
@@ -843,6 +964,8 @@ class _TabStripState extends ConsumerState<_TabStrip> {
   /// tabs other than the dragged one) to show where a drop lands.
   Widget _tabs({int? gapAt}) {
     final tabs = state.tabs;
+    final editorTabs = editorState.tabs;
+    final editorActive = editorState.hasActive;
     final draggedIndex = tabs.indexWhere((t) => t.id == _draggingTabId);
     // Index among the tabs that aren't being dragged.
     int slotOf(int i) => draggedIndex >= 0 && draggedIndex < i ? i - 1 : i;
@@ -862,17 +985,22 @@ class _TabStripState extends ConsumerState<_TabStrip> {
           right: 12 + terminalCardRadius + BrowserTabPainter.foot,
         ),
         clipBehavior: Clip.none,
-        // The pinned workbench tab, the SSH tabs, then the "+" right after
-        // the last one (as in browsers).
-        itemCount: tabs.length + 2,
+        // Pinned workbench tab, SSH tabs, "+" right after the last SSH tab,
+        // then (when open) a "|" separator followed by snippet editor tabs.
+        itemCount:
+            tabs.length + 2 + (editorTabs.isEmpty ? 0 : 1 + editorTabs.length),
         itemBuilder: (context, index) {
           if (index == 0) {
             return HomeTab(
-              selected: state.homeActive,
+              selected: !editorActive && state.homeActive,
               showDivider:
+                  !editorActive &&
                   !state.homeActive &&
                   (tabs.isEmpty || tabs.first.id != state.activeTabId),
-              onTap: () => ref.read(sessionsProvider.notifier).showHome(),
+              onTap: () {
+                ref.read(snippetEditorsProvider.notifier).deactivate();
+                ref.read(sessionsProvider.notifier).showHome();
+              },
             );
           }
           final i = index - 1;
@@ -906,13 +1034,37 @@ class _TabStripState extends ConsumerState<_TabStrip> {
               ),
             );
           }
+          if (i > tabs.length) {
+            // Vertical "|" divider separating SSH tabs from snippet editors.
+            if (i == tabs.length + 1) {
+              return const _EditorTabsDivider();
+            }
+            final ei = i - tabs.length - 2;
+            final et = editorTabs[ei];
+            final selected = editorState.activeTabId == et.id;
+            final nextSelected =
+                ei + 1 < editorTabs.length &&
+                editorTabs[ei + 1].id == editorState.activeTabId;
+            return SnippetEditorBrowserTab(
+              key: ValueKey('editor-tab-${et.id}'),
+              tab: et,
+              selected: selected,
+              showDivider:
+                  !selected && !nextSelected && ei + 1 < editorTabs.length,
+              onTap: () =>
+                  ref.read(snippetEditorsProvider.notifier).activate(et.id),
+              onClose: () => requestCloseSnippetEditor(context, ref, et),
+            );
+          }
           final t = tabs[i];
           final dragged = t.id == _draggingTabId;
           final mySlot = dragged ? -1 : slotOf(i);
           final s = state.session(t.focusedId);
           if (s == null) return const SizedBox(width: _tabWidth);
-          final selected = !state.homeActive && t.id == state.activeTabId;
+          final selected =
+              !editorActive && !state.homeActive && t.id == state.activeTabId;
           final nextSelected =
+              !editorActive &&
               !state.homeActive &&
               i + 1 < tabs.length &&
               tabs[i + 1].id == state.activeTabId;
@@ -939,6 +1091,7 @@ class _TabStripState extends ConsumerState<_TabStrip> {
               if (selected && t.isSplit) {
                 setState(() => _renamingTabId = t.id);
               } else {
+                ref.read(snippetEditorsProvider.notifier).deactivate();
                 ref.read(sessionsProvider.notifier).activateTab(t.id);
               }
             },
@@ -1237,6 +1390,156 @@ class _BrowserTabState extends State<BrowserTab> {
   }
 }
 
+/// Vertical "|" divider placed to the left of snippet editor tabs in the
+/// tab strip to clearly separate SSH terminal tabs from code editor tabs.
+class _EditorTabsDivider extends StatelessWidget {
+  const _EditorTabsDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      key: const ValueKey('editor-tabs-divider'),
+      width: _editorDividerWidth,
+      height: _tabHeight,
+      child: Padding(
+        // Leave enough room on the right for the first editor tab's curved
+        // bottom foot (BrowserTabPainter.foot = 8px) so it never overlaps "|".
+        padding: const EdgeInsets.only(left: 10, right: 12.5),
+        child: Center(
+          child: Container(
+            width: 1.5,
+            height: 18,
+            decoration: BoxDecoration(
+              color: scheme.outline.withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One snippet editor tab in the top strip, using the same browser-tab chrome
+/// as [BrowserTab] so the selected tab joins into the editor card below.
+class SnippetEditorBrowserTab extends StatefulWidget {
+  const SnippetEditorBrowserTab({
+    super.key,
+    required this.tab,
+    required this.selected,
+    required this.showDivider,
+    required this.onTap,
+    required this.onClose,
+  });
+
+  final SnippetEditorTab tab;
+  final bool selected;
+  final bool showDivider;
+  final VoidCallback onTap;
+  final VoidCallback onClose;
+
+  @override
+  State<SnippetEditorBrowserTab> createState() =>
+      _SnippetEditorBrowserTabState();
+}
+
+class _SnippetEditorBrowserTabState extends State<SnippetEditorBrowserTab> {
+  bool _hover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final selected = widget.selected;
+    final fg = selected ? scheme.onSurface : scheme.onSurfaceVariant;
+    final tabColor = terminalThemeFor(scheme).background;
+    final hoverColor = scheme.onSurface.withValues(alpha: 0.06);
+    final visual = snippetLanguageVisual(scheme, widget.tab.language);
+    final fileName = widget.tab.displayFileName(context.l10n.snippetUntitled);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: SizedBox(
+          width: _tabWidth,
+          height: _tabHeight,
+          child: CustomPaint(
+            painter: BrowserTabPainter(
+              fill: selected ? tabColor : null,
+              hover: !selected && _hover ? hoverColor : null,
+              divider: widget.showDivider && !_hover
+                  ? scheme.outlineVariant
+                  : null,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12, right: 4),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: visual.bg,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      snippetLanguageTag(widget.tab.language),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: visual.fg,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      fileName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: fg,
+                        fontWeight: selected ? FontWeight.w600 : null,
+                      ),
+                    ),
+                  ),
+                  if (widget.tab.dirty)
+                    Container(
+                      key: ValueKey('editor-tab-dirty-${widget.tab.id}'),
+                      width: 6,
+                      height: 6,
+                      margin: const EdgeInsets.only(left: 4),
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  IconButton(
+                    key: ValueKey('editor-tab-close-${widget.tab.id}'),
+                    tooltip: context.l10n.close,
+                    iconSize: 16,
+                    visualDensity: VisualDensity.compact,
+                    color: fg,
+                    icon: const Icon(Icons.close),
+                    onPressed: widget.onClose,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Inline editor for a workspace name: Enter or clicking away saves,
 /// Esc cancels.
 class _RenameField extends StatefulWidget {
@@ -1478,16 +1781,26 @@ Map<ShortcutActivator, Intent> get switchTabShortcuts {
 /// Activates tab [number] (1-based; 9 = last). Does nothing if there is
 /// no such tab.
 void switchToTab(WidgetRef ref, int number) {
-  final n = ref.read(sessionsProvider.notifier);
-  final tabs = ref.read(sessionsProvider).tabs;
-  // 1 is the workbench; SSH tabs follow. 9 is the last tab.
-  if (number == 1 || (number == 9 && tabs.isEmpty)) {
-    n.showHome();
+  final sessions = ref.read(sessionsProvider.notifier);
+  final editors = ref.read(snippetEditorsProvider.notifier);
+  final sshTabs = ref.read(sessionsProvider).tabs;
+  final editorTabs = ref.read(snippetEditorsProvider).tabs;
+  final total = sshTabs.length + editorTabs.length;
+  // 1 is the workbench; SSH tabs follow, then snippet editor tabs.
+  // 9 is the last tab.
+  if (number == 1 || (number == 9 && total == 0)) {
+    editors.deactivate();
+    sessions.showHome();
     return;
   }
-  final index = number == 9 ? tabs.length - 1 : number - 2;
-  if (index < 0 || index >= tabs.length) return;
-  n.activateTab(tabs[index].id);
+  final index = number == 9 ? total - 1 : number - 2;
+  if (index < 0 || index >= total) return;
+  if (index < sshTabs.length) {
+    editors.deactivate();
+    sessions.activateTab(sshTabs[index].id);
+  } else {
+    editors.activate(editorTabs[index - sshTabs.length].id);
+  }
 }
 
 /// Split the focused pane: ⌘D / ⌘⇧D on macOS, Ctrl+Shift+D / Ctrl+Shift+E

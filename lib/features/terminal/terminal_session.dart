@@ -281,54 +281,17 @@ class TerminalSession extends ChangeNotifier {
     );
 
     try {
-      final secrets = await repository.readSecrets(host.id);
-
-      List<SSHKeyPair>? identities;
-      if (host.authMethod == AuthMethod.key) {
-        identities = await _loadKeyPairs(secrets);
-      }
-
-      final socket = await SSHSocket.connect(
-        host.address,
-        host.port,
-        timeout: const Duration(seconds: 10),
-      );
-      if (gen != _generation) {
-        socket.destroy();
-        return;
-      }
-
-      // Ask for a password at most once per attempt, even if the server
-      // tries both "password" and "keyboard-interactive".
-      Future<String?>? password;
-      Future<String?> getPassword() => password ??= _resolvePassword(secrets);
-
-      final client = SSHClient(
-        socket,
-        username: host.username,
-        identities: identities,
-        onPasswordRequest: host.authMethod == AuthMethod.password
-            ? getPassword
-            : null,
-        onUserInfoRequest: host.authMethod == AuthMethod.password
-            ? (req) => _answerKeyboardInteractive(req, getPassword)
-            : null,
-        onVerifyHostKey: (type, fingerprint) => knownHosts.verify(
-          address: host.address,
-          port: host.port,
-          keyType: type,
-          fingerprint: fingerprint,
-          prompt: prompts.confirmHostKey,
-        ),
+      final client = await openAuthenticatedSshClient(
+        host: host,
+        repository: repository,
+        knownHosts: knownHosts,
+        prompts: prompts,
+        keys: keys,
         onUserauthBanner: (banner) =>
             terminal.write(banner.replaceAll('\n', '\r\n')),
-        keepAliveInterval: const Duration(seconds: 30),
+        onClientCreated: (c) => _client = c,
+        isCancelled: () => gen != _generation,
       );
-      _client = client;
-      // Socket errors after login surface here; handled via shell.done too.
-      client.done.catchError((Object _) {});
-
-      await client.authenticated;
       if (gen != _generation) return;
 
       final pty = SSHPtyConfig(
@@ -621,66 +584,6 @@ class TerminalSession extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<List<SSHKeyPair>> _loadKeyPairs(HostSecrets secrets) async {
-    String? pem = secrets.privateKey;
-    String? passphrase = secrets.passphrase;
-    final keyId = host.keyId;
-    if (keyId != null) {
-      final saved = await keys?.readSecrets(keyId);
-      pem = saved?.privateKey;
-      passphrase = saved?.passphrase;
-      if (pem == null || pem.trim().isEmpty) {
-        throw _ConnectError(currentL10n.keyDeletedError);
-      }
-    }
-    if (pem == null || pem.trim().isEmpty) {
-      throw _ConnectError(currentL10n.noKeyError);
-    }
-    if (SSHKeyPair.isEncryptedPem(pem) && (passphrase ?? '').isEmpty) {
-      passphrase = await prompts.askSecret(
-        title: currentL10n.enterKeyPassphrase,
-        message: currentL10n.keyIsEncrypted(host.displayName),
-      );
-      if (passphrase == null) throw _ConnectError(currentL10n.loginCancelled);
-    }
-    return SSHKeyPair.fromPem(pem, passphrase);
-  }
-
-  Future<String?> _resolvePassword(HostSecrets secrets) async {
-    final saved = secrets.password;
-    if (saved != null && saved.isNotEmpty) return saved;
-    return prompts.askSecret(
-      title: currentL10n.enterPassword,
-      message: currentL10n.loginTo(host.target),
-    );
-  }
-
-  Future<List<String>?> _answerKeyboardInteractive(
-    SSHUserInfoRequest request,
-    Future<String?> Function() getPassword,
-  ) async {
-    final answers = <String>[];
-    var passwordUsed = false;
-    for (final p in request.prompts) {
-      String? answer;
-      if (!p.echo && !passwordUsed) {
-        // The usual case: a single hidden "Password:" prompt.
-        passwordUsed = true;
-        answer = await getPassword();
-      } else {
-        answer = await prompts.askSecret(
-          title: request.name.isNotEmpty
-              ? request.name
-              : currentL10n.serverVerification,
-          message: p.promptText.trim(),
-        );
-      }
-      if (answer == null) return null;
-      answers.add(answer);
-    }
-    return answers;
-  }
-
   void _onRemoteClosed(int gen, SSHSession shell) {
     if (gen != _generation || _disposed) return;
     // `exit` (or the shell ending) reports an exit status; a dropped
@@ -839,6 +742,156 @@ class CommandResult {
 class _ConnectError implements Exception {
   const _ConnectError(this.message);
   final String message;
+}
+
+/// Opens and authenticates an [SSHClient] for [host], shared by terminal
+/// sessions and standalone port-forwarding tunnels so both follow the exact
+/// same key loading, credential prompt, and known_hosts verification flow.
+Future<SSHClient> openAuthenticatedSshClient({
+  required Host host,
+  required HostRepository repository,
+  required KnownHostsStore knownHosts,
+  required SessionPrompts prompts,
+  KeyRepository? keys,
+  void Function(String banner)? onUserauthBanner,
+  void Function(SSHClient client)? onClientCreated,
+  bool Function()? isCancelled,
+}) async {
+  final secrets = await repository.readSecrets(host.id);
+
+  List<SSHKeyPair>? identities;
+  if (host.authMethod == AuthMethod.key) {
+    identities = await _loadHostKeyPairs(
+      host: host,
+      secrets: secrets,
+      keys: keys,
+      prompts: prompts,
+    );
+  }
+
+  final socket = await SSHSocket.connect(
+    host.address,
+    host.port,
+    timeout: const Duration(seconds: 10),
+  );
+  if (isCancelled?.call() ?? false) {
+    socket.destroy();
+    throw _ConnectError(currentL10n.loginCancelled);
+  }
+
+  // Ask for a password at most once per attempt, even if the server tries both
+  // "password" and "keyboard-interactive".
+  Future<String?>? password;
+  Future<String?> getPassword() => password ??= _resolveHostPassword(
+    host: host,
+    secrets: secrets,
+    prompts: prompts,
+  );
+
+  final client = SSHClient(
+    socket,
+    username: host.username,
+    identities: identities,
+    onPasswordRequest: host.authMethod == AuthMethod.password
+        ? getPassword
+        : null,
+    onUserInfoRequest: host.authMethod == AuthMethod.password
+        ? (req) => _answerHostKeyboardInteractive(
+            request: req,
+            prompts: prompts,
+            getPassword: getPassword,
+          )
+        : null,
+    onVerifyHostKey: (type, fingerprint) => knownHosts.verify(
+      address: host.address,
+      port: host.port,
+      keyType: type,
+      fingerprint: fingerprint,
+      prompt: prompts.confirmHostKey,
+    ),
+    onUserauthBanner: onUserauthBanner,
+    keepAliveInterval: const Duration(seconds: 30),
+  );
+  onClientCreated?.call(client);
+  // Socket errors after login surface here; handled via caller's done hooks too.
+  client.done.catchError((Object _) {});
+
+  await client.authenticated;
+  if (isCancelled?.call() ?? false) {
+    client.close();
+    throw _ConnectError(currentL10n.loginCancelled);
+  }
+  return client;
+}
+
+Future<List<SSHKeyPair>> _loadHostKeyPairs({
+  required Host host,
+  required HostSecrets secrets,
+  required KeyRepository? keys,
+  required SessionPrompts prompts,
+}) async {
+  String? pem = secrets.privateKey;
+  String? passphrase = secrets.passphrase;
+  final keyId = host.keyId;
+  if (keyId != null) {
+    final saved = await keys?.readSecrets(keyId);
+    pem = saved?.privateKey;
+    passphrase = saved?.passphrase;
+    if (pem == null || pem.trim().isEmpty) {
+      throw _ConnectError(currentL10n.keyDeletedError);
+    }
+  }
+  if (pem == null || pem.trim().isEmpty) {
+    throw _ConnectError(currentL10n.noKeyError);
+  }
+  if (SSHKeyPair.isEncryptedPem(pem) && (passphrase ?? '').isEmpty) {
+    passphrase = await prompts.askSecret(
+      title: currentL10n.enterKeyPassphrase,
+      message: currentL10n.keyIsEncrypted(host.displayName),
+    );
+    if (passphrase == null) throw _ConnectError(currentL10n.loginCancelled);
+  }
+  return SSHKeyPair.fromPem(pem, passphrase);
+}
+
+Future<String?> _resolveHostPassword({
+  required Host host,
+  required HostSecrets secrets,
+  required SessionPrompts prompts,
+}) async {
+  final saved = secrets.password;
+  if (saved != null && saved.isNotEmpty) return saved;
+  return prompts.askSecret(
+    title: currentL10n.enterPassword,
+    message: currentL10n.loginTo(host.target),
+  );
+}
+
+Future<List<String>?> _answerHostKeyboardInteractive({
+  required SSHUserInfoRequest request,
+  required SessionPrompts prompts,
+  required Future<String?> Function() getPassword,
+}) async {
+  final answers = <String>[];
+  var passwordUsed = false;
+  for (final p in request.prompts) {
+    String? answer;
+    if (!p.echo && !passwordUsed) {
+      // The usual case: a single hidden "Password:" prompt.
+      passwordUsed = true;
+      answer = await getPassword();
+    } else {
+      answer = await prompts.askSecret(
+        title: request.name.isNotEmpty
+            ? request.name
+            : currentL10n.serverVerification,
+        message: p.promptText.trim(),
+      );
+    }
+    if (answer == null) return null;
+    answers.add(answer);
+  }
+  return answers;
 }
 
 /// Turns connection failures into a short message for the user.

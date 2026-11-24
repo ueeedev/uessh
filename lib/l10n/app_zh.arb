@@ -1042,5 +1042,180 @@
     }
   },
   "mcpApproveAllow": "允许",
-  "mcpApproveDeny": "拒绝"
+  "mcpApproveDeny": "拒绝",
+  "newSnippet": "新建代码片段",
+  "editSnippet": "编辑代码片段",
+  "searchSnippets": "搜索代码片段…",
+  "loadSnippetsFailed": "无法读取代码片段",
+  "snippetName": "名称",
+  "snippetNameHint": "例如：查看磁盘占用、清理日志脚本",
+  "snippetNameRequired": "请填写代码片段名称",
+  "snippetLanguage": "脚本类型",
+  "snippetLangAll": "全部",
+  "snippetLangShell": "Shell (sh)",
+  "snippetLangBash": "Bash",
+  "snippetLangPython": "Python",
+  "snippetLangPowerShell": "PowerShell",
+  "snippetLangNode": "Node.js",
+  "snippetLangOther": "纯文本",
+  "snippetGroup": "分组（可选）",
+  "snippetGroupHint": "例如：运维、Docker、监控",
+  "snippetDescription": "说明（可选）",
+  "snippetDescriptionHint": "简短说明这个脚本的用途",
+  "snippetContent": "脚本内容",
+  "snippetContentHint": "输入命令或脚本，支持使用 {example} 作为参数占位符",
+  "@snippetContentHint": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "snippetContentRequired": "请填写脚本内容",
+  "snippetImportFile": "从文件导入",
+  "snippetPlaceholdersHint": "检测到参数占位符（运行时自动弹窗填写）：",
+  "snippetRun": "运行",
+  "snippetInsert": "填入终端",
+  "snippetSendToTerminal": "发送到终端",
+  "snippetCopied": "已复制代码片段",
+  "snippetSent": "已发送到 {target}",
+  "@snippetSent": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "snippetNoActiveTerminal": "当前没有已连接的终端会话",
+  "snippetConnectFirst": "连接终端后可一键运行或填入代码片段",
+  "snippetFillVarsTitle": "填写参数 · {name}",
+  "@snippetFillVarsTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteSnippetTitle": "删除代码片段“{name}”？",
+  "@deleteSnippetTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteSnippetBody": "删除后无法恢复。",
+  "showSnippetsPanel": "显示代码片段",
+  "hideSnippetsPanel": "隐藏代码片段",
+  "closeSnippetsPanel": "关闭代码片段",
+  "snippetInfoTitle": "代码片段信息",
+  "snippetUntitled": "未命名脚本",
+  "snippetExecutionTitle": "运行方式",
+  "snippetExecShellHint": "单行命令直接在当前 Shell 运行；多行脚本通过 sh -s heredoc 运行。",
+  "snippetExecBashHint": "通过 bash -s heredoc 运行，不在服务器留下临时文件。",
+  "snippetExecPythonHint": "通过 python3 - heredoc 运行，支持完整多行 Python 脚本。",
+  "snippetExecPowerShellHint": "Windows 本地终端直接执行；Linux/macOS 通过 pwsh 运行。",
+  "snippetExecNodeHint": "通过 node - heredoc 运行 JavaScript 脚本。",
+  "snippetExecOtherHint": "按纯文本直接发送到当前终端。",
+  "newForward": "新建转发",
+  "editForward": "编辑转发",
+  "searchForwards": "搜索转发规则…",
+  "loadForwardsFailed": "无法读取转发规则",
+  "forwardStopAll": "全部停止",
+  "forwardFilterAll": "全部",
+  "forwardFilterActive": "运行中",
+  "forwardTypeLocal": "本地 (-L)",
+  "forwardTypeRemote": "远程 (-R)",
+  "forwardTypeDynamic": "动态 (-D)",
+  "forwardBadgeLocal": "本地",
+  "forwardBadgeRemote": "远程",
+  "forwardBadgeDynamic": "SOCKS5",
+  "forwardLocalDesc": "将本地端口转发到远程服务器可访问的目标地址（常用于访问内网数据库、Web 服务）",
+  "forwardRemoteDesc": "在远程服务器监听端口，将访问转发回本机或本机局域网服务",
+  "forwardDynamicDesc": "在本地开启 SOCKS5 代理，通过 SSH 服务器动态转发任意目标流量",
+  "forwardRemoteGatewayHint": "提示：远程监听 0.0.0.0 需服务器 sshd 开启 GatewayPorts yes",
+  "forwardName": "名称（可选）",
+  "forwardNameHint": "例如：生产 MySQL、SOCKS5 代理",
+  "forwardType": "转发类型",
+  "forwardHost": "SSH 主机",
+  "forwardNoHostsHint": "还没有已保存的主机，请先在“主机”页添加一台服务器。",
+  "forwardLocalListen": "本地监听",
+  "forwardRemoteListen": "远程监听",
+  "forwardSocksListen": "本地 SOCKS5 监听",
+  "forwardRemoteTarget": "远程目标",
+  "forwardLocalTarget": "本地目标",
+  "forwardBindAddress": "监听地址",
+  "forwardPort": "端口",
+  "forwardTargetAddress": "目标地址",
+  "forwardAddressRequired": "请输入地址",
+  "forwardPortInvalid": "端口需为 1–65535",
+  "forwardAutoStart": "连接主机时自动启动",
+  "forwardAutoStartSubtitle": "终端连上该主机时自动开启此转发",
+  "forwardNote": "备注（可选）",
+  "forwardNoteHint": "简短记录用途",
+  "forwardCliPreview": "等效 SSH 命令",
+  "forwardStart": "启动转发",
+  "forwardStop": "停止转发",
+  "forwardStatusStopped": "未运行",
+  "forwardStatusStarting": "正在启动…",
+  "forwardStatusRunning": "运行中",
+  "forwardStatusError": "出错",
+  "forwardActiveSummary": "{count} 个运行中",
+  "@forwardActiveSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "forwardConnections": "{count} 个连接",
+  "@forwardConnections": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "forwardAnyTarget": "任意目标",
+  "forwardAutoBadge": "自动",
+  "forwardHostMissing": "关联主机不存在或已被删除",
+  "forwardAddressCopied": "已复制地址：{address}",
+  "@forwardAddressCopied": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "forwardCopyAddress": "复制监听地址",
+  "deleteForwardTitle": "删除转发“{name}”？",
+  "@deleteForwardTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteForwardBody": "如果该转发正在运行，会先停止连接。删除后无法恢复。",
+  "forwardBindFailed": "无法监听 {address}（端口可能已被占用）：{reason}",
+  "@forwardBindFailed": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "forwardRemoteRejected": "服务器拒绝在 {address} 开启远程转发（请检查端口占用或 sshd AllowTcpForwarding 配置）",
+  "@forwardRemoteRejected": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "forwardConnectionLost": "SSH 隧道连接已断开",
+  "forwardNoMatchesTitle": "没有匹配的转发规则"
 }

@@ -20,7 +20,7 @@ enum ReachabilityMethod {
 enum FileViewMode { icons, list, columns, gallery }
 
 /// Side panels of the terminal page.
-enum TerminalPanel { info, ai }
+enum TerminalPanel { info, ai, snippets }
 
 /// The two halves of the side panel column: a panel opens in its own half;
 /// with both halves in use they share the height.
@@ -30,6 +30,7 @@ extension TerminalPanelSlot on TerminalPanel {
   /// Where this panel opens (matches its button's group on the side rail).
   PanelSlot get slot => switch (this) {
     TerminalPanel.info => PanelSlot.top,
+    TerminalPanel.snippets => PanelSlot.top,
     TerminalPanel.ai => PanelSlot.bottom,
   };
 }

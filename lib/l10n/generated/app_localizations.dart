@@ -3229,6 +3229,618 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'拒绝'**
   String get mcpApproveDeny;
+
+  /// No description provided for @newSnippet.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建代码片段'**
+  String get newSnippet;
+
+  /// No description provided for @editSnippet.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑代码片段'**
+  String get editSnippet;
+
+  /// No description provided for @searchSnippets.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索代码片段…'**
+  String get searchSnippets;
+
+  /// No description provided for @loadSnippetsFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取代码片段'**
+  String get loadSnippetsFailed;
+
+  /// No description provided for @snippetName.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get snippetName;
+
+  /// No description provided for @snippetNameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'例如：查看磁盘占用、清理日志脚本'**
+  String get snippetNameHint;
+
+  /// No description provided for @snippetNameRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写代码片段名称'**
+  String get snippetNameRequired;
+
+  /// No description provided for @snippetLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'脚本类型'**
+  String get snippetLanguage;
+
+  /// No description provided for @snippetLangAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get snippetLangAll;
+
+  /// No description provided for @snippetLangShell.
+  ///
+  /// In zh, this message translates to:
+  /// **'Shell (sh)'**
+  String get snippetLangShell;
+
+  /// No description provided for @snippetLangBash.
+  ///
+  /// In zh, this message translates to:
+  /// **'Bash'**
+  String get snippetLangBash;
+
+  /// No description provided for @snippetLangPython.
+  ///
+  /// In zh, this message translates to:
+  /// **'Python'**
+  String get snippetLangPython;
+
+  /// No description provided for @snippetLangPowerShell.
+  ///
+  /// In zh, this message translates to:
+  /// **'PowerShell'**
+  String get snippetLangPowerShell;
+
+  /// No description provided for @snippetLangNode.
+  ///
+  /// In zh, this message translates to:
+  /// **'Node.js'**
+  String get snippetLangNode;
+
+  /// No description provided for @snippetLangOther.
+  ///
+  /// In zh, this message translates to:
+  /// **'纯文本'**
+  String get snippetLangOther;
+
+  /// No description provided for @snippetGroup.
+  ///
+  /// In zh, this message translates to:
+  /// **'分组（可选）'**
+  String get snippetGroup;
+
+  /// No description provided for @snippetGroupHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'例如：运维、Docker、监控'**
+  String get snippetGroupHint;
+
+  /// No description provided for @snippetDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'说明（可选）'**
+  String get snippetDescription;
+
+  /// No description provided for @snippetDescriptionHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'简短说明这个脚本的用途'**
+  String get snippetDescriptionHint;
+
+  /// No description provided for @snippetContent.
+  ///
+  /// In zh, this message translates to:
+  /// **'脚本内容'**
+  String get snippetContent;
+
+  /// No description provided for @snippetContentHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入命令或脚本，支持使用 {example} 作为参数占位符'**
+  String snippetContentHint(String example);
+
+  /// No description provided for @snippetContentRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写脚本内容'**
+  String get snippetContentRequired;
+
+  /// No description provided for @snippetImportFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'从文件导入'**
+  String get snippetImportFile;
+
+  /// No description provided for @snippetPlaceholdersHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'检测到参数占位符（运行时自动弹窗填写）：'**
+  String get snippetPlaceholdersHint;
+
+  /// No description provided for @snippetRun.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行'**
+  String get snippetRun;
+
+  /// No description provided for @snippetInsert.
+  ///
+  /// In zh, this message translates to:
+  /// **'填入终端'**
+  String get snippetInsert;
+
+  /// No description provided for @snippetSendToTerminal.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送到终端'**
+  String get snippetSendToTerminal;
+
+  /// No description provided for @snippetCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制代码片段'**
+  String get snippetCopied;
+
+  /// No description provided for @snippetSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'已发送到 {target}'**
+  String snippetSent(String target);
+
+  /// No description provided for @snippetNoActiveTerminal.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前没有已连接的终端会话'**
+  String get snippetNoActiveTerminal;
+
+  /// No description provided for @snippetConnectFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接终端后可一键运行或填入代码片段'**
+  String get snippetConnectFirst;
+
+  /// No description provided for @snippetFillVarsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'填写参数 · {name}'**
+  String snippetFillVarsTitle(String name);
+
+  /// No description provided for @deleteSnippetTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除代码片段“{name}”？'**
+  String deleteSnippetTitle(String name);
+
+  /// No description provided for @deleteSnippetBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除后无法恢复。'**
+  String get deleteSnippetBody;
+
+  /// No description provided for @showSnippetsPanel.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示代码片段'**
+  String get showSnippetsPanel;
+
+  /// No description provided for @hideSnippetsPanel.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏代码片段'**
+  String get hideSnippetsPanel;
+
+  /// No description provided for @closeSnippetsPanel.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭代码片段'**
+  String get closeSnippetsPanel;
+
+  /// No description provided for @snippetInfoTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'代码片段信息'**
+  String get snippetInfoTitle;
+
+  /// No description provided for @snippetUntitled.
+  ///
+  /// In zh, this message translates to:
+  /// **'未命名脚本'**
+  String get snippetUntitled;
+
+  /// No description provided for @snippetExecutionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行方式'**
+  String get snippetExecutionTitle;
+
+  /// No description provided for @snippetExecShellHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'单行命令直接在当前 Shell 运行；多行脚本通过 sh -s heredoc 运行。'**
+  String get snippetExecShellHint;
+
+  /// No description provided for @snippetExecBashHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'通过 bash -s heredoc 运行，不在服务器留下临时文件。'**
+  String get snippetExecBashHint;
+
+  /// No description provided for @snippetExecPythonHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'通过 python3 - heredoc 运行，支持完整多行 Python 脚本。'**
+  String get snippetExecPythonHint;
+
+  /// No description provided for @snippetExecPowerShellHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'Windows 本地终端直接执行；Linux/macOS 通过 pwsh 运行。'**
+  String get snippetExecPowerShellHint;
+
+  /// No description provided for @snippetExecNodeHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'通过 node - heredoc 运行 JavaScript 脚本。'**
+  String get snippetExecNodeHint;
+
+  /// No description provided for @snippetExecOtherHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'按纯文本直接发送到当前终端。'**
+  String get snippetExecOtherHint;
+
+  /// No description provided for @newForward.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建转发'**
+  String get newForward;
+
+  /// No description provided for @editForward.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑转发'**
+  String get editForward;
+
+  /// No description provided for @searchForwards.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索转发规则…'**
+  String get searchForwards;
+
+  /// No description provided for @loadForwardsFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取转发规则'**
+  String get loadForwardsFailed;
+
+  /// No description provided for @forwardStopAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部停止'**
+  String get forwardStopAll;
+
+  /// No description provided for @forwardFilterAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部'**
+  String get forwardFilterAll;
+
+  /// No description provided for @forwardFilterActive.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行中'**
+  String get forwardFilterActive;
+
+  /// No description provided for @forwardTypeLocal.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地 (-L)'**
+  String get forwardTypeLocal;
+
+  /// No description provided for @forwardTypeRemote.
+  ///
+  /// In zh, this message translates to:
+  /// **'远程 (-R)'**
+  String get forwardTypeRemote;
+
+  /// No description provided for @forwardTypeDynamic.
+  ///
+  /// In zh, this message translates to:
+  /// **'动态 (-D)'**
+  String get forwardTypeDynamic;
+
+  /// No description provided for @forwardBadgeLocal.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地'**
+  String get forwardBadgeLocal;
+
+  /// No description provided for @forwardBadgeRemote.
+  ///
+  /// In zh, this message translates to:
+  /// **'远程'**
+  String get forwardBadgeRemote;
+
+  /// No description provided for @forwardBadgeDynamic.
+  ///
+  /// In zh, this message translates to:
+  /// **'SOCKS5'**
+  String get forwardBadgeDynamic;
+
+  /// No description provided for @forwardLocalDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'将本地端口转发到远程服务器可访问的目标地址（常用于访问内网数据库、Web 服务）'**
+  String get forwardLocalDesc;
+
+  /// No description provided for @forwardRemoteDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'在远程服务器监听端口，将访问转发回本机或本机局域网服务'**
+  String get forwardRemoteDesc;
+
+  /// No description provided for @forwardDynamicDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'在本地开启 SOCKS5 代理，通过 SSH 服务器动态转发任意目标流量'**
+  String get forwardDynamicDesc;
+
+  /// No description provided for @forwardRemoteGatewayHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'提示：远程监听 0.0.0.0 需服务器 sshd 开启 GatewayPorts yes'**
+  String get forwardRemoteGatewayHint;
+
+  /// No description provided for @forwardName.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称（可选）'**
+  String get forwardName;
+
+  /// No description provided for @forwardNameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'例如：生产 MySQL、SOCKS5 代理'**
+  String get forwardNameHint;
+
+  /// No description provided for @forwardType.
+  ///
+  /// In zh, this message translates to:
+  /// **'转发类型'**
+  String get forwardType;
+
+  /// No description provided for @forwardHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 主机'**
+  String get forwardHost;
+
+  /// No description provided for @forwardNoHostsHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有已保存的主机，请先在“主机”页添加一台服务器。'**
+  String get forwardNoHostsHint;
+
+  /// No description provided for @forwardLocalListen.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地监听'**
+  String get forwardLocalListen;
+
+  /// No description provided for @forwardRemoteListen.
+  ///
+  /// In zh, this message translates to:
+  /// **'远程监听'**
+  String get forwardRemoteListen;
+
+  /// No description provided for @forwardSocksListen.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地 SOCKS5 监听'**
+  String get forwardSocksListen;
+
+  /// No description provided for @forwardRemoteTarget.
+  ///
+  /// In zh, this message translates to:
+  /// **'远程目标'**
+  String get forwardRemoteTarget;
+
+  /// No description provided for @forwardLocalTarget.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地目标'**
+  String get forwardLocalTarget;
+
+  /// No description provided for @forwardBindAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'监听地址'**
+  String get forwardBindAddress;
+
+  /// No description provided for @forwardPort.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口'**
+  String get forwardPort;
+
+  /// No description provided for @forwardTargetAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标地址'**
+  String get forwardTargetAddress;
+
+  /// No description provided for @forwardAddressRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入地址'**
+  String get forwardAddressRequired;
+
+  /// No description provided for @forwardPortInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口需为 1–65535'**
+  String get forwardPortInvalid;
+
+  /// No description provided for @forwardAutoStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接主机时自动启动'**
+  String get forwardAutoStart;
+
+  /// No description provided for @forwardAutoStartSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'终端连上该主机时自动开启此转发'**
+  String get forwardAutoStartSubtitle;
+
+  /// No description provided for @forwardNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'备注（可选）'**
+  String get forwardNote;
+
+  /// No description provided for @forwardNoteHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'简短记录用途'**
+  String get forwardNoteHint;
+
+  /// No description provided for @forwardCliPreview.
+  ///
+  /// In zh, this message translates to:
+  /// **'等效 SSH 命令'**
+  String get forwardCliPreview;
+
+  /// No description provided for @forwardStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动转发'**
+  String get forwardStart;
+
+  /// No description provided for @forwardStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止转发'**
+  String get forwardStop;
+
+  /// No description provided for @forwardStatusStopped.
+  ///
+  /// In zh, this message translates to:
+  /// **'未运行'**
+  String get forwardStatusStopped;
+
+  /// No description provided for @forwardStatusStarting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在启动…'**
+  String get forwardStatusStarting;
+
+  /// No description provided for @forwardStatusRunning.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行中'**
+  String get forwardStatusRunning;
+
+  /// No description provided for @forwardStatusError.
+  ///
+  /// In zh, this message translates to:
+  /// **'出错'**
+  String get forwardStatusError;
+
+  /// No description provided for @forwardActiveSummary.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个运行中'**
+  String forwardActiveSummary(int count);
+
+  /// No description provided for @forwardConnections.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个连接'**
+  String forwardConnections(int count);
+
+  /// No description provided for @forwardAnyTarget.
+  ///
+  /// In zh, this message translates to:
+  /// **'任意目标'**
+  String get forwardAnyTarget;
+
+  /// No description provided for @forwardAutoBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动'**
+  String get forwardAutoBadge;
+
+  /// No description provided for @forwardHostMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'关联主机不存在或已被删除'**
+  String get forwardHostMissing;
+
+  /// No description provided for @forwardAddressCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制地址：{address}'**
+  String forwardAddressCopied(String address);
+
+  /// No description provided for @forwardCopyAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制监听地址'**
+  String get forwardCopyAddress;
+
+  /// No description provided for @deleteForwardTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除转发“{name}”？'**
+  String deleteForwardTitle(String name);
+
+  /// No description provided for @deleteForwardBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'如果该转发正在运行，会先停止连接。删除后无法恢复。'**
+  String get deleteForwardBody;
+
+  /// No description provided for @forwardBindFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法监听 {address}（端口可能已被占用）：{reason}'**
+  String forwardBindFailed(String address, String reason);
+
+  /// No description provided for @forwardRemoteRejected.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务器拒绝在 {address} 开启远程转发（请检查端口占用或 sshd AllowTcpForwarding 配置）'**
+  String forwardRemoteRejected(String address);
+
+  /// No description provided for @forwardConnectionLost.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 隧道连接已断开'**
+  String get forwardConnectionLost;
+
+  /// No description provided for @forwardNoMatchesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的转发规则'**
+  String get forwardNoMatchesTitle;
 }
 
 class _AppLocalizationsDelegate

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/forwarding/forwarding_page.dart';
+import '../features/forwarding/forwarding_providers.dart';
 import '../features/hosts/hosts_page.dart';
 import '../features/keys/keys_page.dart';
 import '../features/settings/settings_page.dart';
@@ -116,12 +117,13 @@ class _SideNav extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final activeForwards = ref.watch(activeForwardsCountProvider);
     Widget item(AppDestination d) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: _NavItem(
         destination: _destinations[d]!,
         selected: d == current,
-        count: 0,
+        count: d == AppDestination.forwarding ? activeForwards : 0,
         onTap: () => onSelect(d),
       ),
     );

@@ -1829,4 +1829,345 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mcpApproveDeny => 'Deny';
+
+  @override
+  String get newSnippet => 'New snippet';
+
+  @override
+  String get editSnippet => 'Edit snippet';
+
+  @override
+  String get searchSnippets => 'Search snippets…';
+
+  @override
+  String get loadSnippetsFailed => 'Couldn\'t load snippets';
+
+  @override
+  String get snippetName => 'Name';
+
+  @override
+  String get snippetNameHint => 'e.g. Disk usage, Clean logs script';
+
+  @override
+  String get snippetNameRequired => 'Enter a snippet name';
+
+  @override
+  String get snippetLanguage => 'Language';
+
+  @override
+  String get snippetLangAll => 'All';
+
+  @override
+  String get snippetLangShell => 'Shell (sh)';
+
+  @override
+  String get snippetLangBash => 'Bash';
+
+  @override
+  String get snippetLangPython => 'Python';
+
+  @override
+  String get snippetLangPowerShell => 'PowerShell';
+
+  @override
+  String get snippetLangNode => 'Node.js';
+
+  @override
+  String get snippetLangOther => 'Plain text';
+
+  @override
+  String get snippetGroup => 'Group (optional)';
+
+  @override
+  String get snippetGroupHint => 'e.g. Ops, Docker, Monitoring';
+
+  @override
+  String get snippetDescription => 'Description (optional)';
+
+  @override
+  String get snippetDescriptionHint => 'Short note on what this script does';
+
+  @override
+  String get snippetContent => 'Script content';
+
+  @override
+  String snippetContentHint(String example) {
+    return 'Enter a command or script; use $example for interactive placeholders';
+  }
+
+  @override
+  String get snippetContentRequired => 'Enter the script content';
+
+  @override
+  String get snippetImportFile => 'Import from file';
+
+  @override
+  String get snippetPlaceholdersHint =>
+      'Placeholders detected (prompted when running):';
+
+  @override
+  String get snippetRun => 'Run';
+
+  @override
+  String get snippetInsert => 'Insert';
+
+  @override
+  String get snippetSendToTerminal => 'Send to terminal';
+
+  @override
+  String get snippetCopied => 'Snippet copied';
+
+  @override
+  String snippetSent(String target) {
+    return 'Sent to $target';
+  }
+
+  @override
+  String get snippetNoActiveTerminal => 'No connected terminal session';
+
+  @override
+  String get snippetConnectFirst =>
+      'Connect a terminal to run or insert snippets';
+
+  @override
+  String snippetFillVarsTitle(String name) {
+    return 'Fill parameters · $name';
+  }
+
+  @override
+  String deleteSnippetTitle(String name) {
+    return 'Delete snippet \"$name\"?';
+  }
+
+  @override
+  String get deleteSnippetBody => 'This can\'t be undone.';
+
+  @override
+  String get showSnippetsPanel => 'Show snippets';
+
+  @override
+  String get hideSnippetsPanel => 'Hide snippets';
+
+  @override
+  String get closeSnippetsPanel => 'Close snippets';
+
+  @override
+  String get snippetInfoTitle => 'Snippet info';
+
+  @override
+  String get snippetUntitled => 'untitled';
+
+  @override
+  String get snippetExecutionTitle => 'Execution';
+
+  @override
+  String get snippetExecShellHint =>
+      'Single-line runs directly in the active shell; multi-line runs via sh -s heredoc.';
+
+  @override
+  String get snippetExecBashHint =>
+      'Runs via bash -s heredoc without leaving temporary files on the server.';
+
+  @override
+  String get snippetExecPythonHint =>
+      'Runs via python3 - heredoc with full multi-line Python support.';
+
+  @override
+  String get snippetExecPowerShellHint =>
+      'Runs natively in Windows PowerShell, or via pwsh on Linux/macOS.';
+
+  @override
+  String get snippetExecNodeHint =>
+      'Runs via node - heredoc with full multi-line JavaScript support.';
+
+  @override
+  String get snippetExecOtherHint =>
+      'Sent directly as plain text to the active terminal.';
+
+  @override
+  String get newForward => 'New forward';
+
+  @override
+  String get editForward => 'Edit forward';
+
+  @override
+  String get searchForwards => 'Search forwarding rules…';
+
+  @override
+  String get loadForwardsFailed => 'Couldn\'t load forwarding rules';
+
+  @override
+  String get forwardStopAll => 'Stop all';
+
+  @override
+  String get forwardFilterAll => 'All';
+
+  @override
+  String get forwardFilterActive => 'Active';
+
+  @override
+  String get forwardTypeLocal => 'Local (-L)';
+
+  @override
+  String get forwardTypeRemote => 'Remote (-R)';
+
+  @override
+  String get forwardTypeDynamic => 'Dynamic (-D)';
+
+  @override
+  String get forwardBadgeLocal => 'LOCAL';
+
+  @override
+  String get forwardBadgeRemote => 'REMOTE';
+
+  @override
+  String get forwardBadgeDynamic => 'SOCKS5';
+
+  @override
+  String get forwardLocalDesc =>
+      'Forward a local port through the SSH server to a remote target (e.g. internal database or web service).';
+
+  @override
+  String get forwardRemoteDesc =>
+      'Listen on the remote SSH server and forward incoming connections back to a local service.';
+
+  @override
+  String get forwardDynamicDesc =>
+      'Run a local SOCKS5 proxy that forwards outbound traffic through the SSH server.';
+
+  @override
+  String get forwardRemoteGatewayHint =>
+      'Tip: listening on 0.0.0.0 remotely requires GatewayPorts yes in sshd_config.';
+
+  @override
+  String get forwardName => 'Name (optional)';
+
+  @override
+  String get forwardNameHint => 'e.g. Prod MySQL, SOCKS5 proxy';
+
+  @override
+  String get forwardType => 'Forwarding type';
+
+  @override
+  String get forwardHost => 'SSH host';
+
+  @override
+  String get forwardNoHostsHint =>
+      'No saved hosts yet. Add a server on the Hosts page first.';
+
+  @override
+  String get forwardLocalListen => 'Local listen';
+
+  @override
+  String get forwardRemoteListen => 'Remote listen';
+
+  @override
+  String get forwardSocksListen => 'Local SOCKS5 listen';
+
+  @override
+  String get forwardRemoteTarget => 'Remote target';
+
+  @override
+  String get forwardLocalTarget => 'Local target';
+
+  @override
+  String get forwardBindAddress => 'Bind address';
+
+  @override
+  String get forwardPort => 'Port';
+
+  @override
+  String get forwardTargetAddress => 'Target address';
+
+  @override
+  String get forwardAddressRequired => 'Enter an address';
+
+  @override
+  String get forwardPortInvalid => 'Port must be 1–65535';
+
+  @override
+  String get forwardAutoStart => 'Auto-start on host connect';
+
+  @override
+  String get forwardAutoStartSubtitle =>
+      'Start this tunnel automatically when a terminal connects to the host';
+
+  @override
+  String get forwardNote => 'Note (optional)';
+
+  @override
+  String get forwardNoteHint => 'Short note about this tunnel';
+
+  @override
+  String get forwardCliPreview => 'Equivalent SSH command';
+
+  @override
+  String get forwardStart => 'Start';
+
+  @override
+  String get forwardStop => 'Stop';
+
+  @override
+  String get forwardStatusStopped => 'Stopped';
+
+  @override
+  String get forwardStatusStarting => 'Starting…';
+
+  @override
+  String get forwardStatusRunning => 'Running';
+
+  @override
+  String get forwardStatusError => 'Error';
+
+  @override
+  String forwardActiveSummary(int count) {
+    return '$count active';
+  }
+
+  @override
+  String forwardConnections(int count) {
+    return '$count conn';
+  }
+
+  @override
+  String get forwardAnyTarget => 'Any target';
+
+  @override
+  String get forwardAutoBadge => 'Auto';
+
+  @override
+  String get forwardHostMissing => 'Linked host no longer exists';
+
+  @override
+  String forwardAddressCopied(String address) {
+    return 'Copied: $address';
+  }
+
+  @override
+  String get forwardCopyAddress => 'Copy listen address';
+
+  @override
+  String deleteForwardTitle(String name) {
+    return 'Delete forward \"$name\"?';
+  }
+
+  @override
+  String get deleteForwardBody =>
+      'If active, the tunnel will be stopped first. This can\'t be undone.';
+
+  @override
+  String forwardBindFailed(String address, String reason) {
+    return 'Couldn\'t listen on $address (port may be in use): $reason';
+  }
+
+  @override
+  String forwardRemoteRejected(String address) {
+    return 'Server refused remote forward on $address (check port availability or sshd AllowTcpForwarding)';
+  }
+
+  @override
+  String get forwardConnectionLost => 'SSH tunnel connection lost';
+
+  @override
+  String get forwardNoMatchesTitle => 'No matching forwarding rules';
 }

@@ -1724,4 +1724,334 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mcpApproveDeny => '拒绝';
+
+  @override
+  String get newSnippet => '新建代码片段';
+
+  @override
+  String get editSnippet => '编辑代码片段';
+
+  @override
+  String get searchSnippets => '搜索代码片段…';
+
+  @override
+  String get loadSnippetsFailed => '无法读取代码片段';
+
+  @override
+  String get snippetName => '名称';
+
+  @override
+  String get snippetNameHint => '例如：查看磁盘占用、清理日志脚本';
+
+  @override
+  String get snippetNameRequired => '请填写代码片段名称';
+
+  @override
+  String get snippetLanguage => '脚本类型';
+
+  @override
+  String get snippetLangAll => '全部';
+
+  @override
+  String get snippetLangShell => 'Shell (sh)';
+
+  @override
+  String get snippetLangBash => 'Bash';
+
+  @override
+  String get snippetLangPython => 'Python';
+
+  @override
+  String get snippetLangPowerShell => 'PowerShell';
+
+  @override
+  String get snippetLangNode => 'Node.js';
+
+  @override
+  String get snippetLangOther => '纯文本';
+
+  @override
+  String get snippetGroup => '分组（可选）';
+
+  @override
+  String get snippetGroupHint => '例如：运维、Docker、监控';
+
+  @override
+  String get snippetDescription => '说明（可选）';
+
+  @override
+  String get snippetDescriptionHint => '简短说明这个脚本的用途';
+
+  @override
+  String get snippetContent => '脚本内容';
+
+  @override
+  String snippetContentHint(String example) {
+    return '输入命令或脚本，支持使用 $example 作为参数占位符';
+  }
+
+  @override
+  String get snippetContentRequired => '请填写脚本内容';
+
+  @override
+  String get snippetImportFile => '从文件导入';
+
+  @override
+  String get snippetPlaceholdersHint => '检测到参数占位符（运行时自动弹窗填写）：';
+
+  @override
+  String get snippetRun => '运行';
+
+  @override
+  String get snippetInsert => '填入终端';
+
+  @override
+  String get snippetSendToTerminal => '发送到终端';
+
+  @override
+  String get snippetCopied => '已复制代码片段';
+
+  @override
+  String snippetSent(String target) {
+    return '已发送到 $target';
+  }
+
+  @override
+  String get snippetNoActiveTerminal => '当前没有已连接的终端会话';
+
+  @override
+  String get snippetConnectFirst => '连接终端后可一键运行或填入代码片段';
+
+  @override
+  String snippetFillVarsTitle(String name) {
+    return '填写参数 · $name';
+  }
+
+  @override
+  String deleteSnippetTitle(String name) {
+    return '删除代码片段“$name”？';
+  }
+
+  @override
+  String get deleteSnippetBody => '删除后无法恢复。';
+
+  @override
+  String get showSnippetsPanel => '显示代码片段';
+
+  @override
+  String get hideSnippetsPanel => '隐藏代码片段';
+
+  @override
+  String get closeSnippetsPanel => '关闭代码片段';
+
+  @override
+  String get snippetInfoTitle => '代码片段信息';
+
+  @override
+  String get snippetUntitled => '未命名脚本';
+
+  @override
+  String get snippetExecutionTitle => '运行方式';
+
+  @override
+  String get snippetExecShellHint =>
+      '单行命令直接在当前 Shell 运行；多行脚本通过 sh -s heredoc 运行。';
+
+  @override
+  String get snippetExecBashHint => '通过 bash -s heredoc 运行，不在服务器留下临时文件。';
+
+  @override
+  String get snippetExecPythonHint =>
+      '通过 python3 - heredoc 运行，支持完整多行 Python 脚本。';
+
+  @override
+  String get snippetExecPowerShellHint =>
+      'Windows 本地终端直接执行；Linux/macOS 通过 pwsh 运行。';
+
+  @override
+  String get snippetExecNodeHint => '通过 node - heredoc 运行 JavaScript 脚本。';
+
+  @override
+  String get snippetExecOtherHint => '按纯文本直接发送到当前终端。';
+
+  @override
+  String get newForward => '新建转发';
+
+  @override
+  String get editForward => '编辑转发';
+
+  @override
+  String get searchForwards => '搜索转发规则…';
+
+  @override
+  String get loadForwardsFailed => '无法读取转发规则';
+
+  @override
+  String get forwardStopAll => '全部停止';
+
+  @override
+  String get forwardFilterAll => '全部';
+
+  @override
+  String get forwardFilterActive => '运行中';
+
+  @override
+  String get forwardTypeLocal => '本地 (-L)';
+
+  @override
+  String get forwardTypeRemote => '远程 (-R)';
+
+  @override
+  String get forwardTypeDynamic => '动态 (-D)';
+
+  @override
+  String get forwardBadgeLocal => '本地';
+
+  @override
+  String get forwardBadgeRemote => '远程';
+
+  @override
+  String get forwardBadgeDynamic => 'SOCKS5';
+
+  @override
+  String get forwardLocalDesc => '将本地端口转发到远程服务器可访问的目标地址（常用于访问内网数据库、Web 服务）';
+
+  @override
+  String get forwardRemoteDesc => '在远程服务器监听端口，将访问转发回本机或本机局域网服务';
+
+  @override
+  String get forwardDynamicDesc => '在本地开启 SOCKS5 代理，通过 SSH 服务器动态转发任意目标流量';
+
+  @override
+  String get forwardRemoteGatewayHint =>
+      '提示：远程监听 0.0.0.0 需服务器 sshd 开启 GatewayPorts yes';
+
+  @override
+  String get forwardName => '名称（可选）';
+
+  @override
+  String get forwardNameHint => '例如：生产 MySQL、SOCKS5 代理';
+
+  @override
+  String get forwardType => '转发类型';
+
+  @override
+  String get forwardHost => 'SSH 主机';
+
+  @override
+  String get forwardNoHostsHint => '还没有已保存的主机，请先在“主机”页添加一台服务器。';
+
+  @override
+  String get forwardLocalListen => '本地监听';
+
+  @override
+  String get forwardRemoteListen => '远程监听';
+
+  @override
+  String get forwardSocksListen => '本地 SOCKS5 监听';
+
+  @override
+  String get forwardRemoteTarget => '远程目标';
+
+  @override
+  String get forwardLocalTarget => '本地目标';
+
+  @override
+  String get forwardBindAddress => '监听地址';
+
+  @override
+  String get forwardPort => '端口';
+
+  @override
+  String get forwardTargetAddress => '目标地址';
+
+  @override
+  String get forwardAddressRequired => '请输入地址';
+
+  @override
+  String get forwardPortInvalid => '端口需为 1–65535';
+
+  @override
+  String get forwardAutoStart => '连接主机时自动启动';
+
+  @override
+  String get forwardAutoStartSubtitle => '终端连上该主机时自动开启此转发';
+
+  @override
+  String get forwardNote => '备注（可选）';
+
+  @override
+  String get forwardNoteHint => '简短记录用途';
+
+  @override
+  String get forwardCliPreview => '等效 SSH 命令';
+
+  @override
+  String get forwardStart => '启动转发';
+
+  @override
+  String get forwardStop => '停止转发';
+
+  @override
+  String get forwardStatusStopped => '未运行';
+
+  @override
+  String get forwardStatusStarting => '正在启动…';
+
+  @override
+  String get forwardStatusRunning => '运行中';
+
+  @override
+  String get forwardStatusError => '出错';
+
+  @override
+  String forwardActiveSummary(int count) {
+    return '$count 个运行中';
+  }
+
+  @override
+  String forwardConnections(int count) {
+    return '$count 个连接';
+  }
+
+  @override
+  String get forwardAnyTarget => '任意目标';
+
+  @override
+  String get forwardAutoBadge => '自动';
+
+  @override
+  String get forwardHostMissing => '关联主机不存在或已被删除';
+
+  @override
+  String forwardAddressCopied(String address) {
+    return '已复制地址：$address';
+  }
+
+  @override
+  String get forwardCopyAddress => '复制监听地址';
+
+  @override
+  String deleteForwardTitle(String name) {
+    return '删除转发“$name”？';
+  }
+
+  @override
+  String get deleteForwardBody => '如果该转发正在运行，会先停止连接。删除后无法恢复。';
+
+  @override
+  String forwardBindFailed(String address, String reason) {
+    return '无法监听 $address（端口可能已被占用）：$reason';
+  }
+
+  @override
+  String forwardRemoteRejected(String address) {
+    return '服务器拒绝在 $address 开启远程转发（请检查端口占用或 sshd AllowTcpForwarding 配置）';
+  }
+
+  @override
+  String get forwardConnectionLost => 'SSH 隧道连接已断开';
+
+  @override
+  String get forwardNoMatchesTitle => '没有匹配的转发规则';
 }
