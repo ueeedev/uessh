@@ -10,6 +10,7 @@ import 'core/app_providers.dart';
 import 'core/app_log.dart';
 import 'core/sandbox_migration.dart';
 import 'core/secret_store.dart';
+import 'core/system_proxy.dart';
 import 'core/vault.dart';
 import 'features/hosts/host_repository.dart';
 import 'shell/background_mode.dart';
@@ -18,6 +19,11 @@ import 'features/settings/settings_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final proxyOverrides = SystemProxyHttpOverrides();
+  // Ensure dart:io HttpClient (AI assistant, update checks, host geo) follows
+  // macOS / Windows system proxy settings even when launched from Finder/GUI
+  // without shell HTTP_PROXY/HTTPS_PROXY environment variables.
+  HttpOverrides.global = proxyOverrides;
   log.captureErrors();
   await windowManager.ensureInitialized();
 
@@ -55,6 +61,14 @@ Future<void> main() async {
     'app',
     'uessh started on ${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
   );
+  final detectedProxy = proxyOverrides.resolver.refresh();
+  if (detectedProxy.hasProxy) {
+    log.info(
+      'net',
+      'System proxy detected (http=${detectedProxy.httpProxy ?? '-'}, '
+          'https=${detectedProxy.httpsProxy ?? '-'})',
+    );
+  }
   final settings = await SettingsStore(dataDir: dataDir).load();
   final vault = await _openVault(dataDir);
 
