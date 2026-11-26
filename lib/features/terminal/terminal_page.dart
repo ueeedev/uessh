@@ -1323,8 +1323,18 @@ class _BrowserTabState extends State<BrowserTab> {
                   children: [
                     if (widget.title != null)
                       Icon(Icons.dashboard_outlined, size: 15, color: fg)
-                    else
+                    else ...[
                       SessionStatusDot(status: widget.session.status),
+                      if (widget.session.isOnion) ...[
+                        const SizedBox(width: 5),
+                        Icon(
+                          Icons.layers,
+                          key: const ValueKey('tab-onion-icon'),
+                          size: 14,
+                          color: fg,
+                        ),
+                      ],
+                    ],
                     const SizedBox(width: 8),
                     Expanded(
                       child: widget.renaming
@@ -1339,10 +1349,14 @@ class _BrowserTabState extends State<BrowserTab> {
                           : Tooltip(
                               message: widget.title != null && selected
                                   ? context.l10n.renameWorkspaceHint
+                                  : widget.session.isOnion
+                                  ? widget.session.hopChain
+                                        .map((h) => h.displayName)
+                                        .join(' → ')
                                   : '',
                               waitDuration: const Duration(milliseconds: 600),
                               child: Text(
-                                widget.title ?? widget.session.host.displayName,
+                                widget.title ?? widget.session.displayLabel,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.textTheme.labelLarge?.copyWith(

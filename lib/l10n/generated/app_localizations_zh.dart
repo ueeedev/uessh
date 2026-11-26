@@ -2054,4 +2054,236 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get forwardNoMatchesTitle => '没有匹配的转发规则';
+
+  @override
+  String get proxySection => '网络代理';
+
+  @override
+  String get aiProxyTitle => 'AI 网络代理';
+
+  @override
+  String get aiProxySubtitle => '用于 AI 助手对话与模型列表请求';
+
+  @override
+  String get sshProxyTitle => 'SSH 网络代理';
+
+  @override
+  String get sshProxySubtitle => '用于 SSH 终端连接与端口转发隧道';
+
+  @override
+  String get proxyModeSystem => '跟随系统';
+
+  @override
+  String get proxyModeDirect => '直连';
+
+  @override
+  String get proxyModeCustom => '自定义';
+
+  @override
+  String proxySystemDetected(String endpoint) {
+    return '已检测到系统代理：$endpoint';
+  }
+
+  @override
+  String get proxySystemNone => '当前未检测到系统代理（将直接连接）';
+
+  @override
+  String get proxyScheme => '协议';
+
+  @override
+  String get proxyHost => '代理地址';
+
+  @override
+  String get proxyPort => '端口';
+
+  @override
+  String get proxyUsername => '用户名（可选）';
+
+  @override
+  String get proxyPassword => '密码（可选）';
+
+  @override
+  String get proxyPasswordKeepHint => '留空保持现有密码';
+
+  @override
+  String get proxyHostRequired => '请输入代理地址';
+
+  @override
+  String get proxyPortInvalid => '端口需为 1–65535';
+
+  @override
+  String get proxyTest => '测试连接';
+
+  @override
+  String get proxyTesting => '测试中…';
+
+  @override
+  String proxyTestOk(String endpoint) {
+    return '代理连接正常（$endpoint）';
+  }
+
+  @override
+  String proxyTestFailed(String error) {
+    return '代理连接失败：$error';
+  }
+
+  @override
+  String get proxySaved => '代理设置已保存';
+
+  @override
+  String get proxyCustomNotSet => '请填写并保存代理地址与端口';
+
+  @override
+  String get navOnion => '洋葱连接';
+
+  @override
+  String get onionTitle => '洋葱连接';
+
+  @override
+  String get newOnionRoute => '新建连接';
+
+  @override
+  String get editOnionRoute => '编辑洋葱连接';
+
+  @override
+  String get searchOnionRoutes => '搜索洋葱连接或节点…';
+
+  @override
+  String get loadOnionFailed => '无法读取洋葱连接';
+
+  @override
+  String get noOnionTitle => '还没有洋葱连接';
+
+  @override
+  String get noOnionMessage => '将多台主机串联为跳板链路（如 A → B → C），逐跳加密控制目标服务器';
+
+  @override
+  String get onionNoMatchesTitle => '没有匹配的洋葱连接';
+
+  @override
+  String get onionName => '连接名称（可选）';
+
+  @override
+  String get onionNameHint => '例如：生产跳板链路（留空自动按节点命名）';
+
+  @override
+  String get onionLocalOrigin => '本机 (uessh)';
+
+  @override
+  String get onionJumpNodes => '中间节点';
+
+  @override
+  String get onionJumpNodesHint => '按跳转顺序依次经过以下服务器';
+
+  @override
+  String get onionAddJumpNode => '新增中间节点';
+
+  @override
+  String get onionTargetNode => '结束节点';
+
+  @override
+  String get onionTargetNodeHint => '最终建立终端会话的目标服务器';
+
+  @override
+  String get onionSelectTargetNode => '选择结束节点';
+
+  @override
+  String get onionReplaceNode => '更换节点';
+
+  @override
+  String onionHopBadge(int index) {
+    return '第 $index 跳';
+  }
+
+  @override
+  String get onionTargetBadge => '终点';
+
+  @override
+  String onionHopsCount(int count) {
+    return '$count 跳';
+  }
+
+  @override
+  String get onionNeedJumpError => '请至少新增一个中间节点';
+
+  @override
+  String get onionNeedTargetError => '请选择结束节点';
+
+  @override
+  String onionVisibilityHint(String target, String lastJump) {
+    return '目标节点「$target」仅可见来自「$lastJump」的 SSH 连接';
+  }
+
+  @override
+  String get onionCliPreview => '等效 SSH ProxyJump 命令';
+
+  @override
+  String get onionNote => '备注（可选）';
+
+  @override
+  String get onionNoteHint => '简短记录链路用途';
+
+  @override
+  String get onionConnect => '连接';
+
+  @override
+  String get onionHostMissing => '链路中有主机已删除，请先编辑更新节点';
+
+  @override
+  String get onionMissingHostBadge => '主机已删除';
+
+  @override
+  String get onionCopyCommand => '复制 ssh -J 命令';
+
+  @override
+  String get onionCommandCopied => '已复制命令';
+
+  @override
+  String get onionPickJumpTitle => '选择中间节点（从主机卡片选择）';
+
+  @override
+  String get onionPickTargetTitle => '选择结束节点（从主机卡片选择）';
+
+  @override
+  String get onionAlreadyInChain => '已在链路中';
+
+  @override
+  String get onionMoveUp => '上移';
+
+  @override
+  String get onionMoveDown => '下移';
+
+  @override
+  String get onionRemoveNode => '移除节点';
+
+  @override
+  String deleteOnionTitle(String name) {
+    return '删除洋葱连接“$name”？';
+  }
+
+  @override
+  String get deleteOnionBody => '仅删除此链路卡片，不会影响主机列表中的服务器。';
+
+  @override
+  String onionStartingChain(int hops, String route) {
+    return '正在建立洋葱连接（共 $hops 跳）：$route';
+  }
+
+  @override
+  String onionConnectingHop(int step, int total, String target) {
+    return '[$step/$total] 正在连接节点 $target…';
+  }
+
+  @override
+  String onionForwardingHop(int step, int total, String from, String to) {
+    return '[$step/$total] 已连接 $from，正在经由其转发至 $to…';
+  }
+
+  @override
+  String onionHopForwardFailed(String from, String to, String error) {
+    return '无法通过 $from 转发到 $to（请确认服务器开启 AllowTcpForwarding）：$error';
+  }
+
+  @override
+  String get about => '关于';
 }

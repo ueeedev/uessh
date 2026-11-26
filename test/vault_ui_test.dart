@@ -102,6 +102,7 @@ void main() {
     await pumpApp(tester);
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
+    await selectSettingsCategory(tester, SettingsCategory.security);
 
     // On: validation first.
     await scrollTo(tester, find.widgetWithText(SwitchListTile, '主密码'));

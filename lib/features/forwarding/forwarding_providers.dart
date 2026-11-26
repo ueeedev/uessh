@@ -4,10 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_providers.dart';
+import '../../core/proxy_settings.dart';
+import '../../core/proxy_transport.dart';
 import '../../l10n/l10n.dart';
 import '../hosts/host.dart';
 import '../hosts/hosts_providers.dart';
 import '../keys/keys_providers.dart';
+import '../settings/settings_providers.dart';
 import '../terminal/sessions_providers.dart';
 import '../terminal/terminal_session.dart';
 import 'port_forward.dart';
@@ -28,6 +31,20 @@ final forwardTransportConnectorProvider = Provider<ForwardTransportConnector>(
             knownHosts: ref.read(knownHostsProvider),
             prompts: ref.read(sessionPromptsProvider),
             keys: ref.read(keyRepositoryProvider),
+            connectSocket: (targetHost, targetPort, timeout) {
+              final proxy = ref.read(settingsProvider).sshProxy;
+              String? password;
+              try {
+                password = ref.read(vaultProvider).read(sshProxyPasswordKey);
+              } catch (_) {}
+              return connectSshSocketWithProxy(
+                targetHost: targetHost,
+                targetPort: targetPort,
+                proxy: proxy,
+                password: password,
+                timeout: timeout,
+              );
+            },
             isCancelled: isCancelled,
           ),
 );

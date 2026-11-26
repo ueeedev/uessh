@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/widgets.dart' show AxisDirection, Scrollable;
+import 'package:flutter/widgets.dart' show AxisDirection, Scrollable, ValueKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -15,7 +15,12 @@ import 'package:uessh/features/hosts/host.dart';
 import 'package:uessh/features/hosts/host_geo.dart';
 import 'package:uessh/features/hosts/reachability.dart';
 import 'package:uessh/features/settings/app_settings.dart';
+import 'package:uessh/features/settings/settings_page.dart'
+    show SettingsCategory;
 import 'package:uessh/features/settings/settings_providers.dart';
+
+export 'package:uessh/features/settings/settings_page.dart'
+    show SettingsCategory;
 import 'package:uessh/features/settings/updates.dart';
 import 'package:uessh/features/terminal/known_hosts.dart';
 import 'package:uessh/features/terminal/terminal_session.dart';
@@ -254,30 +259,43 @@ Future<void> pumpUntil(
   await tester.pumpAndSettle();
 }
 
-/// Scrolls the page's list until [finder] is built and on screen (lists
-/// build lazily, so far-down items don't exist until scrolled to).
-Future<void> scrollTo(WidgetTester tester, Finder finder) async {
-  // Load the AI settings outside the fake clock first: the settings card
-  // starts loading them once it's scrolled into view, and a load started
-  // under the fake clock never finishes.
+/// Taps a category in the left vertical secondary menu of [SettingsPage] and
+/// settles any async config loads (such as `aiConfigProvider`).
+Future<void> selectSettingsCategory(
+  WidgetTester tester,
+  SettingsCategory category,
+) async {
   final app = find.byType(UesshApp);
   if (app.evaluate().isNotEmpty) {
     final c = ProviderScope.containerOf(tester.element(app));
     await tester.runAsync(() => c.read(aiConfigProvider.future));
     await tester.pump();
   }
-  await tester.scrollUntilVisible(
-    finder,
-    300,
-    // The page's own (vertical) list, not the tab strip at the top.
-    scrollable: find
-        .byWidgetPredicate(
-          (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
-        )
-        .first,
+  final item = find.byKey(ValueKey('settings-nav-${category.name}'));
+  await tester.ensureVisible(item);
+  await tester.tap(item);
+  await tester.pumpAndSettle();
+  await settleIo(tester);
+}
+
+/// Scrolls the active content list until [finder] is built and on screen.
+Future<void> scrollTo(WidgetTester tester, Finder finder) async {
+  // Load the AI settings outside the fake clock first: the settings card
+  // starts loading them once mounted, and a load started under the fake
+  // clock never finishes.
+  final app = find.byType(UesshApp);
+  if (app.evaluate().isNotEmpty) {
+    final c = ProviderScope.containerOf(tester.element(app));
+    await tester.runAsync(() => c.read(aiConfigProvider.future));
+    await tester.pump();
+  }
+  final downScrollables = find.byWidgetPredicate(
+    (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
   );
-  // Cards scrolled into view may load files first (AI settings) and
-  // change height; bring the target back into view after.
+  // In SettingsPage the left secondary menu is the first down-axis Scrollable
+  // and the active content pane is the last visible one.
+  final scrollable = downScrollables.last;
+  await tester.scrollUntilVisible(finder, 300, scrollable: scrollable);
   await settleIo(tester);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();

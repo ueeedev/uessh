@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/app_providers.dart';
+import '../../core/proxy_settings.dart';
+import '../../core/proxy_transport.dart';
 import '../hosts/host.dart';
 import '../hosts/hosts_providers.dart';
 import '../keys/keys_providers.dart';
@@ -37,6 +39,31 @@ final sessionFactoryProvider = Provider<TerminalSession Function(Host)>(
           keys: ref.read(keyRepositoryProvider),
         ),
 );
+
+/// Makes the session for an onion multi-hop chain (replaceable in tests).
+final onionSessionFactoryProvider =
+    Provider<
+      TerminalSession Function({
+        required Host targetHost,
+        required List<Host> jumpHosts,
+        String? chainLabel,
+      })
+    >(
+      (ref) =>
+          ({
+            required Host targetHost,
+            required List<Host> jumpHosts,
+            String? chainLabel,
+          }) => TerminalSession(
+            host: targetHost,
+            jumpHosts: jumpHosts,
+            chainLabel: chainLabel,
+            repository: ref.read(hostRepositoryProvider),
+            knownHosts: ref.read(knownHostsProvider),
+            prompts: ref.read(sessionPromptsProvider),
+            keys: ref.read(keyRepositoryProvider),
+          ),
+    );
 
 /// One terminal tab: a workspace of one or more panes laid out in a
 /// split tree.
@@ -185,6 +212,29 @@ class SessionsNotifier extends Notifier<SessionsState> {
   }) {
     final session = ref.read(sessionFactoryProvider)(host);
     session.initialDirectory = initialDirectory;
+    return _openSession(session, splitFrom: splitFrom, side: side);
+  }
+
+  /// Opens a multi-hop Onion SSH chain (`jumpHosts[0] -> ... -> targetHost`)
+  /// in a new terminal tab.
+  TerminalSession openOnion({
+    required List<Host> jumpHosts,
+    required Host targetHost,
+    String? label,
+  }) {
+    final session = ref.read(onionSessionFactoryProvider)(
+      targetHost: targetHost,
+      jumpHosts: jumpHosts,
+      chainLabel: label,
+    );
+    return _openSession(session);
+  }
+
+  TerminalSession _openSession(
+    TerminalSession session, {
+    String? splitFrom,
+    DropSide side = DropSide.right,
+  }) {
     _open.add(session);
     if (!session.isLocal) _recordLastConnected(session);
     // Read the settings at each drop, so changes apply to open tabs too.
@@ -194,6 +244,24 @@ class SessionsNotifier extends Notifier<SessionsState> {
     session.highlightSettings ??= () => ref.mounted
         ? ref.read(settingsProvider).highlight
         : (enabled: false, colors: const <HighlightToken, int>{});
+    session.socketConnector ??= (targetHost, targetPort, timeout) {
+      final proxy = ref.mounted
+          ? ref.read(settingsProvider).sshProxy
+          : ProxySettings.sshDefault;
+      String? password;
+      if (ref.mounted) {
+        try {
+          password = ref.read(vaultProvider).read(sshProxyPasswordKey);
+        } catch (_) {}
+      }
+      return connectSshSocketWithProxy(
+        targetHost: targetHost,
+        targetPort: targetPort,
+        proxy: proxy,
+        password: password,
+        timeout: timeout,
+      );
+    };
 
     final target = splitFrom == null ? null : state.tabOf(splitFrom);
     if (target != null &&

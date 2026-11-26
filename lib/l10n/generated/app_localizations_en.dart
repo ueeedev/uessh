@@ -2170,4 +2170,244 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forwardNoMatchesTitle => 'No matching forwarding rules';
+
+  @override
+  String get proxySection => 'Network proxy';
+
+  @override
+  String get aiProxyTitle => 'AI network proxy';
+
+  @override
+  String get aiProxySubtitle =>
+      'Used for AI assistant chat and model list requests';
+
+  @override
+  String get sshProxyTitle => 'SSH network proxy';
+
+  @override
+  String get sshProxySubtitle =>
+      'Used for SSH terminal connections and port-forwarding tunnels';
+
+  @override
+  String get proxyModeSystem => 'System';
+
+  @override
+  String get proxyModeDirect => 'Direct';
+
+  @override
+  String get proxyModeCustom => 'Custom';
+
+  @override
+  String proxySystemDetected(String endpoint) {
+    return 'System proxy detected: $endpoint';
+  }
+
+  @override
+  String get proxySystemNone =>
+      'No system proxy detected (connecting directly)';
+
+  @override
+  String get proxyScheme => 'Protocol';
+
+  @override
+  String get proxyHost => 'Proxy host';
+
+  @override
+  String get proxyPort => 'Port';
+
+  @override
+  String get proxyUsername => 'Username (optional)';
+
+  @override
+  String get proxyPassword => 'Password (optional)';
+
+  @override
+  String get proxyPasswordKeepHint => 'Leave blank to keep current password';
+
+  @override
+  String get proxyHostRequired => 'Enter a proxy host';
+
+  @override
+  String get proxyPortInvalid => 'Port must be 1–65535';
+
+  @override
+  String get proxyTest => 'Test';
+
+  @override
+  String get proxyTesting => 'Testing…';
+
+  @override
+  String proxyTestOk(String endpoint) {
+    return 'Proxy reachable ($endpoint)';
+  }
+
+  @override
+  String proxyTestFailed(String error) {
+    return 'Proxy unreachable: $error';
+  }
+
+  @override
+  String get proxySaved => 'Proxy settings saved';
+
+  @override
+  String get proxyCustomNotSet => 'Enter and save proxy host and port';
+
+  @override
+  String get navOnion => 'Onion';
+
+  @override
+  String get onionTitle => 'Onion connections';
+
+  @override
+  String get newOnionRoute => 'New connection';
+
+  @override
+  String get editOnionRoute => 'Edit onion connection';
+
+  @override
+  String get searchOnionRoutes => 'Search onion routes or hops…';
+
+  @override
+  String get loadOnionFailed => 'Couldn\'t load onion connections';
+
+  @override
+  String get noOnionTitle => 'No onion connections yet';
+
+  @override
+  String get noOnionMessage =>
+      'Chain multiple SSH hosts (e.g. A → B → C) to control a target server through multi-hop encrypted tunnels';
+
+  @override
+  String get onionNoMatchesTitle => 'No matching onion connections';
+
+  @override
+  String get onionName => 'Connection name (optional)';
+
+  @override
+  String get onionNameHint => 'e.g. Prod bastion chain (defaults to hop path)';
+
+  @override
+  String get onionLocalOrigin => 'Local (uessh)';
+
+  @override
+  String get onionJumpNodes => 'Intermediate nodes';
+
+  @override
+  String get onionJumpNodesHint =>
+      'Traffic hops through these servers in order';
+
+  @override
+  String get onionAddJumpNode => 'Add intermediate node';
+
+  @override
+  String get onionTargetNode => 'Destination node';
+
+  @override
+  String get onionTargetNodeHint =>
+      'Final target server where your shell opens';
+
+  @override
+  String get onionSelectTargetNode => 'Select destination node';
+
+  @override
+  String get onionReplaceNode => 'Change node';
+
+  @override
+  String onionHopBadge(int index) {
+    return 'Hop $index';
+  }
+
+  @override
+  String get onionTargetBadge => 'Target';
+
+  @override
+  String onionHopsCount(int count) {
+    return '$count hops';
+  }
+
+  @override
+  String get onionNeedJumpError => 'Add at least one intermediate node';
+
+  @override
+  String get onionNeedTargetError => 'Select a destination node';
+
+  @override
+  String onionVisibilityHint(String target, String lastJump) {
+    return 'Destination \"$target\" only sees an SSH connection from \"$lastJump\"';
+  }
+
+  @override
+  String get onionCliPreview => 'Equivalent SSH ProxyJump command';
+
+  @override
+  String get onionNote => 'Note (optional)';
+
+  @override
+  String get onionNoteHint => 'Short note about this chain';
+
+  @override
+  String get onionConnect => 'Connect';
+
+  @override
+  String get onionHostMissing =>
+      'A host in this chain was deleted; edit the route to update it';
+
+  @override
+  String get onionMissingHostBadge => 'Deleted host';
+
+  @override
+  String get onionCopyCommand => 'Copy ssh -J command';
+
+  @override
+  String get onionCommandCopied => 'Command copied';
+
+  @override
+  String get onionPickJumpTitle => 'Pick intermediate node';
+
+  @override
+  String get onionPickTargetTitle => 'Pick destination node';
+
+  @override
+  String get onionAlreadyInChain => 'In chain';
+
+  @override
+  String get onionMoveUp => 'Move up';
+
+  @override
+  String get onionMoveDown => 'Move down';
+
+  @override
+  String get onionRemoveNode => 'Remove node';
+
+  @override
+  String deleteOnionTitle(String name) {
+    return 'Delete onion connection \"$name\"?';
+  }
+
+  @override
+  String get deleteOnionBody =>
+      'Only this chain card will be removed; saved hosts are unaffected.';
+
+  @override
+  String onionStartingChain(int hops, String route) {
+    return 'Opening onion connection ($hops hops): $route';
+  }
+
+  @override
+  String onionConnectingHop(int step, int total, String target) {
+    return '[$step/$total] Connecting to $target…';
+  }
+
+  @override
+  String onionForwardingHop(int step, int total, String from, String to) {
+    return '[$step/$total] Connected to $from; forwarding to $to…';
+  }
+
+  @override
+  String onionHopForwardFailed(String from, String to, String error) {
+    return 'Couldn\'t forward from $from to $to (check AllowTcpForwarding on $from): $error';
+  }
+
+  @override
+  String get about => 'About';
 }

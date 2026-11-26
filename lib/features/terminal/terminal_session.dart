@@ -8,6 +8,7 @@ import 'package:flutter_pty/flutter_pty.dart';
 import 'package:xterm2/xterm.dart';
 
 import '../../core/app_log.dart';
+import '../../core/proxy_transport.dart';
 
 import '../hosts/host.dart';
 import '../hosts/host_repository.dart';
@@ -44,6 +45,8 @@ class TerminalSession extends ChangeNotifier {
     required this.knownHosts,
     required this.prompts,
     this.keys,
+    this.jumpHosts = const [],
+    this.chainLabel,
   }) : terminal = Terminal(maxLines: 10000, platform: _terminalPlatform()) {
     highlighter = CommandHighlighter(
       terminal,
@@ -65,6 +68,25 @@ class TerminalSession extends ChangeNotifier {
 
   /// Saved keys (Keys page), for hosts that use one.
   final KeyRepository? keys;
+
+  /// Intermediate jump hosts traversed before reaching [host] (empty for
+  /// direct connections; non-empty for Onion multi-hop chains).
+  final List<Host> jumpHosts;
+
+  /// Optional label shown on the tab strip for an Onion chain.
+  final String? chainLabel;
+
+  /// Whether this session connects through one or more intermediate jump hops.
+  bool get isOnion => jumpHosts.isNotEmpty;
+
+  /// Ordered hop chain from entry node to final destination [host].
+  List<Host> get hopChain => [...jumpHosts, host];
+
+  /// Tab title for single-pane tabs.
+  String get displayLabel =>
+      (chainLabel != null && chainLabel!.trim().isNotEmpty)
+      ? chainLabel!.trim()
+      : host.displayName;
 
   final Terminal terminal;
   final TerminalController controller = TerminalController();
@@ -110,6 +132,10 @@ class TerminalSession extends ChangeNotifier {
   /// Colors the command being typed (settings read each time).
   late final CommandHighlighter highlighter;
   HighlightSettings Function()? highlightSettings;
+
+  /// Optional custom socket opener (used to route SSH through the configured
+  /// SSH network proxy).
+  SshSocketConnector? socketConnector;
 
   /// Called when the user presses Enter here (the file browser follows
   /// `cd` with it).
@@ -192,6 +218,7 @@ class TerminalSession extends ChangeNotifier {
   }
 
   SSHClient? _client;
+  final List<SSHClient> _jumpClients = [];
   SSHSession? _shell;
   final _subs = <StreamSubscription<String>>[];
 
@@ -275,23 +302,68 @@ class TerminalSession extends ChangeNotifier {
     _teardown();
     final gen = ++_generation;
     _setStatus(SessionStatus.connecting);
-    log.info('ssh', 'Connecting to ${host.target}');
-    terminal.write(
-      '\x1b[2m${currentL10n.connectingTo(host.target)}\x1b[0m\r\n',
-    );
+    if (isOnion) {
+      final route = hopChain.map((h) => h.displayName).join(' → ');
+      log.info(
+        'ssh',
+        'Connecting onion chain (${hopChain.length} hops): $route',
+      );
+      terminal.write(
+        '\x1b[2m${currentL10n.onionStartingChain(hopChain.length, route)}\x1b[0m\r\n',
+      );
+    } else {
+      log.info('ssh', 'Connecting to ${host.target}');
+      terminal.write(
+        '\x1b[2m${currentL10n.connectingTo(host.target)}\x1b[0m\r\n',
+      );
+    }
 
     try {
-      final client = await openAuthenticatedSshClient(
-        host: host,
-        repository: repository,
-        knownHosts: knownHosts,
-        prompts: prompts,
-        keys: keys,
-        onUserauthBanner: (banner) =>
-            terminal.write(banner.replaceAll('\n', '\r\n')),
-        onClientCreated: (c) => _client = c,
-        isCancelled: () => gen != _generation,
-      );
+      final SSHClient client;
+      if (isOnion) {
+        final result = await openOnionSshClient(
+          chain: hopChain,
+          repository: repository,
+          knownHosts: knownHosts,
+          prompts: prompts,
+          keys: keys,
+          entrySocketConnector: socketConnector,
+          onUserauthBanner: (banner) =>
+              terminal.write(banner.replaceAll('\n', '\r\n')),
+          onIntermediateCreated: _jumpClients.add,
+          onTargetCreated: (c) => _client = c,
+          onHopConnecting: (step, total, hop) {
+            log.info('ssh', 'Onion [$step/$total] connecting to ${hop.target}');
+            terminal.write(
+              '\x1b[2m${currentL10n.onionConnectingHop(step, total, '${hop.displayName} (${hop.target})')}\x1b[0m\r\n',
+            );
+          },
+          onHopForwarding: (step, total, from, to) {
+            log.info(
+              'ssh',
+              'Onion [$step/$total] forwarding ${from.displayName} -> ${to.target}',
+            );
+            terminal.write(
+              '\x1b[32m${currentL10n.onionForwardingHop(step, total, from.displayName, '${to.displayName} (${to.target})')}\x1b[0m\r\n',
+            );
+          },
+          isCancelled: () => gen != _generation,
+        );
+        client = result.client;
+      } else {
+        client = await openAuthenticatedSshClient(
+          host: host,
+          repository: repository,
+          knownHosts: knownHosts,
+          prompts: prompts,
+          keys: keys,
+          connectSocket: socketConnector,
+          onUserauthBanner: (banner) =>
+              terminal.write(banner.replaceAll('\n', '\r\n')),
+          onClientCreated: (c) => _client = c,
+          isCancelled: () => gen != _generation,
+        );
+      }
       if (gen != _generation) return;
 
       final pty = SSHPtyConfig(
@@ -634,6 +706,13 @@ class TerminalSession extends ChangeNotifier {
     _fs = null;
     _client?.close();
     _client = null;
+    // Close intermediate onion jump clients from innermost to outermost.
+    for (final jump in _jumpClients.reversed) {
+      try {
+        jump.close();
+      } catch (_) {}
+    }
+    _jumpClients.clear();
   }
 
   void _setStatus(SessionStatus s) {
@@ -744,15 +823,24 @@ class _ConnectError implements Exception {
   final String message;
 }
 
+/// Custom socket opener for [openAuthenticatedSshClient] (e.g. HTTP/SOCKS5
+/// proxy routing).
+typedef SshSocketConnector = Future<SSHSocket> Function(
+  String host,
+  int port,
+  Duration timeout,
+);
+
 /// Opens and authenticates an [SSHClient] for [host], shared by terminal
 /// sessions and standalone port-forwarding tunnels so both follow the exact
-/// same key loading, credential prompt, and known_hosts verification flow.
+/// same key loading, credential prompt, proxy, and known_hosts verification flow.
 Future<SSHClient> openAuthenticatedSshClient({
   required Host host,
   required HostRepository repository,
   required KnownHostsStore knownHosts,
   required SessionPrompts prompts,
   KeyRepository? keys,
+  SshSocketConnector? connectSocket,
   void Function(String banner)? onUserauthBanner,
   void Function(SSHClient client)? onClientCreated,
   bool Function()? isCancelled,
@@ -769,11 +857,14 @@ Future<SSHClient> openAuthenticatedSshClient({
     );
   }
 
-  final socket = await SSHSocket.connect(
-    host.address,
-    host.port,
-    timeout: const Duration(seconds: 10),
-  );
+  const connectTimeout = Duration(seconds: 10);
+  final socket = connectSocket != null
+      ? await connectSocket(host.address, host.port, connectTimeout)
+      : await SSHSocket.connect(
+          host.address,
+          host.port,
+          timeout: connectTimeout,
+        );
   if (isCancelled?.call() ?? false) {
     socket.destroy();
     throw _ConnectError(currentL10n.loginCancelled);
@@ -822,6 +913,134 @@ Future<SSHClient> openAuthenticatedSshClient({
     throw _ConnectError(currentL10n.loginCancelled);
   }
   return client;
+}
+
+/// Generic multi-hop chain builder (`A -> B -> ... -> Z`), factored out so
+/// hop ordering, channel forwarding, and reverse-order cleanup on error or
+/// cancellation can be unit-tested deterministically.
+Future<({T client, List<T> jumpClients})> establishOnionChain<T>({
+  required List<Host> chain,
+  required Future<T> Function(
+    Host hop,
+    SSHSocket? forwardedSocket,
+    bool isTarget,
+  )
+  connectHop,
+  required Future<SSHSocket> Function(T prevClient, Host from, Host to)
+  forwardNext,
+  required void Function(T client) closeClient,
+  bool Function()? isCancelled,
+  void Function(int step, int total, Host hop)? onHopConnecting,
+  void Function(int step, int total, Host from, Host to)? onHopForwarding,
+}) async {
+  assert(chain.isNotEmpty, 'onion chain must have at least one host');
+  final opened = <T>[];
+  SSHSocket? nextSocket;
+
+  void closeOpened() {
+    for (final c in opened.reversed) {
+      try {
+        closeClient(c);
+      } catch (_) {}
+    }
+    opened.clear();
+  }
+
+  try {
+    final total = chain.length;
+    for (var i = 0; i < total; i++) {
+      if (isCancelled?.call() ?? false) {
+        nextSocket?.destroy();
+        closeOpened();
+        throw _ConnectError(currentL10n.loginCancelled);
+      }
+      final hop = chain[i];
+      final isTarget = i == total - 1;
+      onHopConnecting?.call(i + 1, total, hop);
+
+      final client = await connectHop(hop, nextSocket, isTarget);
+      nextSocket = null;
+      opened.add(client);
+
+      if (isCancelled?.call() ?? false) {
+        closeOpened();
+        throw _ConnectError(currentL10n.loginCancelled);
+      }
+
+      if (!isTarget) {
+        final nextHop = chain[i + 1];
+        onHopForwarding?.call(i + 1, total, hop, nextHop);
+        nextSocket = await forwardNext(client, hop, nextHop);
+      }
+    }
+
+    final target = opened.removeLast();
+    return (client: target, jumpClients: opened);
+  } catch (_) {
+    nextSocket?.destroy();
+    closeOpened();
+    rethrow;
+  }
+}
+
+/// Connects an end-to-end encrypted multi-hop SSH chain `[A, B, ..., target]`
+/// using `direct-tcpip` (`forwardLocal`) on each intermediate hop, matching
+/// OpenSSH `ProxyJump` (`ssh -J`).
+Future<({SSHClient client, List<SSHClient> jumpClients})> openOnionSshClient({
+  required List<Host> chain,
+  required HostRepository repository,
+  required KnownHostsStore knownHosts,
+  required SessionPrompts prompts,
+  KeyRepository? keys,
+  SshSocketConnector? entrySocketConnector,
+  void Function(String banner)? onUserauthBanner,
+  void Function(SSHClient client)? onIntermediateCreated,
+  void Function(SSHClient client)? onTargetCreated,
+  void Function(int step, int total, Host hop)? onHopConnecting,
+  void Function(int step, int total, Host from, Host to)? onHopForwarding,
+  bool Function()? isCancelled,
+}) {
+  return establishOnionChain<SSHClient>(
+    chain: chain,
+    isCancelled: isCancelled,
+    onHopConnecting: onHopConnecting,
+    onHopForwarding: onHopForwarding,
+    connectHop: (hop, forwardedSocket, isTarget) => openAuthenticatedSshClient(
+      host: hop,
+      repository: repository,
+      knownHosts: knownHosts,
+      prompts: prompts,
+      keys: keys,
+      connectSocket: forwardedSocket != null
+          ? (_, _, _) async => forwardedSocket
+          : entrySocketConnector,
+      onUserauthBanner: isTarget ? onUserauthBanner : null,
+      onClientCreated: (c) {
+        if (isTarget) {
+          onTargetCreated?.call(c);
+        } else {
+          onIntermediateCreated?.call(c);
+        }
+      },
+      isCancelled: isCancelled,
+    ),
+    forwardNext: (prevClient, from, to) async {
+      try {
+        return await prevClient
+            .forwardLocal(to.address, to.port)
+            .timeout(const Duration(seconds: 10));
+      } catch (e) {
+        throw _ConnectError(
+          currentL10n.onionHopForwardFailed(
+            from.displayName,
+            '${to.displayName} (${to.target})',
+            '$e',
+          ),
+        );
+      }
+    },
+    closeClient: (c) => c.close(),
+  );
 }
 
 Future<List<SSHKeyPair>> _loadHostKeyPairs({
@@ -897,6 +1116,7 @@ Future<List<String>?> _answerHostKeyboardInteractive({
 /// Turns connection failures into a short message for the user.
 String describeConnectError(Object e, Host host) {
   if (e is _ConnectError) return e.message;
+  if (e is ProxyConnectException) return e.message;
   if (e is SocketException) {
     final reason = e.osError?.message ?? e.message;
     return currentL10n.cannotConnect('${host.address}:${host.port}', reason);

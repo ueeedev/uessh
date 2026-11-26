@@ -145,6 +145,7 @@ void main() {
     await pumpApp(tester);
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
+    await selectSettingsCategory(tester, SettingsCategory.ai);
     // Nothing listed until a provider is added.
     final add = find.byKey(const ValueKey('ai-add-provider'));
     await scrollTo(tester, add);
@@ -298,6 +299,7 @@ void main() {
     final c = await pumpApp(tester);
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
+    await selectSettingsCategory(tester, SettingsCategory.ai);
     final dropdown = find.byKey(const ValueKey('ai-tool-mode'));
     await scrollTo(tester, dropdown);
     await tester.tap(dropdown);

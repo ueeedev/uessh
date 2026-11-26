@@ -13,7 +13,6 @@ import 'package:uessh/features/mcp/mcp_controller.dart';
 import 'package:uessh/features/mcp/mcp_server.dart';
 import 'package:uessh/features/mcp/mcp_tools.dart';
 import 'package:uessh/features/settings/app_settings.dart';
-import 'package:uessh/features/settings/settings_page.dart';
 import 'package:uessh/features/terminal/known_hosts.dart';
 import 'package:uessh/features/terminal/terminal_session.dart';
 
@@ -574,20 +573,10 @@ void main() {
 
         await tester.tap(find.text('设置'));
         await tester.pumpAndSettle();
+        await selectSettingsCategory(tester, SettingsCategory.mcp);
 
         final toggle = find.byKey(const ValueKey('mcp-enable'));
-        await tester.scrollUntilVisible(
-          toggle,
-          300,
-          scrollable: find
-              .descendant(
-                of: find.byType(SettingsPage),
-                matching: find.byType(Scrollable),
-              )
-              .first,
-        );
-        await settleIo(tester);
-        await tester.pumpAndSettle();
+        await scrollTo(tester, toggle);
         expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
 
         await tester.tap(toggle);

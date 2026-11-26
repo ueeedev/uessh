@@ -52,7 +52,7 @@ void main() {
   Future<void> openSettings(WidgetTester tester) async {
     await tester.tap(find.text('设置').last);
     await tester.pumpAndSettle();
-    await scrollTo(tester, find.byKey(const ValueKey('check-updates')));
+    await selectSettingsCategory(tester, SettingsCategory.about);
   }
 
   Future<AppSettings> saved(WidgetTester tester) async => (await tester

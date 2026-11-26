@@ -175,6 +175,7 @@ void main() {
       await pumpApp(tester);
       await tester.tap(find.text('设置'));
       await tester.pumpAndSettle();
+      await selectSettingsCategory(tester, SettingsCategory.reachability);
 
       await tester.tap(find.byKey(const ValueKey('check-interval')));
       await tester.pumpAndSettle();
@@ -212,6 +213,7 @@ void main() {
 
       await tester.tap(find.text('设置'));
       await tester.pumpAndSettle();
+      await selectSettingsCategory(tester, SettingsCategory.reachability);
       await tester.tap(find.byKey(const ValueKey('check-interval')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('不启用').last);

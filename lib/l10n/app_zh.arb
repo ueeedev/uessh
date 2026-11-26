@@ -1217,5 +1217,179 @@
     }
   },
   "forwardConnectionLost": "SSH 隧道连接已断开",
-  "forwardNoMatchesTitle": "没有匹配的转发规则"
+  "forwardNoMatchesTitle": "没有匹配的转发规则",
+  "proxySection": "网络代理",
+  "aiProxyTitle": "AI 网络代理",
+  "aiProxySubtitle": "用于 AI 助手对话与模型列表请求",
+  "sshProxyTitle": "SSH 网络代理",
+  "sshProxySubtitle": "用于 SSH 终端连接与端口转发隧道",
+  "proxyModeSystem": "跟随系统",
+  "proxyModeDirect": "直连",
+  "proxyModeCustom": "自定义",
+  "proxySystemDetected": "已检测到系统代理：{endpoint}",
+  "@proxySystemDetected": {
+    "placeholders": {
+      "endpoint": {
+        "type": "String"
+      }
+    }
+  },
+  "proxySystemNone": "当前未检测到系统代理（将直接连接）",
+  "proxyScheme": "协议",
+  "proxyHost": "代理地址",
+  "proxyPort": "端口",
+  "proxyUsername": "用户名（可选）",
+  "proxyPassword": "密码（可选）",
+  "proxyPasswordKeepHint": "留空保持现有密码",
+  "proxyHostRequired": "请输入代理地址",
+  "proxyPortInvalid": "端口需为 1–65535",
+  "proxyTest": "测试连接",
+  "proxyTesting": "测试中…",
+  "proxyTestOk": "代理连接正常（{endpoint}）",
+  "@proxyTestOk": {
+    "placeholders": {
+      "endpoint": {
+        "type": "String"
+      }
+    }
+  },
+  "proxyTestFailed": "代理连接失败：{error}",
+  "@proxyTestFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "proxySaved": "代理设置已保存",
+  "proxyCustomNotSet": "请填写并保存代理地址与端口",
+  "navOnion": "洋葱连接",
+  "onionTitle": "洋葱连接",
+  "newOnionRoute": "新建连接",
+  "editOnionRoute": "编辑洋葱连接",
+  "searchOnionRoutes": "搜索洋葱连接或节点…",
+  "loadOnionFailed": "无法读取洋葱连接",
+  "noOnionTitle": "还没有洋葱连接",
+  "noOnionMessage": "将多台主机串联为跳板链路（如 A → B → C），逐跳加密控制目标服务器",
+  "onionNoMatchesTitle": "没有匹配的洋葱连接",
+  "onionName": "连接名称（可选）",
+  "onionNameHint": "例如：生产跳板链路（留空自动按节点命名）",
+  "onionLocalOrigin": "本机 (uessh)",
+  "onionJumpNodes": "中间节点",
+  "onionJumpNodesHint": "按跳转顺序依次经过以下服务器",
+  "onionAddJumpNode": "新增中间节点",
+  "onionTargetNode": "结束节点",
+  "onionTargetNodeHint": "最终建立终端会话的目标服务器",
+  "onionSelectTargetNode": "选择结束节点",
+  "onionReplaceNode": "更换节点",
+  "onionHopBadge": "第 {index} 跳",
+  "@onionHopBadge": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "onionTargetBadge": "终点",
+  "onionHopsCount": "{count} 跳",
+  "@onionHopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "onionNeedJumpError": "请至少新增一个中间节点",
+  "onionNeedTargetError": "请选择结束节点",
+  "onionVisibilityHint": "目标节点「{target}」仅可见来自「{lastJump}」的 SSH 连接",
+  "@onionVisibilityHint": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      },
+      "lastJump": {
+        "type": "String"
+      }
+    }
+  },
+  "onionCliPreview": "等效 SSH ProxyJump 命令",
+  "onionNote": "备注（可选）",
+  "onionNoteHint": "简短记录链路用途",
+  "onionConnect": "连接",
+  "onionHostMissing": "链路中有主机已删除，请先编辑更新节点",
+  "onionMissingHostBadge": "主机已删除",
+  "onionCopyCommand": "复制 ssh -J 命令",
+  "onionCommandCopied": "已复制命令",
+  "onionPickJumpTitle": "选择中间节点（从主机卡片选择）",
+  "onionPickTargetTitle": "选择结束节点（从主机卡片选择）",
+  "onionAlreadyInChain": "已在链路中",
+  "onionMoveUp": "上移",
+  "onionMoveDown": "下移",
+  "onionRemoveNode": "移除节点",
+  "deleteOnionTitle": "删除洋葱连接“{name}”？",
+  "@deleteOnionTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteOnionBody": "仅删除此链路卡片，不会影响主机列表中的服务器。",
+  "onionStartingChain": "正在建立洋葱连接（共 {hops} 跳）：{route}",
+  "@onionStartingChain": {
+    "placeholders": {
+      "hops": {
+        "type": "int"
+      },
+      "route": {
+        "type": "String"
+      }
+    }
+  },
+  "onionConnectingHop": "[{step}/{total}] 正在连接节点 {target}…",
+  "@onionConnectingHop": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "onionForwardingHop": "[{step}/{total}] 已连接 {from}，正在经由其转发至 {to}…",
+  "@onionForwardingHop": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "onionHopForwardFailed": "无法通过 {from} 转发到 {to}（请确认服务器开启 AllowTcpForwarding）：{error}",
+  "@onionHopForwardFailed": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "about": "关于"
 }

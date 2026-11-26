@@ -5,6 +5,7 @@ import '../features/forwarding/forwarding_page.dart';
 import '../features/forwarding/forwarding_providers.dart';
 import '../features/hosts/hosts_page.dart';
 import '../features/keys/keys_page.dart';
+import '../features/onion/onion_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/settings/updates.dart';
 import '../features/snippets/snippets_page.dart';
@@ -28,6 +29,11 @@ final _destinations = {
     (l) => l.navHosts,
     Icons.dns_outlined,
     Icons.dns,
+  ),
+  AppDestination.onion: _Destination(
+    (l) => l.navOnion,
+    Icons.layers_outlined,
+    Icons.layers,
   ),
   AppDestination.keys: _Destination(
     (l) => l.navKeys,
@@ -80,6 +86,7 @@ class HomeView extends ConsumerWidget {
             index: current.index,
             children: const [
               HostsPage(),
+              OnionPage(),
               KeysPage(),
               SnippetsPage(),
               ForwardingPage(),

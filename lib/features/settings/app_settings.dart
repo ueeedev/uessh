@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../core/json_file.dart';
+import '../../core/proxy_settings.dart';
 import '../terminal/command_highlight.dart';
 
 /// How host reachability is checked.
@@ -79,6 +80,8 @@ class AppSettings {
     this.mcpEnabled = false,
     this.mcpPort = defaultMcpPort,
     this.mcpApprovalMode = McpApprovalMode.readOnlyAuto,
+    this.aiProxy = ProxySettings.aiDefault,
+    this.sshProxy = ProxySettings.sshDefault,
     this.lastConnectedHostId,
     this.lastConnectedAt,
   });
@@ -180,6 +183,13 @@ class AppSettings {
   final int mcpPort;
   final McpApprovalMode mcpApprovalMode;
 
+  /// Network proxy for AI assistant HTTP requests (defaults to OS system proxy).
+  final ProxySettings aiProxy;
+
+  /// Network proxy for SSH terminal and port-forwarding connections (defaults
+  /// to direct).
+  final ProxySettings sshProxy;
+
   /// Colors the command being typed in the terminal.
   final bool syntaxHighlight;
 
@@ -242,6 +252,8 @@ class AppSettings {
     bool? mcpEnabled,
     int? mcpPort,
     McpApprovalMode? mcpApprovalMode,
+    ProxySettings? aiProxy,
+    ProxySettings? sshProxy,
   }) => _copy(
     themeMode: themeMode,
     followSystemAccent: followSystemAccent,
@@ -268,6 +280,8 @@ class AppSettings {
     mcpEnabled: mcpEnabled,
     mcpPort: mcpPort,
     mcpApprovalMode: mcpApprovalMode,
+    aiProxy: aiProxy,
+    sshProxy: sshProxy,
   );
 
   AppSettings _copy({
@@ -296,6 +310,8 @@ class AppSettings {
     bool? mcpEnabled,
     int? mcpPort,
     McpApprovalMode? mcpApprovalMode,
+    ProxySettings? aiProxy,
+    ProxySettings? sshProxy,
     String? lastConnectedHostId,
     DateTime? lastConnectedAt,
   }) => AppSettings(
@@ -324,6 +340,8 @@ class AppSettings {
     mcpEnabled: mcpEnabled ?? this.mcpEnabled,
     mcpPort: mcpPort ?? this.mcpPort,
     mcpApprovalMode: mcpApprovalMode ?? this.mcpApprovalMode,
+    aiProxy: aiProxy ?? this.aiProxy,
+    sshProxy: sshProxy ?? this.sshProxy,
     lastConnectedHostId: lastConnectedHostId ?? this.lastConnectedHostId,
     lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
   );
@@ -354,6 +372,8 @@ class AppSettings {
     'mcpEnabled': mcpEnabled,
     'mcpPort': mcpPort,
     'mcpApprovalMode': mcpApprovalMode.name,
+    'aiProxy': aiProxy.toJson(),
+    'sshProxy': sshProxy.toJson(),
     if (highlightColors.isNotEmpty)
       'highlightColors': {
         for (final e in highlightColors.entries) e.key.name: e.value,
@@ -418,6 +438,14 @@ class AppSettings {
       mcpApprovalMode:
           McpApprovalMode.values.asNameMap()[json['mcpApprovalMode']] ??
           d.mcpApprovalMode,
+      aiProxy: ProxySettings.fromJson(
+        json['aiProxy'],
+        fallback: ProxySettings.aiDefault,
+      ),
+      sshProxy: ProxySettings.fromJson(
+        json['sshProxy'],
+        fallback: ProxySettings.sshDefault,
+      ),
       highlightColors: {
         if (json['highlightColors'] case final Map<Object?, Object?> m)
           for (final e in m.entries)

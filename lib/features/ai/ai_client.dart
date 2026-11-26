@@ -4,6 +4,10 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/app_providers.dart';
+import '../../core/proxy_settings.dart';
+import '../../core/proxy_transport.dart';
+import '../settings/settings_providers.dart';
 import 'ai_config.dart';
 
 /// A tool the model may call.
@@ -198,7 +202,18 @@ abstract class AiClient {
   Future<List<String>> listModels(AiProvider provider, String apiKey);
 }
 
-final aiClientProvider = Provider<AiClient>((ref) => HttpAiClient());
+final aiClientProvider = Provider<AiClient>(
+  (ref) => HttpAiClient(
+    readProxy: () {
+      final proxy = ref.read(settingsProvider).aiProxy;
+      String? password;
+      try {
+        password = ref.read(vaultProvider).read(aiProxyPasswordKey);
+      } catch (_) {}
+      return (proxy: proxy, password: password);
+    },
+  ),
+);
 
 /// Anthropic models that accept server-side refusal fallbacks
 /// (`fallbacks: "default"`).
@@ -351,8 +366,28 @@ Map<String, Object?> openAiBody({
 };
 
 class HttpAiClient implements AiClient {
+  HttpAiClient({this.readProxy});
+
   static const _connectTimeout = Duration(seconds: 15);
   static const _idleTimeout = Duration(seconds: 120);
+
+  /// Supplies the active AI network proxy settings per request so edits in
+  /// Settings take effect immediately without restarting the app.
+  final ({ProxySettings proxy, String? password}) Function()? readProxy;
+
+  HttpClient _newClient() {
+    final client = HttpClient()..connectionTimeout = _connectTimeout;
+    final cfg = readProxy?.call();
+    if (cfg != null) {
+      configureHttpClientProxy(
+        client,
+        proxy: cfg.proxy,
+        password: cfg.password,
+        connectTimeout: _connectTimeout,
+      );
+    }
+    return client;
+  }
 
   @override
   Stream<AiDelta> chat({
@@ -363,7 +398,7 @@ class HttpAiClient implements AiClient {
     required List<AiTurn> turns,
     List<AiTool> tools = const [],
   }) {
-    final client = HttpClient()..connectionTimeout = _connectTimeout;
+    final client = _newClient();
     late final StreamController<AiDelta> out;
     StreamSubscription<AiDelta>? sub;
 
@@ -451,7 +486,7 @@ class HttpAiClient implements AiClient {
 
   @override
   Future<List<String>> listModels(AiProvider provider, String apiKey) async {
-    final client = HttpClient()..connectionTimeout = _connectTimeout;
+    final client = _newClient();
     try {
       final anthropic = provider.effectiveProtocol == AiProtocol.anthropic;
       final req = await client.getUrl(

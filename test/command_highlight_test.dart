@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -216,6 +218,7 @@ void main() {
     await settleIo(tester);
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
+    await selectSettingsCategory(tester, SettingsCategory.ssh);
 
     final chip = find.byKey(const ValueKey('highlight-command'));
     await tester.ensureVisible(chip);
@@ -224,7 +227,7 @@ void main() {
     await tester.tap(chip);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('color-ffff7eb6')));
-    await tester.pumpAndSettle();
+    await settleIo(tester);
     expect(find.byKey(const ValueKey('highlight-reset')), findsOneWidget);
 
     final reconnect = find.byKey(const ValueKey('auto-reconnect'));
@@ -236,7 +239,13 @@ void main() {
     expect(find.byKey(const ValueKey('reconnect-attempts')), findsNothing);
     await settleIo(tester);
 
-    final saved = (await tester.runAsync(
+    late AppSettings saved;
+    await pumpUntil(tester, () {
+      final f = File('${env.dataDir.path}/settings.json');
+      return f.existsSync() &&
+          f.readAsStringSync().contains('"autoReconnect": false');
+    });
+    saved = (await tester.runAsync(
       () => SettingsStore(dataDir: env.dataDir).load(),
     ))!;
     expect(saved.highlightColor(HighlightToken.command), 0xFFFF7EB6);

@@ -8,6 +8,7 @@ class SystemProxyConfig {
   const SystemProxyConfig({
     this.httpProxy,
     this.httpsProxy,
+    this.socksProxy,
     this.bypass = const [],
   });
 
@@ -19,11 +20,44 @@ class SystemProxyConfig {
   /// `host:port` for `https://` requests (e.g. `127.0.0.1:7890`).
   final String? httpsProxy;
 
+  /// `host:port` for SOCKS5 connections (e.g. `127.0.0.1:7890`).
+  final String? socksProxy;
+
   /// Host patterns that bypass the system proxy (`ExceptionsList` on macOS,
   /// `ProxyOverride` on Windows).
   final List<String> bypass;
 
-  bool get hasProxy => httpProxy != null || httpsProxy != null;
+  bool get hasProxy =>
+      httpProxy != null || httpsProxy != null || socksProxy != null;
+
+  /// Compact human-readable summary of the detected proxy endpoint, or null
+  /// when no OS proxy is active.
+  String? get summary {
+    if (httpsProxy != null) return 'http://$httpsProxy';
+    if (httpProxy != null) return 'http://$httpProxy';
+    if (socksProxy != null) return 'socks5://$socksProxy';
+    return null;
+  }
+
+  /// Preferred endpoint for raw TCP/SSH tunnels (SOCKS5 first, then HTTPS/HTTP
+  /// CONNECT). Returns null when [host] should bypass or no proxy is active.
+  ({String host, int port, bool isSocks5})? resolveForTcp(String host) {
+    if (!hasProxy || isLoopbackHost(host) || shouldBypass(host)) return null;
+    if (socksProxy != null) {
+      final parsed = splitHostPort(socksProxy!);
+      if (parsed != null) {
+        return (host: parsed.host, port: parsed.port, isSocks5: true);
+      }
+    }
+    final http = httpsProxy ?? httpProxy;
+    if (http != null) {
+      final parsed = splitHostPort(http);
+      if (parsed != null) {
+        return (host: parsed.host, port: parsed.port, isSocks5: false);
+      }
+    }
+    return null;
+  }
 
   /// Resolves the `HttpClient.findProxy` directive for [url].
   String resolveFor(Uri url) {
@@ -85,13 +119,34 @@ class SystemProxyConfig {
       other is SystemProxyConfig &&
       other.httpProxy == httpProxy &&
       other.httpsProxy == httpsProxy &&
+      other.socksProxy == socksProxy &&
       other.bypass.length == bypass.length &&
       Iterable<int>.generate(bypass.length)
           .every((i) => other.bypass[i] == bypass[i]);
 
   @override
   int get hashCode =>
-      Object.hash(httpProxy, httpsProxy, Object.hashAll(bypass));
+      Object.hash(httpProxy, httpsProxy, socksProxy, Object.hashAll(bypass));
+}
+
+/// Splits `host:port` or `[::1]:port` into `(host, port)`.
+({String host, int port})? splitHostPort(String endpoint) {
+  final s = endpoint.trim();
+  if (s.isEmpty) return null;
+  if (s.startsWith('[')) {
+    final end = s.indexOf(']:');
+    if (end <= 1) return null;
+    final host = s.substring(1, end);
+    final port = int.tryParse(s.substring(end + 2));
+    if (port == null || port < 1 || port > 65535) return null;
+    return (host: host, port: port);
+  }
+  final colon = s.lastIndexOf(':');
+  if (colon <= 0) return null;
+  final host = s.substring(0, colon);
+  final port = int.tryParse(s.substring(colon + 1));
+  if (host.isEmpty || port == null || port < 1 || port > 65535) return null;
+  return (host: host, port: port);
 }
 
 bool isLoopbackHost(String host) {
@@ -202,10 +257,14 @@ SystemProxyConfig parseMacOsScutilProxy(String output) {
   final httpsProxy = values['HTTPSEnable'] == '1'
       ? _formatHostPort(values['HTTPSProxy'], values['HTTPSPort'])
       : null;
+  final socksProxy = values['SOCKSEnable'] == '1'
+      ? _formatHostPort(values['SOCKSProxy'], values['SOCKSPort'])
+      : null;
 
   return SystemProxyConfig(
     httpProxy: httpProxy,
     httpsProxy: httpsProxy,
+    socksProxy: socksProxy,
     bypass: exceptions,
   );
 }
@@ -244,12 +303,25 @@ SystemProxyConfig parseWindowsRegProxy(String output) {
 
   String? httpProxy;
   String? httpsProxy;
+  String? socksProxy;
   if (proxyServer.contains('=')) {
     for (final part in proxyServer.split(';')) {
       final eq = part.indexOf('=');
       if (eq <= 0) continue;
       final scheme = part.substring(0, eq).trim().toLowerCase();
-      final endpoint = _normalizeProxyEndpoint(part.substring(eq + 1));
+      final rawVal = part.substring(eq + 1).trim();
+      if (scheme == 'socks' || scheme == 'socks5') {
+        final cleaned = rawVal.replaceFirst(
+          RegExp(r'^socks5?://', caseSensitive: false),
+          '',
+        );
+        final parsed = splitHostPort(cleaned);
+        if (parsed != null) {
+          socksProxy = _formatHostPort(parsed.host, '${parsed.port}');
+        }
+        continue;
+      }
+      final endpoint = _normalizeProxyEndpoint(rawVal);
       if (endpoint == null) continue;
       if (scheme == 'http') httpProxy = endpoint;
       if (scheme == 'https') httpsProxy = endpoint;
@@ -269,6 +341,7 @@ SystemProxyConfig parseWindowsRegProxy(String output) {
   return SystemProxyConfig(
     httpProxy: httpProxy,
     httpsProxy: httpsProxy,
+    socksProxy: socksProxy,
     bypass: bypass,
   );
 }
@@ -347,6 +420,41 @@ class SystemProxyResolver {
     }
 
     return _current().resolveFor(url);
+  }
+
+  /// Resolves a TCP/SSH proxy endpoint from explicit env vars or OS system
+  /// proxy settings. Returns null for direct connections.
+  ({String host, int port, bool isSocks5})? resolveForTcp(String targetHost) {
+    if (isLoopbackHost(targetHost)) return null;
+    final env = _readEnvironment();
+    final allProxy = env['ALL_PROXY'] ?? env['all_proxy'];
+    if (allProxy != null && allProxy.trim().isNotEmpty) {
+      final uri = Uri.tryParse(allProxy.trim());
+      if (uri != null && uri.host.isNotEmpty && uri.hasPort) {
+        final scheme = uri.scheme.toLowerCase();
+        if (scheme == 'socks5' || scheme == 'socks5h' || scheme == 'socks') {
+          return (host: uri.host, port: uri.port, isSocks5: true);
+        }
+        if (scheme == 'http' || scheme == 'https') {
+          return (host: uri.host, port: uri.port, isSocks5: false);
+        }
+      }
+    }
+    if (_hasExplicitEnvProxy(env)) {
+      final directive = HttpClient.findProxyFromEnvironment(
+        Uri(scheme: 'https', host: targetHost, port: 443),
+        environment: env,
+      );
+      final m = RegExp(r'PROXY\s+([^\s;]+)').firstMatch(directive);
+      if (m != null) {
+        final parsed = splitHostPort(m.group(1)!);
+        if (parsed != null) {
+          return (host: parsed.host, port: parsed.port, isSocks5: false);
+        }
+      }
+      return null;
+    }
+    return _current().resolveForTcp(targetHost);
   }
 
   static bool _hasExplicitEnvProxy(Map<String, String> env) {

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/terminal/sessions_providers.dart';
 
 /// Pages of the workbench (the first, pinned tab).
-enum AppDestination { hosts, keys, snippets, forwarding, settings }
+enum AppDestination { hosts, onion, keys, snippets, forwarding, settings }
 
 class NavigationNotifier extends Notifier<AppDestination> {
   @override

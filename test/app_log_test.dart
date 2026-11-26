@@ -57,6 +57,7 @@ void main() {
 
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
+    await selectSettingsCategory(tester, SettingsCategory.diagnostics);
     await scrollTo(tester, find.byKey(const ValueKey('open-log')));
     await tester.tap(find.byKey(const ValueKey('open-log')));
     await tester.pumpAndSettle();

@@ -143,6 +143,7 @@ class SshForwardTransport implements ForwardTransport {
     required KnownHostsStore knownHosts,
     required SessionPrompts prompts,
     KeyRepository? keys,
+    SshSocketConnector? connectSocket,
     required bool Function() isCancelled,
   }) async {
     final client = await openAuthenticatedSshClient(
@@ -151,6 +152,7 @@ class SshForwardTransport implements ForwardTransport {
       knownHosts: knownHosts,
       prompts: prompts,
       keys: keys,
+      connectSocket: connectSocket,
       isCancelled: isCancelled,
     );
     return SshForwardTransport(client);

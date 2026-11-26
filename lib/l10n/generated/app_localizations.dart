@@ -3841,6 +3841,426 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'没有匹配的转发规则'**
   String get forwardNoMatchesTitle;
+
+  /// No description provided for @proxySection.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络代理'**
+  String get proxySection;
+
+  /// No description provided for @aiProxyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'AI 网络代理'**
+  String get aiProxyTitle;
+
+  /// No description provided for @aiProxySubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'用于 AI 助手对话与模型列表请求'**
+  String get aiProxySubtitle;
+
+  /// No description provided for @sshProxyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'SSH 网络代理'**
+  String get sshProxyTitle;
+
+  /// No description provided for @sshProxySubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'用于 SSH 终端连接与端口转发隧道'**
+  String get sshProxySubtitle;
+
+  /// No description provided for @proxyModeSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'跟随系统'**
+  String get proxyModeSystem;
+
+  /// No description provided for @proxyModeDirect.
+  ///
+  /// In zh, this message translates to:
+  /// **'直连'**
+  String get proxyModeDirect;
+
+  /// No description provided for @proxyModeCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义'**
+  String get proxyModeCustom;
+
+  /// No description provided for @proxySystemDetected.
+  ///
+  /// In zh, this message translates to:
+  /// **'已检测到系统代理：{endpoint}'**
+  String proxySystemDetected(String endpoint);
+
+  /// No description provided for @proxySystemNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前未检测到系统代理（将直接连接）'**
+  String get proxySystemNone;
+
+  /// No description provided for @proxyScheme.
+  ///
+  /// In zh, this message translates to:
+  /// **'协议'**
+  String get proxyScheme;
+
+  /// No description provided for @proxyHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理地址'**
+  String get proxyHost;
+
+  /// No description provided for @proxyPort.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口'**
+  String get proxyPort;
+
+  /// No description provided for @proxyUsername.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名（可选）'**
+  String get proxyUsername;
+
+  /// No description provided for @proxyPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码（可选）'**
+  String get proxyPassword;
+
+  /// No description provided for @proxyPasswordKeepHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'留空保持现有密码'**
+  String get proxyPasswordKeepHint;
+
+  /// No description provided for @proxyHostRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入代理地址'**
+  String get proxyHostRequired;
+
+  /// No description provided for @proxyPortInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'端口需为 1–65535'**
+  String get proxyPortInvalid;
+
+  /// No description provided for @proxyTest.
+  ///
+  /// In zh, this message translates to:
+  /// **'测试连接'**
+  String get proxyTest;
+
+  /// No description provided for @proxyTesting.
+  ///
+  /// In zh, this message translates to:
+  /// **'测试中…'**
+  String get proxyTesting;
+
+  /// No description provided for @proxyTestOk.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理连接正常（{endpoint}）'**
+  String proxyTestOk(String endpoint);
+
+  /// No description provided for @proxyTestFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理连接失败：{error}'**
+  String proxyTestFailed(String error);
+
+  /// No description provided for @proxySaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'代理设置已保存'**
+  String get proxySaved;
+
+  /// No description provided for @proxyCustomNotSet.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写并保存代理地址与端口'**
+  String get proxyCustomNotSet;
+
+  /// No description provided for @navOnion.
+  ///
+  /// In zh, this message translates to:
+  /// **'洋葱连接'**
+  String get navOnion;
+
+  /// No description provided for @onionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'洋葱连接'**
+  String get onionTitle;
+
+  /// No description provided for @newOnionRoute.
+  ///
+  /// In zh, this message translates to:
+  /// **'新建连接'**
+  String get newOnionRoute;
+
+  /// No description provided for @editOnionRoute.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑洋葱连接'**
+  String get editOnionRoute;
+
+  /// No description provided for @searchOnionRoutes.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索洋葱连接或节点…'**
+  String get searchOnionRoutes;
+
+  /// No description provided for @loadOnionFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取洋葱连接'**
+  String get loadOnionFailed;
+
+  /// No description provided for @noOnionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有洋葱连接'**
+  String get noOnionTitle;
+
+  /// No description provided for @noOnionMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'将多台主机串联为跳板链路（如 A → B → C），逐跳加密控制目标服务器'**
+  String get noOnionMessage;
+
+  /// No description provided for @onionNoMatchesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的洋葱连接'**
+  String get onionNoMatchesTitle;
+
+  /// No description provided for @onionName.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接名称（可选）'**
+  String get onionName;
+
+  /// No description provided for @onionNameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'例如：生产跳板链路（留空自动按节点命名）'**
+  String get onionNameHint;
+
+  /// No description provided for @onionLocalOrigin.
+  ///
+  /// In zh, this message translates to:
+  /// **'本机 (uessh)'**
+  String get onionLocalOrigin;
+
+  /// No description provided for @onionJumpNodes.
+  ///
+  /// In zh, this message translates to:
+  /// **'中间节点'**
+  String get onionJumpNodes;
+
+  /// No description provided for @onionJumpNodesHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'按跳转顺序依次经过以下服务器'**
+  String get onionJumpNodesHint;
+
+  /// No description provided for @onionAddJumpNode.
+  ///
+  /// In zh, this message translates to:
+  /// **'新增中间节点'**
+  String get onionAddJumpNode;
+
+  /// No description provided for @onionTargetNode.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束节点'**
+  String get onionTargetNode;
+
+  /// No description provided for @onionTargetNodeHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'最终建立终端会话的目标服务器'**
+  String get onionTargetNodeHint;
+
+  /// No description provided for @onionSelectTargetNode.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择结束节点'**
+  String get onionSelectTargetNode;
+
+  /// No description provided for @onionReplaceNode.
+  ///
+  /// In zh, this message translates to:
+  /// **'更换节点'**
+  String get onionReplaceNode;
+
+  /// No description provided for @onionHopBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {index} 跳'**
+  String onionHopBadge(int index);
+
+  /// No description provided for @onionTargetBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'终点'**
+  String get onionTargetBadge;
+
+  /// No description provided for @onionHopsCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 跳'**
+  String onionHopsCount(int count);
+
+  /// No description provided for @onionNeedJumpError.
+  ///
+  /// In zh, this message translates to:
+  /// **'请至少新增一个中间节点'**
+  String get onionNeedJumpError;
+
+  /// No description provided for @onionNeedTargetError.
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择结束节点'**
+  String get onionNeedTargetError;
+
+  /// No description provided for @onionVisibilityHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标节点「{target}」仅可见来自「{lastJump}」的 SSH 连接'**
+  String onionVisibilityHint(String target, String lastJump);
+
+  /// No description provided for @onionCliPreview.
+  ///
+  /// In zh, this message translates to:
+  /// **'等效 SSH ProxyJump 命令'**
+  String get onionCliPreview;
+
+  /// No description provided for @onionNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'备注（可选）'**
+  String get onionNote;
+
+  /// No description provided for @onionNoteHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'简短记录链路用途'**
+  String get onionNoteHint;
+
+  /// No description provided for @onionConnect.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接'**
+  String get onionConnect;
+
+  /// No description provided for @onionHostMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'链路中有主机已删除，请先编辑更新节点'**
+  String get onionHostMissing;
+
+  /// No description provided for @onionMissingHostBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'主机已删除'**
+  String get onionMissingHostBadge;
+
+  /// No description provided for @onionCopyCommand.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制 ssh -J 命令'**
+  String get onionCopyCommand;
+
+  /// No description provided for @onionCommandCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制命令'**
+  String get onionCommandCopied;
+
+  /// No description provided for @onionPickJumpTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择中间节点（从主机卡片选择）'**
+  String get onionPickJumpTitle;
+
+  /// No description provided for @onionPickTargetTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择结束节点（从主机卡片选择）'**
+  String get onionPickTargetTitle;
+
+  /// No description provided for @onionAlreadyInChain.
+  ///
+  /// In zh, this message translates to:
+  /// **'已在链路中'**
+  String get onionAlreadyInChain;
+
+  /// No description provided for @onionMoveUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'上移'**
+  String get onionMoveUp;
+
+  /// No description provided for @onionMoveDown.
+  ///
+  /// In zh, this message translates to:
+  /// **'下移'**
+  String get onionMoveDown;
+
+  /// No description provided for @onionRemoveNode.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除节点'**
+  String get onionRemoveNode;
+
+  /// No description provided for @deleteOnionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除洋葱连接“{name}”？'**
+  String deleteOnionTitle(String name);
+
+  /// No description provided for @deleteOnionBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅删除此链路卡片，不会影响主机列表中的服务器。'**
+  String get deleteOnionBody;
+
+  /// No description provided for @onionStartingChain.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在建立洋葱连接（共 {hops} 跳）：{route}'**
+  String onionStartingChain(int hops, String route);
+
+  /// No description provided for @onionConnectingHop.
+  ///
+  /// In zh, this message translates to:
+  /// **'[{step}/{total}] 正在连接节点 {target}…'**
+  String onionConnectingHop(int step, int total, String target);
+
+  /// No description provided for @onionForwardingHop.
+  ///
+  /// In zh, this message translates to:
+  /// **'[{step}/{total}] 已连接 {from}，正在经由其转发至 {to}…'**
+  String onionForwardingHop(int step, int total, String from, String to);
+
+  /// No description provided for @onionHopForwardFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法通过 {from} 转发到 {to}（请确认服务器开启 AllowTcpForwarding）：{error}'**
+  String onionHopForwardFailed(String from, String to, String error);
+
+  /// No description provided for @about.
+  ///
+  /// In zh, this message translates to:
+  /// **'关于'**
+  String get about;
 }
 
 class _AppLocalizationsDelegate

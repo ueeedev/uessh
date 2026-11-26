@@ -38,6 +38,7 @@ void main() {
     await pumpApp(tester);
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
+    await selectSettingsCategory(tester, SettingsCategory.appearance);
     await tester.tap(find.text('深色'));
     await tester.pumpAndSettle();
 
@@ -163,28 +164,72 @@ void main() {
     );
   });
 
-  testWidgets('Settings ends with the app version, as part of the page', (
-    tester,
-  ) async {
-    await pumpApp(tester);
-    await tester.tap(find.text('设置'));
-    await tester.pumpAndSettle();
-    final label = find.byKey(const ValueKey('app-version'));
-    await scrollTo(tester, label);
-    expect(find.text('uessh 0.1.1'), findsOneWidget);
-    expect(find.textContaining('(2)'), findsNothing, reason: 'no build number');
+  testWidgets(
+    'Settings shows a vertical left secondary menu with centered About page',
+    (tester) async {
+      await pumpApp(tester);
+      await tester.tap(find.text('设置'));
+      await tester.pumpAndSettle();
 
-    // Inside the scrolling list (not pinned), below the last section.
-    final list = find.ancestor(of: label, matching: find.byType(ListView));
-    expect(list, findsOneWidget);
-    await tester.ensureVisible(label);
-    await tester.pumpAndSettle();
-    final rect = tester.getRect(label);
-    expect(rect.top, greaterThan(tester.getRect(find.text('查看日志')).bottom));
-    // Centred in the settings content.
-    final listRect = tester.getRect(list);
-    expect(rect.center.dx, closeTo(listRect.center.dx, 1));
-  });
+      // All categories are arranged vertically in the left secondary menu,
+      // with "关于" positioned directly below "诊断".
+      final secondaryNav = find.byKey(const ValueKey('settings-secondary-nav'));
+      expect(secondaryNav, findsOneWidget);
+      double? prevTop;
+      for (final category in SettingsCategory.values) {
+        final item = find.byKey(ValueKey('settings-nav-${category.name}'));
+        expect(
+          find.descendant(of: secondaryNav, matching: item),
+          findsOneWidget,
+        );
+        final rect = tester.getRect(item);
+        if (prevTop != null) {
+          expect(rect.top, greaterThan(prevTop));
+        }
+        prevTop = rect.top;
+      }
+
+      // Secondary menu sits on the left of the active category content pane.
+      final navRect = tester.getRect(secondaryNav);
+      final paneRect = tester.getRect(
+        find.byKey(const ValueKey('settings-content-general')),
+      );
+      expect(navRect.right, lessThanOrEqualTo(paneRect.left + 2));
+
+      // Clicking a secondary menu category switches the right content pane.
+      expect(find.byKey(const ValueKey('run-in-background')), findsOneWidget);
+      expect(find.byKey(const ValueKey('open-log')), findsNothing);
+      await selectSettingsCategory(tester, SettingsCategory.diagnostics);
+      expect(find.byKey(const ValueKey('open-log')), findsOneWidget);
+      expect(find.byKey(const ValueKey('run-in-background')), findsNothing);
+
+      // Selecting "关于" shows centered app icon, app name, and version number.
+      await selectSettingsCategory(tester, SettingsCategory.about);
+      final aboutPane = find.byKey(const ValueKey('settings-content-about'));
+      final logo = find.byKey(const ValueKey('about-app-logo'));
+      final name = find.byKey(const ValueKey('about-app-name'));
+      final version = find.byKey(const ValueKey('app-version'));
+
+      expect(logo, findsOneWidget);
+      expect(name, findsOneWidget);
+      expect(find.text('v0.1.1'), findsOneWidget);
+      expect(
+        find.textContaining('(2)'),
+        findsNothing,
+        reason: 'no build number',
+      );
+
+      final aboutRect = tester.getRect(aboutPane);
+      final logoRect = tester.getRect(logo);
+      final nameRect = tester.getRect(name);
+      final versionRect = tester.getRect(version);
+      expect(logoRect.center.dx, closeTo(aboutRect.center.dx, 2));
+      expect(nameRect.center.dx, closeTo(aboutRect.center.dx, 2));
+      expect(versionRect.center.dx, closeTo(aboutRect.center.dx, 2));
+      expect(nameRect.top, greaterThan(logoRect.bottom));
+      expect(versionRect.top, greaterThan(nameRect.bottom));
+    },
+  );
 
   testWidgets('Settings is pinned to the bottom of the sidebar', (
     tester,
@@ -634,6 +679,7 @@ void main() {
     await pumpApp(tester);
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
+    await selectSettingsCategory(tester, SettingsCategory.reachability);
     final anchor = tester.widget<MenuAnchor>(
       find.descendant(
         of: find.byKey(const ValueKey('check-interval')),

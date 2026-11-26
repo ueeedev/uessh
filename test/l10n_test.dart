@@ -44,6 +44,7 @@ void main() {
 
     await tester.tap(find.text('设置'));
     await tester.pumpAndSettle();
+    await selectSettingsCategory(tester, SettingsCategory.appearance);
     await tester.tap(find.byKey(const ValueKey('language')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('English').last);
